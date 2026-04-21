@@ -1,0 +1,62 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", sans-serif;
+  
+  --color-primary: var(--color-blue-600);
+  --color-primary-hover: var(--color-blue-700);
+  --color-primary-soft: var(--color-blue-50);
+  --color-border-subtle: var(--color-slate-100);
+  --color-border-default: var(--color-slate-200);
+}
+
+@layer base {
+  body {
+    @apply font-sans bg-slate-50 text-slate-900 antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-bold tracking-tight text-slate-800;
+  }
+}
+
+/* Material Design Overrides to match Professional Polish */
+.mat-mdc-card {
+  @apply rounded-xl border border-slate-200 shadow-sm shadow-slate-100/50 bg-white !important;
+}
+
+.mat-mdc-button {
+  @apply rounded-lg !important;
+}
+
+.mat-mdc-unelevated-button {
+  @apply bg-blue-600 text-white !important;
+}
+
+.mat-mdc-form-field-focus-overlay {
+  @apply bg-transparent !important;
+}
+
+.mat-mdc-text-field-wrapper {
+  @apply bg-white !important;
+}
+
+.resume-container {
+  @apply max-w-6xl mx-auto p-6 md:p-10;
+}
+
+/* Custom Scrollbar for side-by-side layout if used */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-200 rounded-full hover:bg-slate-300;
+}
