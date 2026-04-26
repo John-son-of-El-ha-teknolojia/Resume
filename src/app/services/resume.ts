@@ -8,6 +8,31 @@ export interface ResumeSection {
   content: string;
 }
 
+export interface ResumeElement {
+  id: string;
+  type: 'image' | 'line' | 'box' | 'text';
+  content?: string;
+  url?: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation?: number;
+  isLocked?: boolean;
+  isVisible?: boolean;
+  mirror?: { horizontal: boolean; vertical: boolean };
+  unit?: 'px' | 'cm' | 'mm';
+  style?: any;
+}
+
+export interface Aesthetics {
+  fontFamily: string;
+  primaryColor: string;
+  backgroundColor: string;
+  fontSize: number;
+  elements: ResumeElement[];
+}
+
 export interface ResumeData {
   name: string;
   email: string;
@@ -15,6 +40,7 @@ export interface ResumeData {
   location: string;
   summary: string;
   sections: ResumeSection[];
+  aesthetics: Aesthetics;
 }
 
 @Injectable({
@@ -34,7 +60,14 @@ export class ResumeService {
       { id: '1', title: 'Work Experience', content: '' },
       { id: '2', title: 'Education', content: '' },
       { id: '3', title: 'Skills', content: '' }
-    ]
+    ],
+    aesthetics: {
+      fontFamily: 'Inter',
+      primaryColor: '#09090b',
+      backgroundColor: '#ffffff',
+      fontSize: 14,
+      elements: []
+    }
   });
 
   isPaid = signal<boolean>(false);

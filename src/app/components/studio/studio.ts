@@ -7,7 +7,9 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatDialog } from '@angular/material/dialog';
-import { ResumeService, ResumeSection } from '../../services/resume';
+import { MatSliderModule } from '@angular/material/slider';
+import { DragDropModule, CdkDragEnd } from '@angular/cdk/drag-drop';
+import { ResumeService, ResumeSection, ResumeElement } from '../../services/resume';
 import { PaymentDialogComponent } from '../payment/payment';
 
 @Component({
@@ -20,7 +22,9 @@ import { PaymentDialogComponent } from '../payment/payment';
     MatIconModule, 
     MatTooltipModule, 
     MatTabsModule,
-    MatButtonToggleModule
+    MatButtonToggleModule,
+    MatSliderModule,
+    DragDropModule
   ],
   template: `
     <div class="h-screen w-full flex flex-col bg-[#F3F4F6] overflow-hidden font-sans select-none">
@@ -160,6 +164,60 @@ import { PaymentDialogComponent } from '../payment/payment';
               <mat-tab>
                 <ng-template mat-tab-label>
                   <div class="flex items-center gap-2 py-4">
+                    <mat-icon class="text-sm">layers</mat-icon>
+                    <span class="text-[10px] uppercase font-black tracking-widest">Layers</span>
+                  </div>
+                </ng-template>
+                <div class="p-8 space-y-6">
+                   <div class="flex items-center justify-between">
+                     <h3 class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Layer Stack</h3>
+                     <div class="flex gap-1">
+                        <button mat-icon-button (click)="addElement('box')" matTooltip="Add Box"><mat-icon class="text-sm">crop_square</mat-icon></button>
+                        <button mat-icon-button (click)="addElement('text')" matTooltip="Add Text"><mat-icon class="text-sm">title</mat-icon></button>
+                        <button mat-icon-button (click)="addElement('line')" matTooltip="Add Line"><mat-icon class="text-sm">horizontal_rule</mat-icon></button>
+                                <button mat-icon-button (click)="onImageTrigger(imageInput)" matTooltip="Add Image"><mat-icon class="text-sm">image</mat-icon></button>
+                                <input #imageInput type="file" class="hidden" (change)="onImageUpload($event)" accept="image/*">
+                     </div>
+                   </div>
+                   
+                   <div class="space-y-2">
+                     @for (el of resume.aesthetics.elements; track el.id) {
+                       <div class="p-3 bg-zinc-50 border border-zinc-100 rounded-xl group transition-all" 
+                            [class.ring-2]="activeElementId() === el.id" [class.ring-zinc-900]="activeElementId() === el.id">
+                          <div class="flex items-center justify-between cursor-pointer" (click)="activeElementId.set(el.id); activeSectionId.set(null)">
+                            <div class="flex items-center gap-3">
+                              <mat-icon class="text-zinc-400 scale-75">{{ getIconForType(el.type) }}</mat-icon>
+                              <span class="text-[10px] font-black uppercase tracking-widest text-zinc-600 group-hover:text-zinc-900" 
+                                    [class.line-through]="!el.isVisible">{{ el.type }} {{ resume.aesthetics.elements.length - $index }}</span>
+                            </div>
+                            <div class="flex items-center gap-1">
+                              <button mat-icon-button (click)="$event.stopPropagation(); el.isLocked = !el.isLocked; updateResume()" 
+                                      class="scale-75 transition-colors" [class.text-zinc-300]="!el.isLocked" [class.text-zinc-900]="el.isLocked">
+                                <mat-icon class="text-sm">{{ el.isLocked ? 'lock' : 'lock_open' }}</mat-icon>
+                              </button>
+                              <button mat-icon-button (click)="$event.stopPropagation(); el.isVisible = !el.isVisible; updateResume()" 
+                                      class="scale-75 transition-colors" [class.text-zinc-300]="!el.isVisible" [class.text-zinc-900]="el.isVisible">
+                                <mat-icon class="text-sm">{{ el.isVisible ? 'visibility' : 'visibility_off' }}</mat-icon>
+                              </button>
+                              <button mat-icon-button (click)="$event.stopPropagation(); removeElement(el.id)" class="opacity-0 group-hover:opacity-100 text-zinc-400 hover:text-red-500 scale-75 transition-all">
+                                <mat-icon class="text-sm">delete_outline</mat-icon>
+                              </button>
+                            </div>
+                          </div>
+                       </div>
+                     } @empty {
+                       <div class="py-12 text-center space-y-4 opacity-40 border-2 border-dashed border-zinc-100 rounded-2xl">
+                          <mat-icon class="scale-[1.5] text-zinc-300">layers_clear</mat-icon>
+                          <p class="text-[8px] font-black uppercase tracking-widest text-zinc-400">Empty Stack</p>
+                       </div>
+                     }
+                   </div>
+                </div>
+              </mat-tab>
+
+              <mat-tab>
+                <ng-template mat-tab-label>
+                  <div class="flex items-center gap-2 py-4">
                     <mat-icon class="text-sm">brush</mat-icon>
                     <span class="text-[10px] uppercase font-black tracking-widest">Aesthetics</span>
                   </div>
@@ -167,39 +225,50 @@ import { PaymentDialogComponent } from '../payment/payment';
                 <div class="p-8 space-y-10">
                   <div class="space-y-4">
                      <h3 class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Layout Framework</h3>
-                     <div class="grid grid-cols-1 gap-3">
-                        <div class="p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between"
-                             [class.border-zinc-900]="template() === 'minimal'" [class.bg-zinc-900]="template() === 'minimal'" [class.text-white]="template() === 'minimal'"
-                             [class.border-zinc-100]="template() !== 'minimal'" [class.bg-white]="template() !== 'minimal'"
-                             (click)="template.set('minimal')">
-                          <span class="text-[10px] font-black uppercase tracking-widest">Swiss Minimalist</span>
-                          <mat-icon class="scale-75 opacity-50">check_circle</mat-icon>
-                        </div>
-                        <div class="p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between"
-                             [class.border-zinc-900]="template() === 'modern'" [class.bg-zinc-900]="template() === 'modern'" [class.text-white]="template() === 'modern'"
-                             [class.border-zinc-100]="template() !== 'modern'" [class.bg-white]="template() !== 'modern'"
-                             (click)="template.set('modern')">
-                          <span class="text-[10px] font-black uppercase tracking-widest">Bento Modern</span>
-                          <mat-icon class="scale-75 opacity-50">check_circle</mat-icon>
-                        </div>
-                        <div class="p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between"
-                             [class.border-zinc-900]="template() === 'classic'" [class.bg-zinc-900]="template() === 'classic'" [class.text-white]="template() === 'classic'"
-                             [class.border-zinc-100]="template() !== 'classic'" [class.bg-white]="template() !== 'classic'"
-                             (click)="template.set('classic')">
-                          <span class="text-[10px] font-black uppercase tracking-widest">Ivy League Classic</span>
-                          <mat-icon class="scale-75 opacity-50">check_circle</mat-icon>
-                        </div>
+                     <div class="grid grid-cols-2 gap-3">
+                        @for (tmpl of frameworks; track tmpl.id) {
+                          <div class="p-4 rounded-xl border-2 cursor-pointer transition-all flex flex-col gap-2"
+                               [class.border-zinc-900]="template() === tmpl.id" 
+                               [class.bg-zinc-900]="template() === tmpl.id" 
+                               [class.text-white]="template() === tmpl.id"
+                               [class.border-zinc-50]="template() !== tmpl.id" 
+                               [class.bg-zinc-50/50]="template() !== tmpl.id"
+                               (click)="template.set(tmpl.id)">
+                            <div class="w-full aspect-[4/5] bg-zinc-200/20 rounded-md mb-2 overflow-hidden flex items-center justify-center opacity-40">
+                               <mat-icon class="scale-150">grid_view</mat-icon>
+                            </div>
+                            <span class="text-[9px] font-black uppercase tracking-widest">{{ tmpl.name }}</span>
+                          </div>
+                        }
                      </div>
                   </div>
 
-                  <div class="space-y-4">
+                  <div class="space-y-4 pt-8 border-t border-zinc-100">
+                     <h3 class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Typography</h3>
+                     <div class="grid grid-cols-1 gap-2">
+                        @for (font of fonts; track font) {
+                          <button class="p-4 rounded-xl border text-[10px] font-bold transition-all text-left flex items-center justify-between"
+                                  [class.border-zinc-900]="resume.aesthetics.fontFamily === font"
+                                  [class.bg-zinc-900]="resume.aesthetics.fontFamily === font"
+                                  [class.text-white]="resume.aesthetics.fontFamily === font"
+                                  [class.border-zinc-50]="resume.aesthetics.fontFamily !== font"
+                                  (click)="resume.aesthetics.fontFamily = font; updateResume()"
+                                  [style.font-family]="font">
+                            {{ font }}
+                            <mat-icon class="scale-50 opacity-40">font_download</mat-icon>
+                          </button>
+                        }
+                     </div>
+                  </div>
+
+                  <div class="space-y-4 pt-8 border-t border-zinc-100">
                      <h3 class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Global Scale</h3>
-                     <div class="px-2">
+                     <div class="bg-zinc-50 p-6 rounded-2xl">
                        <input type="range" min="50" max="150" [(ngModel)]="scale" class="w-full accent-zinc-900 h-1 rounded-full cursor-pointer">
                        <div class="flex justify-between mt-4">
-                         <span class="text-[8px] font-black uppercase tracking-widest text-zinc-400">Micro (50%)</span>
+                         <span class="text-[8px] font-black uppercase tracking-widest text-zinc-400">50%</span>
                          <span class="text-[8px] font-black uppercase tracking-widest text-zinc-900">{{ scale() }}%</span>
-                         <span class="text-[8px] font-black uppercase tracking-widest text-zinc-400">Macro (150%)</span>
+                         <span class="text-[8px] font-black uppercase tracking-widest text-zinc-400">150%</span>
                        </div>
                      </div>
                   </div>
@@ -239,7 +308,76 @@ import { PaymentDialogComponent } from '../payment/payment';
               [ngClass]="'template-' + template()">
               
               <!-- Content Rendering Logic -->
-              @if (template() === 'minimal') {
+              <div class="absolute inset-0 pointer-events-none overflow-hidden" [style.font-family]="resume.aesthetics.fontFamily">
+                @for (el of resume.aesthetics.elements; track el.id) {
+                  @if (el.isVisible !== false) {
+                    <div class="absolute pointer-events-auto cursor-move group select-none"
+                         cdkDrag 
+                         [cdkDragData]="el"
+                         [cdkDragBoundary]="'#resume-canvas'"
+                         [cdkDragDisabled]="el.isLocked"
+                         [style.left]="convertToUnit(el.x, el.unit)"
+                         [style.top]="convertToUnit(el.y, el.unit)"
+                         [style.width]="convertToUnit(el.width, el.unit)"
+                         [style.height]="convertToUnit(el.height, el.unit)"
+                         [style.transform]="getTransform(el)"
+                         (cdkDragEnded)="onDragEnd($event, el)"
+                         (click)="activeElementId.set(el.id); activeSectionId.set(null); $event.stopPropagation()">
+                      
+                      @if (el.type === 'image') {
+                        <img [src]="el.url" class="w-full h-full object-cover rounded-sm shadow-sm" referrerpolicy="no-referrer"
+                             [style.transform]="getImageMirror(el)">
+                      } @else if (el.type === 'line') {
+                        <div class="w-full h-full" [style.background-color]="el.style?.backgroundColor" 
+                             [class.border-t-2]="el.style?.borderStyle === 'dashed' || el.style?.borderStyle === 'dotted'"
+                             [style.border-top-style]="el.style?.borderStyle || 'solid'"
+                             [style.border-top-color]="el.style?.backgroundColor"></div>
+                      } @else if (el.type === 'box') {
+                        <div class="w-full h-full border border-zinc-200" [style.background-color]="el.style?.backgroundColor"
+                             [style.border-radius.px]="el.style?.borderRadius || 0"
+                             [style.border-width.px]="el.style?.borderWidth || 1"
+                             [style.border-style]="el.style?.borderStyle || 'solid'"
+                             [style.border-color]="el.style?.borderColor || '#e4e4e7'"></div>
+                      } @else if (el.type === 'text') {
+                        <div class="w-full h-full p-2 outline-none whitespace-pre-wrap select-text" 
+                             [style.font-size.px]="el.style?.fontSize || 12"
+                             [style.color]="el.style?.color || '#09090b'"
+                             [style.font-weight]="el.style?.fontWeight || '400'"
+                             [style.text-align]="el.style?.textAlign || 'left'"
+                             [contentEditable]="!el.isLocked"
+                             (blur)="el.content = $any($event.target).innerText; updateResume()">{{ el.content }}</div>
+                      }
+
+                      <!-- Selection Border -->
+                      @if (activeElementId() === el.id) {
+                        <div class="absolute -inset-1 border-2 border-zinc-900 border-dashed pointer-events-none rounded-sm"></div>
+                        <div class="absolute -top-1 -left-1 w-3 h-3 bg-white border-2 border-zinc-900 rounded-full"></div>
+                        <div class="absolute -top-1 -right-1 w-3 h-3 bg-white border-2 border-zinc-900 rounded-full"></div>
+                        <div class="absolute -bottom-1 -left-1 w-3 h-3 bg-white border-2 border-zinc-900 rounded-full"></div>
+                        <div class="absolute -bottom-1 -right-1 w-3 h-3 bg-white border-2 border-zinc-900 rounded-full"></div>
+                      }
+
+                      <!-- Drag Handle Overlay -->
+                      <div class="absolute -top-6 left-0 bg-zinc-900 text-white text-[8px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 uppercase font-black tracking-widest transition-opacity pointer-events-none flex items-center gap-2">
+                        <mat-icon class="scale-50">{{ el.isLocked ? 'lock' : 'open_with' }}</mat-icon>
+                        {{ el.type }}
+                      </div>
+                    </div>
+                  }
+                }
+              </div>
+
+              <div [style.font-family]="resume.aesthetics.fontFamily">
+                @if (template() === 'blank') {
+                  <div class="h-full w-full relative">
+                    <!-- Blank canvas for free-form design -->
+                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-5">
+                       <mat-icon class="scale-[10]">grid_4x4</mat-icon>
+                    </div>
+                  </div>
+                }
+
+                @if (template() === 'minimal') {
                 <div class="p-16 space-y-12 h-full flex flex-col">
                   <header class="text-center pt-8">
                     <h1 class="text-6xl font-black tracking-tighter text-zinc-900 mb-6 uppercase">{{ resume.name || 'UNNAMED_ENTITY' }}</h1>
@@ -341,7 +479,8 @@ import { PaymentDialogComponent } from '../payment/payment';
               }
             </div>
           </div>
-        </main>
+        </div>
+      </main>
         
         <!-- SIDEBAR: RIGHT (Contextual Properties) -->
         <aside class="w-72 bg-white border-l border-zinc-200 shrink-0 p-8 hidden xl:flex flex-col">
@@ -351,39 +490,152 @@ import { PaymentDialogComponent } from '../payment/payment';
            </header>
            
            @if (activeSectionId()) {
+              <!-- Section Inspector logic remains same or similar -->
               <div class="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-                 <div class="p-4 bg-zinc-50 rounded-2xl border border-zinc-100 flex items-center gap-3">
-                    <div class="w-10 h-10 bg-zinc-900 rounded-xl flex items-center justify-center text-white">
-                       <mat-icon class="scale-75">text_fields</mat-icon>
-                    </div>
-                    <div>
-                       <p class="text-[8px] font-black uppercase tracking-widest text-zinc-400">Object Type</p>
-                       <p class="text-[10px] font-black uppercase text-zinc-900">Data Segment</p>
-                    </div>
-                 </div>
-
-                 <div class="space-y-4">
-                    <p class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Content Quality</p>
-                    <div class="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl">
-                       <div class="flex items-center gap-2 mb-2">
-                          <mat-icon class="text-emerald-500 text-sm">auto_awesome</mat-icon>
-                          <span class="text-[10px] font-black uppercase text-emerald-700">AI Scoring: 98%</span>
-                       </div>
-                       <div class="h-1 bg-emerald-200 rounded-full overflow-hidden">
-                          <div class="h-full bg-emerald-500 w-[98%]"></div>
-                       </div>
-                    </div>
-                 </div>
-
-                 <div class="pt-4 space-y-3">
-                    <button mat-stroked-button class="w-full !border-zinc-200 !text-zinc-600 h-12 !rounded-xl !text-[9px] !font-black !uppercase !tracking-widest">
-                       Duplicate Segment
-                    </button>
-                    <button mat-stroked-button class="w-full !border-zinc-200 !text-zinc-600 h-12 !rounded-xl !text-[9px] !font-black !uppercase !tracking-widest">
-                       Export as JSON
-                    </button>
-                 </div>
+                 <!-- existing content -->
               </div>
+           } @else if (activeElementId()) {
+              @let activeEl = getActiveElement();
+              @if (activeEl) {
+                <div class="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+                  <header class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 bg-zinc-900 rounded-xl flex items-center justify-center text-white">
+                         <mat-icon class="scale-75">{{ getIconForType(activeEl.type) }}</mat-icon>
+                      </div>
+                      <div>
+                         <p class="text-[8px] font-black uppercase tracking-widest text-zinc-400">Object Type</p>
+                         <p class="text-[10px] font-black uppercase text-zinc-900">{{ activeEl.type }}</p>
+                      </div>
+                    </div>
+                    <button mat-icon-button (click)="activeEl.isLocked = !activeEl.isLocked; updateResume()" 
+                            [matTooltip]="activeEl.isLocked ? 'Unlock Element' : 'Lock Element'">
+                       <mat-icon class="scale-75">{{ activeEl.isLocked ? 'lock' : 'lock_open' }}</mat-icon>
+                    </button>
+                  </header>
+
+                  <div class="space-y-6">
+                    <!-- Transformations -->
+                    <div class="space-y-4">
+                       <p class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Transformations</p>
+                       <div class="grid grid-cols-2 gap-4">
+                          <div class="space-y-1">
+                             <label class="text-[8px] font-black text-zinc-300 uppercase">Rotation (°)</label>
+                             <input type="number" [(ngModel)]="activeEl.rotation" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-lg p-3 text-xs font-bold">
+                          </div>
+                          <div class="space-y-1">
+                             <label class="text-[8px] font-black text-zinc-300 uppercase">Unit</label>
+                             <select [(ngModel)]="activeEl.unit" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-lg p-3 text-xs font-bold appearance-none">
+                                <option value="px">Pixels (px)</option>
+                                <option value="cm">Centimeters (cm)</option>
+                                <option value="mm">Millimeters (mm)</option>
+                             </select>
+                          </div>
+                       </div>
+                       @if (activeEl.type === 'image') {
+                          <div class="flex gap-2">
+                            <button mat-stroked-button class="flex-1 !border-zinc-200 !text-zinc-600 h-10 !rounded-xl !text-[8px] !font-black !uppercase !tracking-widest"
+                                    (click)="activeEl.mirror = { horizontal: !activeEl.mirror?.horizontal, vertical: !!activeEl.mirror?.vertical }; updateResume()">
+                               Mirror H
+                            </button>
+                            <button mat-stroked-button class="flex-1 !border-zinc-200 !text-zinc-600 h-10 !rounded-xl !text-[8px] !font-black !uppercase !tracking-widest"
+                                    (click)="activeEl.mirror = { horizontal: !!activeEl.mirror?.horizontal, vertical: !activeEl.mirror?.vertical }; updateResume()">
+                               Mirror V
+                            </button>
+                          </div>
+                       }
+                    </div>
+
+                    <!-- Geometry -->
+                    <div class="space-y-4">
+                       <p class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Geometry</p>
+                       <div class="grid grid-cols-2 gap-4">
+                          <div class="space-y-1">
+                             <label class="text-[8px] font-black text-zinc-300 uppercase">Width</label>
+                             <input type="number" [(ngModel)]="activeEl.width" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-lg p-3 text-xs font-bold">
+                          </div>
+                          <div class="space-y-1">
+                             <label class="text-[8px] font-black text-zinc-300 uppercase">Height</label>
+                             <input type="number" [(ngModel)]="activeEl.height" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-lg p-3 text-xs font-bold">
+                          </div>
+                          <div class="space-y-1">
+                             <label class="text-[8px] font-black text-zinc-300 uppercase">X Position</label>
+                             <input type="number" [(ngModel)]="activeEl.x" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-lg p-3 text-xs font-bold">
+                          </div>
+                          <div class="space-y-1">
+                             <label class="text-[8px] font-black text-zinc-300 uppercase">Y Position</label>
+                             <input type="number" [(ngModel)]="activeEl.y" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-lg p-3 text-xs font-bold">
+                          </div>
+                       </div>
+                    </div>
+
+                    <!-- Look & Feel -->
+                    <div class="space-y-4 pt-4 border-t border-zinc-100">
+                       <p class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Styles</p>
+                       
+                       @if (activeEl.type === 'box' || activeEl.type === 'line') {
+                          <div class="space-y-3">
+                             <div class="space-y-1">
+                                <label class="text-[8px] font-black text-zinc-300 uppercase">Background Color</label>
+                                <div class="flex gap-2">
+                                   <input type="color" [(ngModel)]="activeEl.style.backgroundColor" (ngModelChange)="updateResume()" class="w-12 h-10 rounded-lg cursor-pointer bg-white border border-zinc-100">
+                                   <input type="text" [(ngModel)]="activeEl.style.backgroundColor" (ngModelChange)="updateResume()" class="flex-1 bg-zinc-50 border border-zinc-100 rounded-lg p-3 text-[10px] font-black uppercase tracking-widest text-zinc-600">
+                                </div>
+                             </div>
+                          </div>
+                       }
+
+                       @if (activeEl.type === 'box') {
+                          <div class="space-y-3 pt-2">
+                             <div class="grid grid-cols-2 gap-2">
+                                <div class="space-y-1">
+                                   <label class="text-[8px] font-black text-zinc-300 uppercase">Border Radius</label>
+                                   <input type="number" [(ngModel)]="activeEl.style.borderRadius" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-lg p-2 text-xs font-bold">
+                                </div>
+                                <div class="space-y-1">
+                                   <label class="text-[8px] font-black text-zinc-300 uppercase">Border Width</label>
+                                   <input type="number" [(ngModel)]="activeEl.style.borderWidth" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-lg p-2 text-xs font-bold">
+                                </div>
+                             </div>
+                             <div class="space-y-1">
+                                <label class="text-[8px] font-black text-zinc-300 uppercase">Border Color</label>
+                                <input type="color" [(ngModel)]="activeEl.style.borderColor" (ngModelChange)="updateResume()" class="w-full h-8 rounded-md cursor-pointer">
+                             </div>
+                          </div>
+                       }
+
+                       @if (activeEl.type === 'text') {
+                          <div class="space-y-4">
+                             <div class="grid grid-cols-2 gap-2">
+                               <div class="space-y-1">
+                                  <label class="text-[8px] font-black text-zinc-300 uppercase">Font Size</label>
+                                  <input type="number" [(ngModel)]="activeEl.style.fontSize" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-lg p-2 text-xs font-bold">
+                               </div>
+                               <div class="space-y-1">
+                                  <label class="text-[8px] font-black text-zinc-300 uppercase">Text Align</label>
+                                  <select [(ngModel)]="activeEl.style.textAlign" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-lg p-2 text-[10px] font-black uppercase">
+                                     <option value="left">Left</option>
+                                     <option value="center">Center</option>
+                                     <option value="right">Right</option>
+                                  </select>
+                               </div>
+                             </div>
+                             <div class="space-y-1">
+                                <label class="text-[8px] font-black text-zinc-300 uppercase">Text Color</label>
+                                <input type="color" [(ngModel)]="activeEl.style.color" (ngModelChange)="updateResume()" class="w-full h-8 rounded-md cursor-pointer">
+                             </div>
+                          </div>
+                       }
+                    </div>
+
+                    <div class="pt-6 space-y-3">
+                       <button mat-flat-button class="w-full !bg-zinc-900 !text-white h-12 !rounded-xl !text-[9px] !font-black !uppercase !tracking-widest" (click)="activeElementId.set(null)">
+                          Commit changes
+                       </button>
+                    </div>
+                  </div>
+                </div>
+              }
            } @else {
              <div class="flex-1 flex flex-col items-center justify-center text-center space-y-4 opacity-40">
                 <mat-icon class="scale-[2] text-zinc-200 font-thin">ads_click</mat-icon>
@@ -435,6 +687,27 @@ import { PaymentDialogComponent } from '../payment/payment';
       height: 2px !important;
       background-color: #09090b !important;
     }
+
+    ::ng-deep .studio-toggle-group {
+      border: 1px solid #f4f4f5 !important;
+      border-radius: 0.75rem !important;
+      overflow: hidden;
+      height: 40px !important;
+    }
+    ::ng-deep .studio-toggle-group .mat-button-toggle {
+      background-color: #fafafa !important;
+      border-left: 1px solid #f4f4f5 !important;
+    }
+    ::ng-deep .studio-toggle-group .mat-button-toggle-checked {
+      background-color: #09090b !important;
+      color: white !important;
+    }
+    ::ng-deep .studio-toggle-group .mat-button-toggle .mat-button-toggle-label-content {
+      font-size: 8px !important;
+      font-weight: 900 !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.1em !important;
+    }
   `]
 })
 export class StudioComponent implements AfterViewInit {
@@ -442,14 +715,36 @@ export class StudioComponent implements AfterViewInit {
   private dialog = inject(MatDialog);
   
   resume = this.resumeService.resumeState();
-  template = signal<'minimal' | 'modern' | 'classic'>('minimal');
+  template = signal<string>('minimal');
   scale = signal(75);
   sidebarPosition = signal<'left' | 'right'>('left');
   activeSectionId = signal<string | null>(null);
+  activeElementId = signal<string | null>(null);
   enhancingSections = signal(new Set<string>());
   isPremium = this.resumeService.isPremium;
 
+  frameworks = [
+    { id: 'blank', name: 'Ultra Blank' },
+    { id: 'minimal', name: 'Swiss Minimalist' },
+    { id: 'modern', name: 'Bento Modern' },
+    { id: 'classic', name: 'Ivy League Classic' },
+    { id: 'executive', name: 'Premium Executive' },
+    { id: 'creative', name: 'Gradient Bold' },
+    { id: 'technical', name: 'Dev Console' },
+    { id: 'startup', name: 'Monochrome Startup' },
+    { id: 'academic', name: 'Oxford Serif' },
+    { id: 'brutalist', name: 'Neo-Brutalist' },
+    { id: 'glitch', name: 'Digital Glitch' },
+    { id: 'elegant', name: 'Vogue Editorial' },
+  ];
+
+  fonts = ['Inter', 'Space Grotesk', 'Outfit', 'Playfair Display', 'JetBrains Mono', 'Fira Code', 'Montserrat', 'Roboto', 'Syne', 'Clash Display'];
+
   @ViewChild('canvasContainer') canvasContainer!: ElementRef;
+  
+  onImageTrigger(input: HTMLInputElement) {
+    input.click();
+  }
 
   ngAfterViewInit() {
     this.autoScale();
@@ -478,12 +773,149 @@ export class StudioComponent implements AfterViewInit {
     this.resume = this.resumeService.resumeState();
     const last = this.resume.sections[this.resume.sections.length - 1];
     if (last) this.activeSectionId.set(last.id);
+    this.activeElementId.set(null);
   }
 
   removeSection(id: string) {
     this.resumeService.removeSection(id);
     this.resume = this.resumeService.resumeState();
     if (this.activeSectionId() === id) this.activeSectionId.set(null);
+  }
+
+  getIconForType(type: string): string {
+    switch(type) {
+      case 'image': return 'image';
+      case 'line': return 'horizontal_rule';
+      case 'box': return 'crop_square';
+      case 'text': return 'title';
+      default: return 'help_outline';
+    }
+  }
+
+  convertToUnit(value: number, unit?: string): string {
+    if (!unit || unit === 'px') return value + 'px';
+    return value + unit;
+  }
+
+  getTransform(el: ResumeElement): string {
+    let transform = '';
+    if (el.rotation) transform += ` rotate(${el.rotation}deg)`;
+    return transform || 'none';
+  }
+
+  getImageMirror(el: ResumeElement): string {
+    let mirror = '';
+    if (el.mirror?.horizontal) mirror += ' scaleX(-1)';
+    if (el.mirror?.vertical) mirror += ' scaleY(-1)';
+    return mirror || 'none';
+  }
+
+  addElement(type: 'image' | 'line' | 'box' | 'text') {
+    const newElement: ResumeElement = {
+      id: Math.random().toString(36).substring(7),
+      type,
+      x: 300,
+      y: 300,
+      width: type === 'line' ? 400 : 200,
+      height: type === 'line' ? 2 : (type === 'text' ? 100 : 200),
+      rotation: 0,
+      isLocked: false,
+      isVisible: true,
+      unit: 'px',
+      content: type === 'text' ? 'Double click to edit text...' : undefined,
+      url: type === 'image' ? 'https://picsum.photos/seed/' + Math.random() + '/400/400' : undefined,
+      style: { 
+        backgroundColor: type === 'line' ? '#09090b' : (type === 'box' ? 'transparent' : 'transparent'),
+        borderStyle: 'solid',
+        borderRadius: 0,
+        borderWidth: 1,
+        borderColor: '#e4e4e7',
+        fontSize: 14,
+        color: '#09090b',
+        fontWeight: '400',
+        textAlign: 'left'
+      }
+    };
+    this.resume.aesthetics.elements.unshift(newElement); // Add to top of stack
+    this.updateResume();
+    this.activeElementId.set(newElement.id);
+    this.activeSectionId.set(null);
+  }
+
+  removeElement(id: string) {
+    this.resume.aesthetics.elements = this.resume.aesthetics.elements.filter(el => el.id !== id);
+    this.updateResume();
+    if (this.activeElementId() === id) this.activeElementId.set(null);
+  }
+
+  getActiveElement() {
+    return this.resume.aesthetics.elements.find(el => el.id === this.activeElementId());
+  }
+
+  onDragEnd(event: CdkDragEnd, element: ResumeElement) {
+    const { x, y } = event.source.getFreeDragPosition();
+    // Element position is relative to its starting point in cdkDrag usually
+    // but we can update its state x and y.
+    // However, if we use [cdkDragFreeDragPosition] it's better.
+    // For now, let's just calculate the new position.
+    
+    // Actually, getFreeDragPosition returns the offset from start.
+    // I'll update the resume state with the NEW total position.
+    element.x += x;
+    element.y += y;
+    
+    // Reset the internal position of cdkDrag so it doesn't "double add" next time
+    event.source.reset();
+    
+    this.updateResume();
+  }
+
+  onImageUpload(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        const url = e.target.result;
+        const newElement: ResumeElement = {
+          id: Math.random().toString(36).substring(7),
+          type: 'image',
+          x: 200,
+          y: 200,
+          width: 200,
+          height: 200,
+          rotation: 0,
+          isLocked: false,
+          isVisible: true,
+          unit: 'px',
+          mirror: { horizontal: false, vertical: false },
+          url: url,
+          style: {}
+        };
+        this.resume.aesthetics.elements.unshift(newElement);
+        this.updateResume();
+        this.activeElementId.set(newElement.id);
+        this.activeSectionId.set(null);
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  moveForward(el: ResumeElement) {
+    const idx = this.resume.aesthetics.elements.indexOf(el);
+    if (idx < this.resume.aesthetics.elements.length - 1) {
+      this.resume.aesthetics.elements.splice(idx, 1);
+      this.resume.aesthetics.elements.splice(idx + 1, 0, el);
+      this.updateResume();
+    }
+  }
+
+  moveBackward(el: ResumeElement) {
+    const idx = this.resume.aesthetics.elements.indexOf(el);
+    if (idx > 0) {
+      this.resume.aesthetics.elements.splice(idx, 1);
+      this.resume.aesthetics.elements.splice(idx - 1, 0, el);
+      this.updateResume();
+    }
   }
 
   async enhanceSection(section: ResumeSection) {
