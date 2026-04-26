@@ -26,7 +26,7 @@ import { PaymentDialogComponent } from '../payment/payment';
              <mat-icon class="text-blue-600 scale-[2.5]">fingerprint</mat-icon>
           </div>
           <h2 class="text-xl font-black text-slate-800 mb-1 uppercase tracking-tight">{{ resume().name || 'ADMIN-USER' }}</h2>
-          <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 mb-6">{{ resume().email || 'AUTHENTICATED' }}</p>
+          <p class="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-6">{{ resume().email || 'AUTHENTICATED' }}</p>
           <button mat-stroked-button class="w-full !border-slate-200 !text-slate-600 font-bold text-sm h-12 rounded-xl">View Details</button>
         </mat-card>
 
@@ -46,7 +46,7 @@ import { PaymentDialogComponent } from '../payment/payment';
           <div class="p-8">
             <div class="flex items-center justify-between mb-10">
               <div>
-                <p class="text-[10px] font-black uppercase tracking-widest text-slate-300 mb-2">Member Service</p>
+                <p class="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-2">Member Service</p>
                 <h3 class="text-2xl font-black text-slate-800 uppercase tracking-tight">
                   @if (isPremium()) {
                     Executive Pro
@@ -67,23 +67,23 @@ import { PaymentDialogComponent } from '../payment/payment';
             </div>
 
             <div class="space-y-6">
-              <h3 class="text-[10px] font-black tracking-widest uppercase text-slate-300">Available Tiers</h3>
+              <h3 class="text-[10px] font-black tracking-widest uppercase text-zinc-400">Available Tiers</h3>
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div class="p-4 border border-slate-100 rounded-xl bg-slate-50/30 text-center">
                   <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Rapid</p>
                   <div class="text-lg font-black text-slate-800">127 KES</div>
-                  <p class="text-[8px] font-bold text-slate-300 uppercase">3 Days</p>
+                  <p class="text-[8px] font-bold text-zinc-400 uppercase">3 Days</p>
                 </div>
                 <div class="p-4 border-2 border-blue-100 rounded-xl bg-blue-50/10 text-center relative">
                   <div class="absolute -top-2 left-1/2 -translate-x-1/2 bg-blue-600 text-[8px] text-white px-2 py-0.5 rounded-full font-black uppercase">Popular</div>
                   <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Professional</p>
                   <div class="text-lg font-black text-slate-800">498 KES</div>
-                  <p class="text-[8px] font-bold text-slate-300 uppercase">1 Month</p>
+                  <p class="text-[8px] font-bold text-zinc-400 uppercase">1 Month</p>
                 </div>
                 <div class="p-4 border border-slate-100 rounded-xl bg-slate-50/30 text-center">
                   <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Executive</p>
                   <div class="text-lg font-black text-slate-800">1.2k KES</div>
-                  <p class="text-[8px] font-bold text-slate-300 uppercase">Yearly</p>
+                  <p class="text-[8px] font-bold text-zinc-400 uppercase">Yearly</p>
                 </div>
               </div>
             </div>
@@ -95,7 +95,7 @@ import { PaymentDialogComponent } from '../payment/payment';
           <h2 class="text-sm font-black uppercase tracking-widest text-slate-400 mb-6">Archive & Drafts</h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
             <div class="aspect-[3/4] border-2 border-dashed border-slate-200 rounded-3xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 hover:border-slate-300 transition-all group">
-              <mat-icon class="text-slate-300 scale-150 mb-4 group-hover:text-blue-400 transition-colors">add_to_photos</mat-icon>
+              <mat-icon class="text-zinc-400 scale-150 mb-4 group-hover:text-blue-400 transition-colors">add_to_photos</mat-icon>
               <span class="text-[10px] uppercase font-black tracking-widest text-slate-400">Initialize New</span>
             </div>
             
@@ -105,7 +105,7 @@ import { PaymentDialogComponent } from '../payment/payment';
                   <div>
                     <div class="h-4 w-12 bg-blue-100 rounded mb-4"></div>
                     <h4 class="text-sm font-black uppercase tracking-tight text-slate-800 truncate mb-1">Corporate_Draft_V1</h4>
-                    <p class="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Saved 12h ago</p>
+                    <p class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Saved 12h ago</p>
                   </div>
                   <div class="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-blue-600 opacity-0 group-hover:opacity-100 transition-all">
                     <span>Restore</span>

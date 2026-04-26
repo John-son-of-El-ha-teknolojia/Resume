@@ -73,7 +73,7 @@ import { PaymentDialogComponent } from '../payment/payment';
             <div class="space-y-12">
               @for (section of resume().sections; track section.id) {
                 <section>
-                  <h3 class="text-xs font-black tracking-[0.3em] uppercase text-slate-300 mb-6 flex items-center gap-4">
+                  <h3 class="text-xs font-black tracking-[0.3em] uppercase text-zinc-400 mb-6 flex items-center gap-4">
                     {{ section.title }}
                     <span class="flex-1 h-px bg-slate-100"></span>
                   </h3>
@@ -138,7 +138,7 @@ import { PaymentDialogComponent } from '../payment/payment';
             </header>
 
             <section>
-              <h2 class="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300 text-center mb-6">Executive Summary</h2>
+              <h2 class="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 text-center mb-6">Executive Summary</h2>
               <p class="leading-relaxed text-center max-w-2xl mx-auto italic text-lg text-slate-600">"{{ resume().summary }}"</p>
             </section>
 
@@ -159,9 +159,9 @@ import { PaymentDialogComponent } from '../payment/payment';
   styles: [`
     :host { display: block; }
     .min-h-inherit { min-height: inherit; }
-    mat-button-toggle-group { @apply bg-transparent !important; }
-    .mat-button-toggle-checked { @apply !bg-slate-900 !text-white rounded-lg !important; }
-    .mat-button-toggle { @apply text-slate-500 font-bold transition-all !border-none !important; }
+    mat-button-toggle-group { background-color: transparent !important; border: none !important; }
+    .mat-button-toggle-checked { background-color: rgb(15, 23, 42) !important; color: white !important; border-radius: 0.5rem !important; }
+    .mat-button-toggle { color: rgb(100, 116, 139) !important; font-weight: 700 !important; transition: all 0.2s !important; border: none !important; }
   `]
 })
 export class ViewerComponent {

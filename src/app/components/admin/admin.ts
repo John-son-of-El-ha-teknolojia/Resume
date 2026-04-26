@@ -31,9 +31,9 @@ export interface AdminStats {
               <div class="p-3 bg-blue-50 rounded-xl">
                 <mat-icon class="text-blue-600">people</mat-icon>
               </div>
-              <span class="text-[10px] font-black uppercase tracking-widest text-slate-300">Total Users</span>
+              <span class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Total Users</span>
             </div>
-            <div class="text-3xl font-black text-slate-800 tracking-tight">{{ stats()?.totalUsers }}</div>
+            <div class="text-3xl font-black text-slate-800 tracking-tight">{{ stats()?.totalUsers ?? 0 }}</div>
             <p class="text-[10px] font-bold text-slate-400 uppercase mt-2">Platform Global</p>
           </mat-card>
 
@@ -43,9 +43,9 @@ export interface AdminStats {
               <div class="p-3 bg-emerald-50 rounded-xl">
                 <mat-icon class="text-emerald-600">record_voice_over</mat-icon>
               </div>
-              <span class="text-[10px] font-black uppercase tracking-widest text-slate-300">Active Now</span>
+              <span class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Active Now</span>
             </div>
-            <div class="text-3xl font-black text-slate-800 tracking-tight">{{ stats()?.activeUsers }}</div>
+            <div class="text-3xl font-black text-slate-800 tracking-tight">{{ stats()?.activeUsers ?? 0 }}</div>
             <p class="text-[10px] font-bold text-emerald-500 uppercase mt-2 flex items-center gap-1">
               <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Streaming real-time
             </p>
@@ -57,7 +57,7 @@ export interface AdminStats {
               <div class="p-3 bg-indigo-50 rounded-xl">
                 <mat-icon class="text-indigo-600">payments</mat-icon>
               </div>
-              <span class="text-[10px] font-black uppercase tracking-widest text-slate-300">Net Revenue</span>
+              <span class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Net Revenue</span>
             </div>
             <div class="text-3xl font-black text-slate-800 tracking-tight">{{ stats()?.totalRevenue }} KES</div>
             <p class="text-[10px] font-bold text-slate-400 uppercase mt-2">Gross Platform Earnings</p>
@@ -69,7 +69,7 @@ export interface AdminStats {
               <div class="p-3 bg-amber-50 rounded-xl">
                 <mat-icon class="text-amber-600">insights</mat-icon>
               </div>
-              <span class="text-[10px] font-black uppercase tracking-widest text-slate-300">Conversion</span>
+              <span class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Conversion</span>
             </div>
             <div class="text-3xl font-black text-slate-800 tracking-tight">
               {{ (stats()?.totalRevenue || 0) > 0 ? (stats()?.totalRevenue || 0) / 127 : 0 | number:'1.0-1' }}
@@ -87,34 +87,34 @@ export interface AdminStats {
             
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
               <div class="p-6 bg-slate-50 rounded-3xl text-center border border-slate-100">
-                <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Rapid (3 Days)</p>
-                <div class="text-4xl font-black text-slate-800 tracking-tight">{{ stats()?.tierCounts['3days'] }}</div>
+            <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Rapid (3 Days)</p>
+                <div class="text-4xl font-black text-slate-800 tracking-tight">{{ stats()?.tierCounts?.['3days'] ?? 0 }}</div>
                 <div class="mt-4 h-1 bg-slate-200 rounded-full overflow-hidden">
-                  <div class="bg-blue-600 h-full" [style.width.%]="(stats()?.tierCounts['3days'] || 0) * 10"></div>
+                  <div class="bg-blue-600 h-full" [style.width.%]="(stats()?.tierCounts?.['3days'] || 0) * 10"></div>
                 </div>
               </div>
 
                <div class="p-6 bg-slate-50 rounded-3xl text-center border border-slate-100 relative group overflow-hidden">
                 <div class="absolute inset-0 bg-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Professional (Month)</p>
-                <div class="text-4xl font-black text-slate-800 tracking-tight">{{ stats()?.tierCounts['1month'] }}</div>
+                <div class="text-4xl font-black text-slate-800 tracking-tight">{{ stats()?.tierCounts?.['1month'] ?? 0 }}</div>
                 <div class="mt-4 h-1 bg-slate-200 rounded-full overflow-hidden">
-                  <div class="bg-blue-600 h-full" [style.width.%]="(stats()?.tierCounts['1month'] || 0) * 10"></div>
+                  <div class="bg-blue-600 h-full" [style.width.%]="(stats()?.tierCounts?.['1month'] || 0) * 10"></div>
                 </div>
               </div>
 
                <div class="p-6 bg-slate-50 rounded-3xl text-center border border-slate-100">
                 <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Executive (Year)</p>
-                <div class="text-4xl font-black text-slate-800 tracking-tight">{{ stats()?.tierCounts['1year'] }}</div>
+                <div class="text-4xl font-black text-slate-800 tracking-tight">{{ stats()?.tierCounts?.['1year'] ?? 0 }}</div>
                 <div class="mt-4 h-1 bg-slate-200 rounded-full overflow-hidden">
-                  <div class="bg-blue-600 h-full" [style.width.%]="(stats()?.tierCounts['1year'] || 0) * 10"></div>
+                  <div class="bg-blue-600 h-full" [style.width.%]="(stats()?.tierCounts?.['1year'] || 0) * 10"></div>
                 </div>
               </div>
             </div>
           </mat-card>
         </div>
       } @else {
-        <div class="flex flex-col items-center justify-center p-20 text-slate-300">
+        <div class="flex flex-col items-center justify-center p-20 text-zinc-400">
           <mat-icon class="animate-spin scale-[2.5] mb-8">sync</mat-icon>
           <p class="font-black uppercase tracking-widest">Aggregating Global Metrics...</p>
         </div>

@@ -1,0 +1,77 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 0. Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() { return request.auth != null; }
+    function isVerified() { return isSignedIn() && request.auth.token.email_verified == true; }
+    function isUser(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function isAdmin() { 
+      return isSignedIn() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'; 
+    }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+
+    // --- Entity Validations ---
+    function isValidUser(data) {
+      return data.email is string && data.email.size() <= 200 &&
+             data.lastActive is timestamp &&
+             data.role in ['user', 'admin'] &&
+             data.keys().hasAll(['email', 'lastActive', 'role']) && data.keys().size() == 3;
+    }
+
+    function isValidSubscription(data) {
+      return data.tier in ['3days', '1month', '1year'] &&
+             data.expires is timestamp &&
+             data.amount is number && data.amount >= 0 &&
+             data.createdAt is timestamp &&
+             data.keys().hasAll(['tier', 'expires', 'amount', 'createdAt']) && data.keys().size() == 4;
+    }
+
+    function isValidResume(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             data.content is map &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp &&
+             data.keys().hasAll(['userId', 'content', 'createdAt', 'updatedAt']) && data.keys().size() == 4;
+    }
+
+    // --- Collections ---
+
+    match /users/{userId} {
+      allow get: if isUser(userId) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isUser(userId) && isValidUser(incoming()) && incoming().role == 'user';
+      allow update: if (isUser(userId) && isValidUser(incoming()) && incoming().role == existing().role &&
+                        incoming().diff(existing()).affectedKeys().hasOnly(['lastActive', 'email'])) || isAdmin();
+    }
+
+    match /subscriptions/{userId} {
+      allow get: if isUser(userId) || isAdmin();
+      allow list: if isAdmin();
+      // Only system or admin can create/update subscriptions normally, 
+      // but for this app we'll allow the user to 'pay' and create their own record for demo purposes, 
+      // or we can restrict it to admin. Let's allow user to create if it matches their UID.
+      allow create: if isUser(userId) && isValidSubscription(incoming());
+      allow update: if isAdmin();
+    }
+
+    match /resumes/{resumeId} {
+      allow get: if isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidResume(incoming());
+      allow update: if isSignedIn() && existing().userId == request.auth.uid && isValidResume(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().updatedAt == request.time;
+      allow delete: if isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+    }
+  }
+}

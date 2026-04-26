@@ -6,7 +6,7 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import {join} from 'node:path';
-import { GoogleGenerativeAI } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -17,7 +17,7 @@ const angularApp = new AngularNodeAppEngine();
 
 // Simple in-memory storage for tracking free downloads, subscriptions, and users
 const downloadTracker = new Set<string>(); // "email:ip" keys
-const subscriptions = new Map<string, { tier: string; expires: number; amount: number }>();
+const activeSubscriptions = new Map<string, { tier: string; expires: number; amount: number }>();
 const users = new Map<string, { email: string; lastActive: number }>();
 
 // Login Endpoint
@@ -27,7 +27,7 @@ app.post('/api/auth/login', (req, res) => {
   
   users.set(email, { email, lastActive: Date.now() });
   
-  res.json({ 
+  return res.json({ 
     success: true, 
     email,
     isAdmin: email === 'curtisombai@gmail.com'
@@ -43,14 +43,14 @@ app.get('/api/admin/stats', (req, res) => {
   let totalRevenue = 0;
   const tierCounts: Record<string, number> = { '3days': 0, '1month': 0, '1year': 0 };
   
-  subscriptions.forEach(sub => {
+  activeSubscriptions.forEach(sub => {
     totalRevenue += sub.amount;
     if (tierCounts[sub.tier] !== undefined) {
       tierCounts[sub.tier]++;
     }
   });
 
-  res.json({
+  return res.json({
     totalUsers,
     activeUsers,
     totalRevenue,
@@ -80,10 +80,10 @@ app.post('/api/ai/enhance', async (req, res) => {
     const result = await model.generateContent(prompt);
     const improvedText = result.response.text().trim();
     
-    res.json({ improvedText });
+    return res.json({ improvedText });
   } catch (error) {
     console.error('AI Enhancement Error:', error);
-    res.status(500).json({ error: 'Failed to enhance text' });
+    return res.status(500).json({ error: 'Failed to enhance text' });
   }
 });
 
@@ -114,7 +114,7 @@ app.post('/api/resume/check-eligibility', (req, res) => {
   const ip = req.ip || 'unknown';
   const key = `${email}:${ip}`;
   
-  const sub = subscriptions.get(email);
+  const sub = activeSubscriptions.get(email);
   const isPremium = sub && sub.expires > Date.now();
   const hasFreeDownloadLeft = !downloadTracker.has(key);
   
@@ -139,7 +139,7 @@ app.post('/api/payment/initiate', (req, res) => {
     else if (tier === '1year') duration = 365 * 24 * 60 * 60 * 1000;
     
     if (duration > 0) {
-      subscriptions.set(email, { tier, expires: Date.now() + duration, amount: Number(amount) });
+      activeSubscriptions.set(email, { tier, expires: Date.now() + duration, amount: Number(amount) });
     }
 
     res.json({ 
@@ -157,7 +157,7 @@ app.get('/api/resume/pdf', (req, res) => {
   const key = `${email}:${ip}`;
 
   // Log "Free Download" if not premium and hasn't used free one
-  const sub = subscriptions.get(email);
+  const sub = activeSubscriptions.get(email);
   const isPremium = sub && sub.expires > Date.now();
   
   if (!isPremium) {

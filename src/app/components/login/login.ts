@@ -43,14 +43,18 @@ import { ResumeService } from '../../services/resume';
           <button mat-flat-button class="!bg-blue-600 !text-white w-full h-14 rounded-xl text-sm font-black uppercase tracking-widest shadow-xl shadow-blue-100"
                   [disabled]="loading()">
             @if (loading()) {
-              <mat-icon class="animate-spin mr-2">sync</mat-icon> Verifying...
+              <ng-container>
+                <mat-icon class="animate-spin mr-2">sync</mat-icon> Verifying...
+              </ng-container>
             } @else {
-              Sign In
+              <ng-container>
+                Sign In
+              </ng-container>
             }
           </button>
         </form>
 
-        <p class="text-center text-[10px] font-bold text-slate-300 uppercase tracking-widest mt-8">Professional Resume Builder v2.0</p>
+        <p class="text-center text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-8">Professional Resume Builder v2.0</p>
       </mat-card>
     </div>
   `,

@@ -24,7 +24,7 @@ import { ResumeService } from '../../services/resume';
     <div class="p-8 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-8">
         <h2 mat-dialog-title class="m-0 text-2xl font-black text-slate-800 uppercase tracking-tight">Unlock Premium</h2>
-        <button mat-icon-button (click)="close()" class="text-slate-300"><mat-icon>close</mat-icon></button>
+        <button mat-icon-button (click)="close()" class="text-zinc-400"><mat-icon>close</mat-icon></button>
       </div>
       
       <mat-dialog-content class="!p-0 border-none">
@@ -82,19 +82,23 @@ import { ResumeService } from '../../services/resume';
         <button mat-flat-button class="!bg-blue-600 !text-white w-full h-14 rounded-xl text-sm font-black uppercase tracking-widest shadow-xl shadow-blue-100" 
                 [disabled]="processing() || !phoneNumber" (click)="pay()">
           @if (processing()) {
-            <mat-icon class="animate-spin mr-2">sync</mat-icon> Authenticating...
+            <ng-container>
+              <mat-icon class="animate-spin mr-2">sync</mat-icon> Authenticating...
+            </ng-container>
           } @else {
-            Pay {{ selectedTier().priceKES }} KES
+            <ng-container>
+              Pay {{ selectedTier().priceKES }} KES
+            </ng-container>
           }
         </button>
-        <p class="text-[10px] font-bold text-slate-300 text-center uppercase tracking-widest w-full">Secure payment powered by Intasend</p>
+        <p class="text-[10px] font-bold text-zinc-400 text-center uppercase tracking-widest w-full">Secure payment powered by Intasend</p>
       </mat-dialog-actions>
     </div>
   `,
   styles: [`
     :host { display: block; }
-    ::ng-deep .mat-mdc-dialog-container { @apply !rounded-3xl !overflow-hidden; }
-    ::ng-deep .mat-mdc-dialog-surface { @apply !rounded-3xl !shadow-2xl; }
+    ::ng-deep .mat-mdc-dialog-container { border-radius: 1.5rem !important; overflow: hidden !important; }
+    ::ng-deep .mat-mdc-dialog-surface { border-radius: 1.5rem !important; box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25) !important; }
   `]
 })
 export class PaymentDialogComponent {

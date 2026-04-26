@@ -20,11 +20,15 @@ import { ResumeService } from '../../services/resume';
 
         @if (resumeService.isLoggedIn()) {
           <div class="hidden md:flex items-center gap-1">
-            <a routerLink="/writer" routerLinkActive="active-link" class="nav-link">Writer</a>
-            <a routerLink="/viewer" routerLinkActive="active-link" class="nav-link">Viewer</a>
-            <a routerLink="/account" routerLinkActive="active-link" class="nav-link">Account</a>
+            <a routerLink="/writer" routerLinkActive="!text-blue-600" [routerLinkActiveOptions]="{exact: true}" 
+               class="px-5 py-2 text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-all">Writer</a>
+            <a routerLink="/viewer" routerLinkActive="!text-blue-600" 
+               class="px-5 py-2 text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-all">Viewer</a>
+            <a routerLink="/account" routerLinkActive="!text-blue-600" 
+               class="px-5 py-2 text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-all">Account</a>
             @if (resumeService.isAdmin()) {
-              <a routerLink="/admin" routerLinkActive="active-link" class="nav-link">Admin</a>
+              <a routerLink="/admin" routerLinkActive="!text-blue-600" 
+                 class="px-5 py-2 text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-all">Admin</a>
             }
           </div>
 
@@ -46,12 +50,6 @@ import { ResumeService } from '../../services/resume';
   `,
   styles: [`
     :host { display: block; }
-    .nav-link {
-      @apply px-5 py-2 text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-all;
-    }
-    .active-link {
-      @apply text-blue-600;
-    }
   `]
 })
 export class NavbarComponent {

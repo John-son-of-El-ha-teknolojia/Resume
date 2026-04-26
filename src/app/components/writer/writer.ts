@@ -39,9 +39,13 @@ import { ResumeService, ResumeSection } from '../../services/resume';
           <button mat-flat-button (click)="fileInput.click()" 
                   class="!bg-white !text-blue-600 !border !border-blue-100 !rounded-xl h-12 px-6 font-black text-xs uppercase tracking-widest shadow-sm shadow-blue-50">
             @if (isExtracting()) {
-              <mat-icon class="animate-spin mr-2">sync</mat-icon> Analyzing...
+              <ng-container>
+                <mat-icon class="animate-spin mr-2">sync</mat-icon> Analyzing...
+              </ng-container>
             } @else {
-              <mat-icon class="mr-2">cloud_upload</mat-icon> Upload Existing (Premium)
+              <ng-container>
+                <mat-icon class="mr-2">cloud_upload</mat-icon> Upload Existing (Premium)
+              </ng-container>
             }
           </button>
         </div>
@@ -106,7 +110,7 @@ import { ResumeService, ResumeSection } from '../../services/resume';
              <div class="p-4 border-b border-slate-50 bg-slate-50/30 flex items-center justify-between">
                <input class="text-sm font-black uppercase tracking-widest bg-transparent border-none focus:outline-none focus:ring-0 text-slate-600" 
                       [(ngModel)]="section.title" (ngModelChange)="updateResume()">
-               <button mat-icon-button (click)="removeSection(section.id)" class="text-slate-300 hover:text-red-500 transition-colors">
+               <button mat-icon-button (click)="removeSection(section.id)" class="text-zinc-400 hover:text-red-500 transition-colors">
                   <mat-icon class="text-sm">close</mat-icon>
                </button>
              </div>
@@ -143,9 +147,10 @@ import { ResumeService, ResumeSection } from '../../services/resume';
     </div>
   `,
   styles: [`
+    @reference "tailwindcss";
     :host { display: block; }
     textarea { min-height: 120px; }
-    input::placeholder, textarea::placeholder { @apply text-slate-300; }
+    input::placeholder, textarea::placeholder { @apply text-zinc-400; }
   `]
 })
 export class WriterComponent {

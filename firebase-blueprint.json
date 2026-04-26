@@ -1,0 +1,53 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Platform user metadata and session tracking",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "lastActive": { "type": "string", "format": "date-time" },
+        "role": { "type": "string", "enum": ["user", "admin"] }
+      },
+      "required": ["email", "lastActive", "role"]
+    },
+    "Subscription": {
+      "title": "Subscription",
+      "description": "User subscription details and payment tracking",
+      "type": "object",
+      "properties": {
+        "tier": { "type": "string", "enum": ["3days", "1month", "1year"] },
+        "expires": { "type": "string", "format": "date-time" },
+        "amount": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["tier", "expires", "amount", "createdAt"]
+    },
+    "Resume": {
+      "title": "Resume",
+      "description": "Professional resume data stored by the user",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "content": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "content", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles and roles"
+    },
+    "/subscriptions/{userId}": {
+      "schema": "Subscription",
+      "description": "Active and past subscription records"
+    },
+    "/resumes/{resumeId}": {
+      "schema": "Resume",
+      "description": "User created resumes"
+    }
+  }
+}
