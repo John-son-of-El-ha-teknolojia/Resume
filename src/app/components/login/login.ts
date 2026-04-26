@@ -5,13 +5,13 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { ResumeService } from '../../services/resume';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatCardModule, MatButtonModule, MatInputModule, MatIconModule],
+  imports: [CommonModule, FormsModule, MatCardModule, MatButtonModule, MatInputModule, MatIconModule, RouterModule],
   template: `
     <div class="min-h-screen flex items-center justify-center bg-slate-50 p-6">
       <mat-card class="w-full max-w-md p-8 !rounded-3xl !border-none shadow-2xl">
@@ -54,7 +54,11 @@ import { ResumeService } from '../../services/resume';
           </button>
         </form>
 
-        <p class="text-center text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-8">Professional Resume Builder v2.0</p>
+        <p class="text-center text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-8">
+          Don't have an account? <a routerLink="/signup" class="text-blue-600 hover:underline">Sign Up</a>
+        </p>
+
+        <p class="text-center text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-4">Professional Resume Builder v2.0</p>
       </mat-card>
     </div>
   `,
