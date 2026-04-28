@@ -40,7 +40,7 @@ export interface ResumeElement {
   isVisible?: boolean;
   mirror?: { horizontal: boolean; vertical: boolean };
   unit?: 'px' | 'cm' | 'mm';
-  style?: any;
+  style?: Record<string, any>;
 }
 
 export interface Aesthetics {
@@ -49,6 +49,11 @@ export interface Aesthetics {
   backgroundColor: string;
   fontSize: number;
   elements: ResumeElement[];
+}
+
+export interface Skill {
+  name: string;
+  level: number; // 0-100
 }
 
 export interface ResumeData {
@@ -60,10 +65,11 @@ export interface ResumeData {
   summary: string;
   sections: ResumeSection[];
   experience: Experience[];
-  education: any[];
+  education: string[];
   referees: Referee[];
-  skills: string[];
+  skills: Skill[];
   hobbies: string[];
+  website?: string;
   aesthetics: Aesthetics;
   metadataStyle?: {
     border?: string;
@@ -87,6 +93,11 @@ export interface CoverLetterData {
 })
 export class ResumeService {
   private http = inject(HttpClient);
+  
+  // History management
+  private history: string[] = [];
+  private redoStack: string[] = [];
+  private maxHistory = 50;
 
   // State
   resumeState = signal<ResumeData>({
@@ -102,6 +113,7 @@ export class ResumeService {
     referees: [],
     skills: [],
     hobbies: [],
+    website: '',
     metadataStyle: {
       border: 'none',
       padding: 0,
@@ -116,6 +128,34 @@ export class ResumeService {
       elements: []
     }
   });
+
+  commit() {
+    const currentState = JSON.stringify(this.resumeState());
+    if (this.history.length > 0 && this.history[this.history.length - 1] === currentState) {
+      return;
+    }
+    this.history.push(currentState);
+    if (this.history.length > this.maxHistory) {
+      this.history.shift();
+    }
+    this.redoStack = [];
+    console.log('State committed to history');
+  }
+
+  undo() {
+    if (this.history.length < 2) return;
+    const current = this.history.pop()!;
+    this.redoStack.push(current);
+    const previous = this.history[this.history.length - 1];
+    this.resumeState.set(JSON.parse(previous));
+  }
+
+  redo() {
+    if (this.redoStack.length === 0) return;
+    const next = this.redoStack.pop()!;
+    this.history.push(next);
+    this.resumeState.set(JSON.parse(next));
+  }
 
   coverLetterState = signal<CoverLetterData>({
     jobDescription: '',

@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, ElementRef, ViewChild, AfterViewInit, HostListener } from '@angular/core';
+import { Component, inject, signal, ElementRef, ViewChild, AfterViewInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,9 +8,39 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSliderModule } from '@angular/material/slider';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { DragDropModule, CdkDragEnd } from '@angular/cdk/drag-drop';
 import { ResumeService, ResumeSection, ResumeElement } from '../../services/resume';
 import { PaymentDialogComponent } from '../payment/payment';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import * as QRCode from 'qrcode';
+
+declare const GEMINI_API_KEY: string;
+
+const MOOD_PRESETS: Record<string, any> = {
+  executive: {
+    fontFamily: 'Playfair Display',
+    primaryColor: '#0f172a',
+    backgroundColor: '#ffffff',
+    fontSize: 14,
+    metadataStyle: { border: 'solid', padding: 20, x: 0, y: 0 }
+  },
+  creative: {
+    fontFamily: 'Outfit',
+    primaryColor: '#4f46e5',
+    backgroundColor: '#f8fafc',
+    fontSize: 15,
+    metadataStyle: { border: 'dashed', padding: 30, x: 5, y: -10 }
+  },
+  startup: {
+    fontFamily: 'Inter',
+    primaryColor: '#10b981',
+    backgroundColor: '#ffffff',
+    fontSize: 13,
+    metadataStyle: { border: 'none', padding: 0, x: 0, y: 0 }
+  }
+};
 
 @Component({
   selector: 'app-studio',
@@ -24,6 +54,8 @@ import { PaymentDialogComponent } from '../payment/payment';
     MatTabsModule,
     MatButtonToggleModule,
     MatSliderModule,
+    MatProgressBarModule,
+    MatProgressSpinnerModule,
     DragDropModule
   ],
   template: `
@@ -50,10 +82,12 @@ import { PaymentDialogComponent } from '../payment/payment';
           
           <div class="h-6 w-px bg-zinc-200"></div>
 
-          <button *ngIf="isPremium()" mat-button (click)="saveToCloud()" 
-                  class="!text-xs !font-black !uppercase !tracking-widest !text-emerald-600 hover:!bg-emerald-50 transition-all">
-            <mat-icon class="mr-1">cloud_upload</mat-icon> Save to Cloud
-          </button>
+          @if (isPremium()) {
+            <button mat-button (click)="saveToCloud()" 
+                    class="!text-xs !font-black !uppercase !tracking-widest !text-emerald-600 hover:!bg-emerald-50 transition-all">
+              <mat-icon class="mr-1">cloud_upload</mat-icon> Save to Cloud
+            </button>
+          }
 
           <div class="h-6 w-px bg-zinc-200"></div>
           
@@ -87,19 +121,19 @@ import { PaymentDialogComponent } from '../payment/payment';
                     <h3 class="text-[10px] font-black uppercase tracking-widest text-zinc-400 pl-1">Identity</h3>
                     <div class="grid grid-cols-1 gap-5">
                       <div class="space-y-2 group">
-                        <label class="text-[10px] font-black uppercase tracking-widest text-zinc-300 group-focus-within:text-zinc-900 transition-colors">Field: Full Name</label>
-                        <input class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 text-sm font-bold text-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900/5 focus:border-zinc-900 transition-all" 
+                        <label for="fullName" class="text-[10px] font-black uppercase tracking-widest text-zinc-300 group-focus-within:text-zinc-900 transition-colors">Field: Full Name</label>
+                        <input id="fullName" name="fullName" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 text-sm font-bold text-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900/5 focus:border-zinc-900 transition-all" 
                                [(ngModel)]="resume.name" (ngModelChange)="updateResume()">
                       </div>
                       <div class="space-y-2 group">
-                        <label class="text-[10px] font-black uppercase tracking-widest text-zinc-300 group-focus-within:text-zinc-900 transition-colors">Field: Professional Email</label>
-                        <input class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 text-sm font-bold text-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900/5 focus:border-zinc-900 transition-all" 
+                        <label for="email" class="text-[10px] font-black uppercase tracking-widest text-zinc-300 group-focus-within:text-zinc-900 transition-colors">Field: Professional Email</label>
+                        <input id="email" name="email" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 text-sm font-bold text-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900/5 focus:border-zinc-900 transition-all" 
                                [(ngModel)]="resume.email" (ngModelChange)="updateResume()">
                       </div>
                       <div class="grid grid-cols-3 gap-4">
                         <div class="space-y-2 group">
-                          <label class="text-[10px] font-black uppercase tracking-widest text-zinc-300 group-focus-within:text-zinc-900 transition-colors">Code</label>
-                          <select class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 text-xs font-bold text-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900/5 transition-all appearance-none"
+                          <label for="countryCode" class="text-[10px] font-black uppercase tracking-widest text-zinc-300 group-focus-within:text-zinc-900 transition-colors">Code</label>
+                          <select id="countryCode" name="countryCode" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 text-xs font-bold text-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900/5 transition-all appearance-none"
                                   [(ngModel)]="resume.phoneCountryCode" (ngModelChange)="updateResume()">
                             <option value="+1">+1 (US)</option>
                             <option value="+44">+44 (UK)</option>
@@ -108,8 +142,8 @@ import { PaymentDialogComponent } from '../payment/payment';
                           </select>
                         </div>
                         <div class="col-span-2 space-y-2 group">
-                          <label class="text-[10px] font-black uppercase tracking-widest text-zinc-300 group-focus-within:text-zinc-900 transition-colors">Phone Number</label>
-                          <input class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 text-sm font-bold text-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900/5 focus:border-zinc-900 transition-all" 
+                          <label for="phone" class="text-[10px] font-black uppercase tracking-widest text-zinc-300 group-focus-within:text-zinc-900 transition-colors">Phone Number</label>
+                          <input id="phone" name="phone" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 text-sm font-bold text-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900/5 focus:border-zinc-900 transition-all" 
                                  [(ngModel)]="resume.phone" (ngModelChange)="updateResume()">
                         </div>
                       </div>
@@ -286,6 +320,123 @@ import { PaymentDialogComponent } from '../payment/payment';
               <mat-tab>
                 <ng-template mat-tab-label>
                   <div class="flex items-center gap-2 py-4">
+                    <mat-icon class="text-sm">auto_awesome</mat-icon>
+                    <span class="text-[10px] uppercase font-black tracking-widest">Coach</span>
+                  </div>
+                </ng-template>
+                <div class="p-8 space-y-10">
+                   <div class="p-6 bg-zinc-900 rounded-3xl space-y-6 text-white overflow-hidden relative">
+                      <div class="absolute -top-10 -right-10 w-40 h-40 bg-zinc-800 rounded-full blur-3xl opacity-50"></div>
+                      <div class="relative">
+                        <div class="flex items-center gap-3 mb-6">
+                           <div class="w-10 h-10 bg-zinc-800 rounded-xl flex items-center justify-center text-emerald-400">
+                              <mat-icon>auto_awesome</mat-icon>
+                           </div>
+                           <div>
+                              <p class="text-[8px] font-black uppercase tracking-widest text-zinc-500">AI Intelligence</p>
+                              <p class="text-xs font-black uppercase tracking-widest">Review & Optimize</p>
+                           </div>
+                        </div>
+                        
+                        @if (isAnalyzing()) {
+                          <div class="space-y-4 py-8 text-center animate-in fade-in duration-500">
+                             <mat-spinner diameter="30" class="mx-auto"></mat-spinner>
+                             <p class="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">Analyzing your professional DNA...</p>
+                          </div>
+                        } @else if (coachReport) {
+                          <div class="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+                             <!-- ATS Score -->
+                             <div class="space-y-2">
+                                <div class="flex justify-between items-end">
+                                   <span class="text-[9px] font-black uppercase tracking-widest text-zinc-400">ATS Correlation Score</span>
+                                   <span class="text-2xl font-black text-emerald-400">{{ coachReport.atsScore }}%</span>
+                                </div>
+                                <mat-progress-bar mode="determinate" [value]="coachReport.atsScore" class="h-1 rounded-full !bg-zinc-800">
+                                </mat-progress-bar>
+                             </div>
+
+                             <!-- Critical Suggestions -->
+                             <div class="space-y-4">
+                               <p class="text-[9px] font-black uppercase tracking-widest text-zinc-400">Optimization Targets</p>
+                               <div class="space-y-3">
+                                  @for (item of coachReport.suggestions; track item) {
+                                    <div class="flex gap-3 items-start p-3 bg-zinc-800 rounded-xl">
+                                       <mat-icon class="text-emerald-400 scale-75 pt-1">check_circle</mat-icon>
+                                       <p class="text-[10px] leading-relaxed text-zinc-300 font-medium">{{ item }}</p>
+                                    </div>
+                                  }
+                               </div>
+                             </div>
+
+                             <button mat-flat-button class="w-full !bg-white !text-zinc-900 !rounded-xl h-12 !text-[9px] !font-black !uppercase !tracking-widest" (click)="runCoachAnalysis()">
+                                Re-verify Blueprint
+                             </button>
+                          </div>
+                        } @else {
+                          <div class="space-y-8 py-4">
+                            <p class="text-xs text-zinc-400 leading-relaxed font-bold">
+                              Our AI agent will scan your resume against 500+ ATS algorithms and suggest high-impact verbs to reshape your bullet points.
+                            </p>
+                            <button mat-flat-button class="w-full !bg-white !text-zinc-900 !rounded-xl h-12 !text-[9px] !font-black !uppercase !tracking-widest" (click)="runCoachAnalysis()">
+                               Generate Report
+                            </button>
+                          </div>
+                        }
+                      </div>
+                   </div>
+
+                   <div class="space-y-4">
+                      <h3 class="text-[10px] font-black uppercase tracking-widest text-zinc-400 px-1">Mapping to Job Post</h3>
+                      <div class="p-5 bg-white border border-zinc-100 rounded-2xl space-y-4 shadow-sm">
+                         <textarea class="w-full h-32 bg-zinc-50 border border-zinc-50 rounded-xl p-4 text-[10px] font-bold text-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-900 focus:bg-white transition-all resize-none" 
+                                   [(ngModel)]="jobUrl" placeholder="Paste the job description or link here..."></textarea>
+                         <button mat-stroked-button class="w-full !border-zinc-200 !text-zinc-600 !rounded-xl h-10 !text-[8px] !font-black !uppercase !tracking-widest"
+                                 (click)="mapToJob()" [disabled]="isMapping()">
+                            @if (isMapping()) {
+                               AI Repainting...
+                            } @else {
+                               Strategize Resume Map
+                            }
+                         </button>
+                      </div>
+                   </div>
+                </div>
+              </mat-tab>
+              
+              <mat-tab>
+                <ng-template mat-tab-label>
+                  <div class="flex items-center gap-2 py-4">
+                    <mat-icon class="text-sm">bar_chart</mat-icon>
+                    <span class="text-[10px] uppercase font-black tracking-widest">Skills</span>
+                  </div>
+                </ng-template>
+                <div class="p-8 space-y-8">
+                   <div class="space-y-4">
+                      <div class="flex items-center justify-between pl-1">
+                        <h3 class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Technical Stack</h3>
+                        <button mat-icon-button (click)="addSkill()" class="hover:bg-zinc-100 scale-75"><mat-icon>add</mat-icon></button>
+                      </div>
+                      <div class="space-y-3">
+                         @for (skill of resume.skills; track skill.name) {
+                           <div class="p-4 bg-zinc-50 border border-zinc-100 rounded-2xl space-y-2 group">
+                              <div class="flex items-center justify-between">
+                                 <input [(ngModel)]="skill.name" (ngModelChange)="updateResume()" class="bg-transparent border-none p-0 text-[10px] font-black uppercase tracking-widest focus:ring-0">
+                                 <button mat-icon-button (click)="removeSkill(skill.name)" class="scale-50 text-zinc-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"><mat-icon>delete</mat-icon></button>
+                              </div>
+                              <div class="flex items-center gap-2">
+                                 <input type="range" [(ngModel)]="skill.level" (ngModelChange)="updateResume()" class="flex-1 accent-zinc-900 h-1">
+                                 <span class="text-[8px] font-black text-zinc-400">{{ skill.level }}%</span>
+                              </div>
+                           </div>
+                         }
+                      </div>
+                   </div>
+                </div>
+              </mat-tab>
+
+              <mat-tab>
+                <ng-template mat-tab-label>
+                  <div class="flex items-center gap-2 py-4">
                     <mat-icon class="text-sm">brush</mat-icon>
                     <span class="text-[10px] uppercase font-black tracking-widest">Aesthetics</span>
                   </div>
@@ -308,6 +459,24 @@ import { PaymentDialogComponent } from '../payment/payment';
                             <span class="text-[9px] font-black uppercase tracking-widest">{{ tmpl.name }}</span>
                           </div>
                         }
+                     </div>
+                  </div>
+
+                  <div class="space-y-4 pt-8 border-t border-zinc-100">
+                     <h3 class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Style Moods</h3>
+                     <div class="grid grid-cols-3 gap-2">
+                        <button (click)="applyMood('executive')" class="p-4 bg-zinc-50 border border-zinc-100 rounded-xl hover:bg-zinc-900 hover:text-white transition-all text-center space-y-2">
+                           <mat-icon class="scale-75">business</mat-icon>
+                           <p class="text-[8px] font-black uppercase tracking-tighter">Executive</p>
+                        </button>
+                        <button (click)="applyMood('creative')" class="p-4 bg-zinc-50 border border-zinc-100 rounded-xl hover:bg-zinc-900 hover:text-white transition-all text-center space-y-2">
+                           <mat-icon class="scale-75">brush</mat-icon>
+                           <p class="text-[8px] font-black uppercase tracking-tighter">Creative</p>
+                        </button>
+                        <button (click)="applyMood('startup')" class="p-4 bg-zinc-50 border border-zinc-100 rounded-xl hover:bg-zinc-900 hover:text-white transition-all text-center space-y-2">
+                           <mat-icon class="scale-75">rocket_launch</mat-icon>
+                           <p class="text-[8px] font-black uppercase tracking-tighter">Startup</p>
+                        </button>
                      </div>
                   </div>
 
@@ -414,24 +583,24 @@ import { PaymentDialogComponent } from '../payment/payment';
                       
                       @if (el.type === 'image') {
                         <img [src]="el.url" class="w-full h-full object-cover rounded-sm shadow-sm" referrerpolicy="no-referrer"
-                             [style.transform]="getImageMirror(el)">
+                             [style.transform]="getImageMirror(el)" alt="Canvas element">
                       } @else if (el.type === 'line') {
-                        <div class="w-full h-full" [style.background-color]="el.style?.backgroundColor" 
-                             [class.border-t-2]="el.style?.borderStyle === 'dashed' || el.style?.borderStyle === 'dotted'"
-                             [style.border-top-style]="el.style?.borderStyle || 'solid'"
-                             [style.border-top-color]="el.style?.backgroundColor"></div>
+                        <div class="w-full h-full" [style.background-color]="el.style?.['backgroundColor']" 
+                             [class.border-t-2]="el.style?.['borderStyle'] === 'dashed' || el.style?.['borderStyle'] === 'dotted'"
+                             [style.border-top-style]="el.style?.['borderStyle'] || 'solid'"
+                             [style.border-top-color]="el.style?.['backgroundColor']"></div>
                       } @else if (el.type === 'box') {
-                        <div class="w-full h-full border border-zinc-200" [style.background-color]="el.style?.backgroundColor"
-                             [style.border-radius.px]="el.style?.borderRadius || 0"
-                             [style.border-width.px]="el.style?.borderWidth || 1"
-                             [style.border-style]="el.style?.borderStyle || 'solid'"
-                             [style.border-color]="el.style?.borderColor || '#e4e4e7'"></div>
+                        <div class="w-full h-full border border-zinc-200" [style.background-color]="el.style?.['backgroundColor']"
+                             [style.border-radius.px]="el.style?.['borderRadius'] || 0"
+                             [style.border-width.px]="el.style?.['borderWidth'] || 1"
+                             [style.border-style]="el.style?.['borderStyle'] || 'solid'"
+                             [style.border-color]="el.style?.['borderColor'] || '#e4e4e7'"></div>
                       } @else if (el.type === 'text') {
                         <div class="w-full h-full p-2 outline-none whitespace-pre-wrap select-text" 
-                             [style.font-size.px]="el.style?.fontSize || 12"
-                             [style.color]="el.style?.color || '#09090b'"
-                             [style.font-weight]="el.style?.fontWeight || '400'"
-                             [style.text-align]="el.style?.textAlign || 'left'"
+                             [style.font-size.px]="el.style?.['fontSize'] || 12"
+                             [style.color]="el.style?.['color'] || '#09090b'"
+                             [style.font-weight]="el.style?.['fontWeight'] || '400'"
+                             [style.text-align]="el.style?.['textAlign'] || 'left'"
                              [contentEditable]="!el.isLocked"
                              (blur)="el.content = $any($event.target).innerText; updateResume()">{{ el.content }}</div>
                       }
@@ -511,6 +680,28 @@ import { PaymentDialogComponent } from '../payment/payment';
                       </section>
                     }
 
+                    @if (resume.skills.length > 0) {
+                      <section class="space-y-8">
+                        <h3 class="text-xs font-black tracking-[0.3em] uppercase text-zinc-400 mb-6 flex items-center gap-6">
+                          Proficiencies
+                          <span class="flex-1 h-px bg-zinc-100"></span>
+                        </h3>
+                        <div class="grid grid-cols-3 gap-x-12 gap-y-10 pl-8">
+                          @for (skill of resume.skills; track skill.name) {
+                            <div class="space-y-3">
+                               <div class="flex justify-between items-end">
+                                  <span class="text-[10px] font-black uppercase tracking-widest text-zinc-900">{{ skill.name }}</span>
+                                  <span class="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">{{ skill.level }}%</span>
+                               </div>
+                               <div class="h-1 bg-zinc-100 rounded-full overflow-hidden">
+                                  <div class="h-full bg-zinc-900 transition-all duration-1000" [style.width.%]="skill.level" [style.background-color]="resume.aesthetics.primaryColor"></div>
+                               </div>
+                            </div>
+                          }
+                        </div>
+                      </section>
+                    }
+
                     @for (section of resume.sections; track section.id) {
                       <section class="group">
                         <h3 class="text-xs font-black tracking-[0.3em] uppercase text-zinc-400 mb-6 flex items-center gap-6">
@@ -540,7 +731,12 @@ import { PaymentDialogComponent } from '../payment/payment';
                     }
                   </div>
                   
-                  <footer class="pt-20 text-center opacity-20">
+                  
+                  <footer class="pt-20 text-center opacity-20 flex flex-col items-center gap-4">
+                    @if (qrCodeUrl()) {
+                       <img [src]="qrCodeUrl()" class="w-16 h-16 grayscale">
+                       <p class="text-[6px] font-black uppercase tracking-widest text-zinc-900 mb-2">Scan for Portfolio Link</p>
+                    }
                     <p class="text-[8px] font-black uppercase tracking-[0.4em] text-zinc-900">Generated via Creative Studio System</p>
                   </footer>
                 </div>
@@ -714,8 +910,8 @@ import { PaymentDialogComponent } from '../payment/payment';
                              <div class="space-y-1">
                                 <label class="text-[8px] font-black text-zinc-300 uppercase">Background Color</label>
                                 <div class="flex gap-2">
-                                   <input type="color" [(ngModel)]="activeEl.style.backgroundColor" (ngModelChange)="updateResume()" class="w-12 h-10 rounded-lg cursor-pointer bg-white border border-zinc-100">
-                                   <input type="text" [(ngModel)]="activeEl.style.backgroundColor" (ngModelChange)="updateResume()" class="flex-1 bg-zinc-50 border border-zinc-100 rounded-lg p-3 text-[10px] font-black uppercase tracking-widest text-zinc-600">
+                                   <input type="color" [(ngModel)]="activeEl.style!['backgroundColor']" (ngModelChange)="updateResume()" class="w-12 h-10 rounded-lg cursor-pointer bg-white border border-zinc-100">
+                                   <input type="text" [(ngModel)]="activeEl.style!['backgroundColor']" (ngModelChange)="updateResume()" class="flex-1 bg-zinc-50 border border-zinc-100 rounded-lg p-3 text-[10px] font-black uppercase tracking-widest text-zinc-600">
                                 </div>
                              </div>
                           </div>
@@ -726,16 +922,16 @@ import { PaymentDialogComponent } from '../payment/payment';
                              <div class="grid grid-cols-2 gap-2">
                                 <div class="space-y-1">
                                    <label class="text-[8px] font-black text-zinc-300 uppercase">Border Radius</label>
-                                   <input type="number" [(ngModel)]="activeEl.style.borderRadius" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-lg p-2 text-xs font-bold">
+                                   <input type="number" [(ngModel)]="activeEl.style!['borderRadius']" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-lg p-2 text-xs font-bold">
                                 </div>
                                 <div class="space-y-1">
                                    <label class="text-[8px] font-black text-zinc-300 uppercase">Border Width</label>
-                                   <input type="number" [(ngModel)]="activeEl.style.borderWidth" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-lg p-2 text-xs font-bold">
+                                   <input type="number" [(ngModel)]="activeEl.style!['borderWidth']" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-lg p-2 text-xs font-bold">
                                 </div>
                              </div>
                              <div class="space-y-1">
                                 <label class="text-[8px] font-black text-zinc-300 uppercase">Border Color</label>
-                                <input type="color" [(ngModel)]="activeEl.style.borderColor" (ngModelChange)="updateResume()" class="w-full h-8 rounded-md cursor-pointer">
+                                <input type="color" [(ngModel)]="activeEl.style!['borderColor']" (ngModelChange)="updateResume()" class="w-full h-8 rounded-md cursor-pointer">
                              </div>
                           </div>
                        }
@@ -745,11 +941,11 @@ import { PaymentDialogComponent } from '../payment/payment';
                              <div class="grid grid-cols-2 gap-2">
                                <div class="space-y-1">
                                   <label class="text-[8px] font-black text-zinc-300 uppercase">Font Size</label>
-                                  <input type="number" [(ngModel)]="activeEl.style.fontSize" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-lg p-2 text-xs font-bold">
+                                  <input type="number" [(ngModel)]="activeEl.style!['fontSize']" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-lg p-2 text-xs font-bold">
                                </div>
                                <div class="space-y-1">
                                   <label class="text-[8px] font-black text-zinc-300 uppercase">Text Align</label>
-                                  <select [(ngModel)]="activeEl.style.textAlign" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-lg p-2 text-[10px] font-black uppercase">
+                                  <select [(ngModel)]="activeEl.style!['textAlign']" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-lg p-2 text-[10px] font-black uppercase">
                                      <option value="left">Left</option>
                                      <option value="center">Center</option>
                                      <option value="right">Right</option>
@@ -758,7 +954,7 @@ import { PaymentDialogComponent } from '../payment/payment';
                              </div>
                              <div class="space-y-1">
                                 <label class="text-[8px] font-black text-zinc-300 uppercase">Text Color</label>
-                                <input type="color" [(ngModel)]="activeEl.style.color" (ngModelChange)="updateResume()" class="w-full h-8 rounded-md cursor-pointer">
+                                <input type="color" [(ngModel)]="activeEl.style!['color']" (ngModelChange)="updateResume()" class="w-full h-8 rounded-md cursor-pointer">
                              </div>
                           </div>
                        }
@@ -878,12 +1074,19 @@ export class StudioComponent implements AfterViewInit {
 
   @ViewChild('canvasContainer') canvasContainer!: ElementRef;
   
+  isAnalyzing = signal(false);
+  isMapping = signal(false);
+  coachReport: { atsScore: number; suggestions: string[] } | null = null;
+  jobUrl = '';
+  qrCodeUrl = signal('');
+
   onImageTrigger(input: HTMLInputElement) {
     input.click();
   }
 
   ngAfterViewInit() {
     this.autoScale();
+    this.generateQRCode();
   }
 
   @HostListener('window:resize')
@@ -902,6 +1105,8 @@ export class StudioComponent implements AfterViewInit {
 
   updateResume() {
     this.resumeService.updateResume(this.resume);
+    this.resumeService.commit();
+    this.generateQRCode();
   }
 
   calculateDuration(exp: any): string {
@@ -957,21 +1162,97 @@ export class StudioComponent implements AfterViewInit {
     this.updateResume();
   }
 
-  saveToCloud() {
-    // In a real app, this would use Firestore
-    console.log('Saving to cloud...', this.resume);
-    // Mock success
-    const btn = event?.target as HTMLElement;
-    if (btn) btn.innerText = 'Saved!';
-    setTimeout(() => { if (btn) btn.innerText = 'Save to Cloud'; }, 3000);
+  async runCoachAnalysis() {
+    if (!GEMINI_API_KEY) return;
+    this.isAnalyzing.set(true);
+    try {
+      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+      const prompt = `Analyze this resume data for ATS scoring and refinement:
+      ${JSON.stringify(this.resume)}
+      Provide a JSON response with 'atsScore' (0-100) and 'suggestions' (string array of action-verb improvements).`;
+      
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+      const cleanJson = text.replace(/```json|```/g, "").trim();
+      this.coachReport = JSON.parse(cleanJson);
+    } catch (e) {
+      console.error("Coach analysis failed", e);
+    } finally {
+      this.isAnalyzing.set(false);
+    }
+  }
+
+  async mapToJob() {
+    if (!GEMINI_API_KEY || !this.jobUrl) return;
+    this.isMapping.set(true);
+    try {
+      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+      const prompt = `Rewrite elements of this resume to better map to this job description: ${this.jobUrl}. 
+      Target specifically the Summary and Key projects. 
+      Original Data: ${JSON.stringify(this.resume)}
+      Return ONLY the updated ResumeData JSON object.`;
+      
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+      const cleanJson = text.replace(/```json|```/g, "").trim();
+      const updatedData = JSON.parse(cleanJson);
+      this.resume = { ...this.resume, ...updatedData };
+      this.updateResume();
+    } catch (e) {
+      console.error("Job mapping failed", e);
+    } finally {
+      this.isMapping.set(false);
+    }
+  }
+
+  addSkill() {
+    this.resume.skills = [...(this.resume.skills || []), { name: 'New Skill', level: 50 }];
+    this.updateResume();
+  }
+
+  removeSkill(name: string) {
+    this.resume.skills = this.resume.skills.filter(s => s.name !== name);
+    this.updateResume();
+  }
+
+  async generateQRCode() {
+    const url = this.resume.website || `https://linkedin.com/in/${this.resume.name.replace(/\s/g, '').toLowerCase()}`;
+    try {
+      this.qrCodeUrl.set(await QRCode.toDataURL(url));
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  applyMood(moodKey: string) {
+    const preset = MOOD_PRESETS[moodKey];
+    if (preset) {
+      this.resume.aesthetics.fontFamily = preset.fontFamily;
+      this.resume.aesthetics.primaryColor = preset.primaryColor;
+      this.resume.aesthetics.backgroundColor = preset.backgroundColor;
+      this.resume.aesthetics.fontSize = preset.fontSize;
+      this.resume.metadataStyle = { ...preset.metadataStyle };
+      this.updateResume();
+    }
   }
 
   undo() {
-    // Basic mock undo
+    this.resumeService.undo();
+    this.resume = this.resumeService.resumeState();
   }
 
   redo() {
-    // Basic mock redo
+    this.resumeService.redo();
+    this.resume = this.resumeService.resumeState();
+  }
+
+  saveToCloud() {
+    // Mock save
+    console.log('Syncing blueprint to edge nodes...', this.resume);
   }
 
   addSection() {
