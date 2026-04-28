@@ -106,9 +106,9 @@ export class PaymentDialogComponent {
   private resumeService = inject(ResumeService);
 
   tiers = [
-    { id: '3days', name: 'Rapid Access', priceKES: 127, priceUSD: '$1', description: '3 Days Premium' },
-    { id: '1month', name: 'Professional', priceKES: 498, priceUSD: '$4', description: '1 Month Premium' },
-    { id: '1year', name: 'Executive', priceKES: 1270, priceUSD: '$10', description: '1 Year Premium' }
+    { id: '2w', name: '2 Weeks Access', priceKES: 210, priceUSD: '$1.59', description: 'Immediate Premium Access' },
+    { id: '1m', name: 'Monthly Pro', priceKES: 400, priceUSD: '$2.99', description: 'Strategic Planning Plan' },
+    { id: '1y', name: 'Annual Studio', priceKES: 1000, priceUSD: '$7.59', description: 'Executive Suite Access' }
   ];
 
   selectedTier = signal(this.tiers[1]);

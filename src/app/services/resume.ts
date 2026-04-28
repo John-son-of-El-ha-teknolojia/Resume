@@ -2,6 +2,24 @@ import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
+export interface Referee {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+}
+
+export interface Experience {
+  id: string;
+  title: string;
+  company: string;
+  startDate: string;
+  endDate: string;
+  current: boolean;
+  content: string;
+}
+
 export interface ResumeSection {
   id: string;
   title: string;
@@ -37,10 +55,31 @@ export interface ResumeData {
   name: string;
   email: string;
   phone: string;
+  phoneCountryCode: string;
   location: string;
   summary: string;
   sections: ResumeSection[];
+  experience: Experience[];
+  education: any[];
+  referees: Referee[];
+  skills: string[];
+  hobbies: string[];
   aesthetics: Aesthetics;
+  metadataStyle?: {
+    border?: string;
+    padding?: number;
+    width?: number;
+    x?: number;
+    y?: number;
+  };
+}
+
+export interface CoverLetterData {
+  jobDescription: string;
+  institutionName: string;
+  positionTitle: string;
+  requirements: string;
+  generatedLetter: string;
 }
 
 @Injectable({
@@ -54,13 +93,21 @@ export class ResumeService {
     name: '',
     email: '',
     phone: '',
+    phoneCountryCode: '+1',
     location: '',
     summary: '',
-    sections: [
-      { id: '1', title: 'Work Experience', content: '' },
-      { id: '2', title: 'Education', content: '' },
-      { id: '3', title: 'Skills', content: '' }
-    ],
+    sections: [],
+    experience: [],
+    education: [],
+    referees: [],
+    skills: [],
+    hobbies: [],
+    metadataStyle: {
+      border: 'none',
+      padding: 0,
+      x: 0,
+      y: 0
+    },
     aesthetics: {
       fontFamily: 'Inter',
       primaryColor: '#09090b',
@@ -69,6 +116,20 @@ export class ResumeService {
       elements: []
     }
   });
+
+  coverLetterState = signal<CoverLetterData>({
+    jobDescription: '',
+    institutionName: '',
+    positionTitle: '',
+    requirements: '',
+    generatedLetter: ''
+  });
+
+  plans = [
+    { id: '2w', name: '2 Weeks Access', price: 1.59, duration: '2 weeks' },
+    { id: '1m', name: 'Monthly Pro', price: 2.99, duration: '1 month' },
+    { id: '1y', name: 'Annual Studio', price: 7.59, duration: '1 year' }
+  ];
 
   isPaid = signal<boolean>(false);
   hasFreeDownloadLeft = signal<boolean>(true);

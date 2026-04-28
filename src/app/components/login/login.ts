@@ -89,7 +89,7 @@ export class LoginComponent {
       if (this.resumeService.isAdmin()) {
         this.router.navigate(['/admin']);
       } else {
-        this.router.navigate(['/writer']);
+        this.router.navigate(['/dashboard']);
       }
     } else {
       this.error.set('Invalid credentials');

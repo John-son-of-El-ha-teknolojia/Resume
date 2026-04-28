@@ -11,6 +11,16 @@ export const routes: Routes = [
     loadComponent: () => import('./components/signup/signup').then(m => m.SignupComponent) 
   },
   { 
+    path: 'dashboard', 
+    loadComponent: () => import('./components/dashboard/dashboard').then(m => m.DashboardComponent),
+    canActivate: [authGuard]
+  },
+  { 
+    path: 'cover-letter', 
+    loadComponent: () => import('./components/cover-letter/cover-letter').then(m => m.CoverLetterComponent),
+    canActivate: [authGuard]
+  },
+  { 
     path: 'writer', 
     loadComponent: () => import('./components/studio/studio').then(m => m.StudioComponent),
     canActivate: [authGuard]
@@ -30,6 +40,6 @@ export const routes: Routes = [
     loadComponent: () => import('./components/admin/admin').then(m => m.AdminDashboardComponent),
     canActivate: [adminGuard]
   },
-  { path: '', redirectTo: 'writer', pathMatch: 'full' },
-  { path: '**', redirectTo: 'writer' }
+  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+  { path: '**', redirectTo: 'dashboard' }
 ];

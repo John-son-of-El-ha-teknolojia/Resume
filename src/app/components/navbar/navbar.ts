@@ -20,8 +20,12 @@ import { ResumeService } from '../../services/resume';
 
         @if (resumeService.isLoggedIn()) {
           <div class="hidden md:flex items-center gap-1">
-            <a routerLink="/writer" routerLinkActive="!text-blue-600" [routerLinkActiveOptions]="{exact: true}" 
+            <a routerLink="/dashboard" routerLinkActive="!text-blue-600" 
+               class="px-5 py-2 text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-all">Dashboard</a>
+            <a routerLink="/writer" routerLinkActive="!text-blue-600" 
                class="px-5 py-2 text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-all">Studio</a>
+            <a routerLink="/cover-letter" routerLinkActive="!text-blue-600" 
+               class="px-5 py-2 text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-all">Cover Letter</a>
             <a routerLink="/viewer" routerLinkActive="!text-blue-600" 
                class="px-5 py-2 text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-all">Viewer</a>
             <a routerLink="/account" routerLinkActive="!text-blue-600" 

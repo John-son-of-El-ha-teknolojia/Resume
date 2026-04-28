@@ -183,7 +183,7 @@ export class SignupComponent {
     const success = await this.resumeService.signup(data);
     
     if (success) {
-      this.router.navigate(['/writer']);
+      this.router.navigate(['/dashboard']);
     } else {
       this.error.set('Signup failed. Please try again.');
     }

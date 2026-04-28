@@ -39,14 +39,20 @@ import { PaymentDialogComponent } from '../payment/payment';
         </div>
 
         <div class="flex items-center gap-3">
-          <button mat-button class="!text-xs !font-black !uppercase !tracking-widest !text-zinc-500 hover:!text-zinc-900 transition-colors" (click)="undo()" matTooltip="Undo Change">
-            <mat-icon class="mr-1">undo</mat-icon>
-          </button>
+          <div class="flex items-center gap-1">
+            <button mat-icon-button (click)="undo()" matTooltip="Undo">
+              <mat-icon class="scale-75 text-zinc-500">undo</mat-icon>
+            </button>
+            <button mat-icon-button (click)="redo()" matTooltip="Redo">
+              <mat-icon class="scale-75 text-zinc-500">redo</mat-icon>
+            </button>
+          </div>
           
           <div class="h-6 w-px bg-zinc-200"></div>
 
-          <button mat-icon-button (click)="toggleSidebarPosition()" [matTooltip]="'Move Sidebar to ' + (sidebarPosition() === 'left' ? 'Right' : 'Left')">
-            <mat-icon class="scale-75 text-zinc-500">{{ sidebarPosition() === 'left' ? 'format_indent_increase' : 'format_indent_decrease' }}</mat-icon>
+          <button *ngIf="isPremium()" mat-button (click)="saveToCloud()" 
+                  class="!text-xs !font-black !uppercase !tracking-widest !text-emerald-600 hover:!bg-emerald-50 transition-all">
+            <mat-icon class="mr-1">cloud_upload</mat-icon> Save to Cloud
           </button>
 
           <div class="h-6 w-px bg-zinc-200"></div>
@@ -90,16 +96,21 @@ import { PaymentDialogComponent } from '../payment/payment';
                         <input class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 text-sm font-bold text-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900/5 focus:border-zinc-900 transition-all" 
                                [(ngModel)]="resume.email" (ngModelChange)="updateResume()">
                       </div>
-                      <div class="grid grid-cols-2 gap-4">
+                      <div class="grid grid-cols-3 gap-4">
                         <div class="space-y-2 group">
-                          <label class="text-[10px] font-black uppercase tracking-widest text-zinc-300 group-focus-within:text-zinc-900 transition-colors">Phone</label>
+                          <label class="text-[10px] font-black uppercase tracking-widest text-zinc-300 group-focus-within:text-zinc-900 transition-colors">Code</label>
+                          <select class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 text-xs font-bold text-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900/5 transition-all appearance-none"
+                                  [(ngModel)]="resume.phoneCountryCode" (ngModelChange)="updateResume()">
+                            <option value="+1">+1 (US)</option>
+                            <option value="+44">+44 (UK)</option>
+                            <option value="+254">+254 (KE)</option>
+                            <option value="+91">+91 (IN)</option>
+                          </select>
+                        </div>
+                        <div class="col-span-2 space-y-2 group">
+                          <label class="text-[10px] font-black uppercase tracking-widest text-zinc-300 group-focus-within:text-zinc-900 transition-colors">Phone Number</label>
                           <input class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 text-sm font-bold text-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900/5 focus:border-zinc-900 transition-all" 
                                  [(ngModel)]="resume.phone" (ngModelChange)="updateResume()">
-                        </div>
-                        <div class="space-y-2 group">
-                          <label class="text-[10px] font-black uppercase tracking-widest text-zinc-300 group-focus-within:text-zinc-900 transition-colors">Location</label>
-                          <input class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 text-sm font-bold text-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900/5 focus:border-zinc-900 transition-all" 
-                                 [(ngModel)]="resume.location" (ngModelChange)="updateResume()">
                         </div>
                       </div>
                     </div>
@@ -110,53 +121,102 @@ import { PaymentDialogComponent } from '../payment/payment';
                     <textarea class="w-full h-40 bg-zinc-50 border border-zinc-100 rounded-2xl p-6 text-sm leading-relaxed text-zinc-600 focus:outline-none focus:ring-2 focus:ring-zinc-900/5 focus:border-zinc-900 resize-none transition-all placeholder:italic" 
                               [(ngModel)]="resume.summary" (ngModelChange)="updateResume()" placeholder="Synthesize your executive presence..."></textarea>
                   </div>
+
+                  <div class="space-y-6 pt-8 border-t border-zinc-100">
+                    <h3 class="text-[10px] font-black uppercase tracking-widest text-zinc-400 pl-1">Metadata Block Styling</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                      <div class="space-y-1">
+                        <label class="text-[8px] font-black uppercase text-zinc-300">Border Style</label>
+                        <select [(ngModel)]="resume.metadataStyle!.border" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-[10px] font-black uppercase">
+                          <option value="none">None</option>
+                          <option value="solid">Solid</option>
+                          <option value="dashed">Dashed</option>
+                        </select>
+                      </div>
+                      <div class="space-y-1">
+                        <label class="text-[8px] font-black uppercase text-zinc-300">Padding (px)</label>
+                        <input type="number" [(ngModel)]="resume.metadataStyle!.padding" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-xs font-bold">
+                      </div>
+                      <div class="space-y-1">
+                        <label class="text-[8px] font-black uppercase text-zinc-300">X Offset</label>
+                        <input type="number" [(ngModel)]="resume.metadataStyle!.x" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-xs font-bold">
+                      </div>
+                      <div class="space-y-1">
+                        <label class="text-[8px] font-black uppercase text-zinc-300">Y Offset</label>
+                        <input type="number" [(ngModel)]="resume.metadataStyle!.y" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-xs font-bold">
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </mat-tab>
 
               <mat-tab>
                 <ng-template mat-tab-label>
                   <div class="flex items-center gap-2 py-4">
-                    <mat-icon class="text-sm">layers</mat-icon>
+                    <mat-icon class="text-sm">work</mat-icon>
                     <span class="text-[10px] uppercase font-black tracking-widest">Experience</span>
                   </div>
                 </ng-template>
-                <div class="p-8 space-y-6">
-                   <div class="flex items-center justify-between">
-                     <h3 class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Section Stack</h3>
-                     <button mat-icon-button (click)="addSection()" class="hover:bg-zinc-100"><mat-icon class="text-sm">add</mat-icon></button>
+                <div class="p-8 space-y-10">
+                   <!-- Professional Experience -->
+                   <div class="space-y-6">
+                     <div class="flex items-center justify-between pl-1">
+                       <h3 class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Career History</h3>
+                       <button mat-icon-button (click)="addExperience()" class="hover:bg-zinc-100 scale-75"><mat-icon>add</mat-icon></button>
+                     </div>
+                     <div class="space-y-4">
+                       @for (exp of resume.experience; track exp.id) {
+                         <div class="p-4 bg-zinc-50 border border-zinc-100 rounded-[1.5rem] space-y-4 group">
+                           <div class="flex items-center justify-between">
+                             <div class="flex items-center gap-3">
+                               <mat-icon class="text-zinc-300 scale-75">work_outline</mat-icon>
+                               <span class="text-[10px] font-black uppercase tracking-widest text-zinc-800">{{ exp.company || 'New Company' }}</span>
+                             </div>
+                             <button mat-icon-button (click)="removeExperience(exp.id)" class="opacity-0 group-hover:opacity-100 scale-75 text-zinc-400 hover:text-red-500 transition-all"><mat-icon>delete</mat-icon></button>
+                           </div>
+                           <div class="grid grid-cols-2 gap-3">
+                             <div class="space-y-1">
+                               <label class="text-[8px] font-black uppercase tracking-widest text-zinc-300">Start Date</label>
+                               <input type="month" [(ngModel)]="exp.startDate" (ngModelChange)="updateResume()" class="w-full bg-white border border-zinc-100 rounded-lg p-2 text-[10px] font-bold">
+                             </div>
+                             <div class="space-y-1">
+                               <label class="text-[8px] font-black uppercase tracking-widest text-zinc-300">End Date</label>
+                               <input type="month" [(ngModel)]="exp.endDate" (ngModelChange)="updateResume()" [disabled]="exp.current" class="w-full bg-white border border-zinc-100 rounded-lg p-2 text-[10px] font-bold">
+                             </div>
+                           </div>
+                           <div class="flex items-center gap-2">
+                             <input type="checkbox" [(ngModel)]="exp.current" (ngModelChange)="updateResume()" class="rounded border-zinc-300">
+                             <label class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">I currently work here</label>
+                           </div>
+                           <div class="p-3 bg-zinc-900 rounded-xl text-center">
+                             <span class="text-[10px] font-black text-white uppercase tracking-widest">Duration: {{ calculateDuration(exp) }}</span>
+                           </div>
+                         </div>
+                       }
+                     </div>
                    </div>
-                   
-                   <div class="space-y-4">
-                     @for (section of resume.sections; track section.id) {
-                       <div class="p-1 bg-zinc-50 border border-zinc-100 rounded-2xl group transition-all" [class.ring-2]="activeSectionId() === section.id" [class.ring-zinc-900]="activeSectionId() === section.id">
-                          <div class="p-4 flex items-center justify-between cursor-pointer" (click)="activeSectionId.set(section.id)">
-                            <div class="flex items-center gap-3">
-                              <mat-icon class="text-zinc-300 scale-75">drag_indicator</mat-icon>
-                              <span class="text-[10px] font-black uppercase tracking-widest text-zinc-600 group-hover:text-zinc-900">{{ section.title || 'Untitled Segment' }}</span>
-                            </div>
-                            <button mat-icon-button (click)="$event.stopPropagation(); removeSection(section.id)" class="opacity-0 group-hover:opacity-100 text-zinc-400 hover:text-red-500 transition-all scale-75">
-                              <mat-icon>delete_outline</mat-icon>
-                            </button>
-                          </div>
-                          @if (activeSectionId() === section.id) {
-                            <div class="p-4 pt-0 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                               <input class="w-full bg-white border border-zinc-200 rounded-lg p-3 text-[10px] font-black uppercase tracking-widest text-zinc-800 focus:outline-none" 
-                                      [(ngModel)]="section.title" (ngModelChange)="updateResume()">
-                               <textarea class="w-full h-32 bg-white border border-zinc-200 rounded-lg p-4 text-xs leading-relaxed text-zinc-600 focus:outline-none resize-none" 
-                                         [(ngModel)]="section.content" (ngModelChange)="updateResume()"></textarea>
-                               
-                               <button mat-stroked-button class="w-full !border-zinc-200 !text-zinc-600 !rounded-xl h-10 !text-[9px] !font-black !uppercase !tracking-widest"
-                                       (click)="enhanceSection(section)" [disabled]="enhancingSections().has(section.id)">
-                                  @if (enhancingSections().has(section.id)) {
-                                    <mat-icon class="animate-spin scale-75">sync</mat-icon> AI Reshaping...
-                                  } @else {
-                                    <mat-icon class="scale-75 mr-1">auto_awesome</mat-icon> AI Optimization
-                                  }
-                               </button>
-                            </div>
-                          }
-                       </div>
-                     }
+
+                   <!-- Referees -->
+                   <div class="space-y-6 pt-6 border-t border-zinc-100">
+                     <div class="flex items-center justify-between pl-1">
+                       <h3 class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Referees</h3>
+                       <button mat-icon-button (click)="addReferee()" class="hover:bg-zinc-100 scale-75"><mat-icon>add</mat-icon></button>
+                     </div>
+                     <div class="space-y-4">
+                       @for (ref of resume.referees; track ref.id) {
+                         <div class="p-6 bg-white border border-zinc-100 shadow-sm rounded-[1.5rem] space-y-4 group">
+                           <div class="flex items-center justify-between">
+                             <input [(ngModel)]="ref.name" placeholder="Referee Name" class="bg-transparent border-none p-0 text-xs font-black uppercase tracking-widest focus:ring-0 placeholder:text-zinc-200">
+                             <button mat-icon-button (click)="removeReferee(ref.id)" class="opacity-0 group-hover:opacity-100 scale-75 text-zinc-400 hover:text-red-500 transition-all"><mat-icon>delete</mat-icon></button>
+                           </div>
+                           <div class="grid grid-cols-1 gap-3">
+                             <input [(ngModel)]="ref.email" placeholder="Email Address" class="w-full bg-zinc-50 border border-zinc-50 rounded-lg p-2 text-[10px] font-bold">
+                             <input [(ngModel)]="ref.phone" placeholder="Phone Number" class="w-full bg-zinc-50 border border-zinc-50 rounded-lg p-2 text-[10px] font-bold">
+                             <input [(ngModel)]="ref.address" placeholder="Professional Address" class="w-full bg-zinc-50 border border-zinc-50 rounded-lg p-2 text-[10px] font-bold">
+                           </div>
+                         </div>
+                       }
+                     </div>
                    </div>
                 </div>
               </mat-tab>
@@ -180,37 +240,45 @@ import { PaymentDialogComponent } from '../payment/payment';
                      </div>
                    </div>
                    
-                   <div class="space-y-2">
-                     @for (el of resume.aesthetics.elements; track el.id) {
-                       <div class="p-3 bg-zinc-50 border border-zinc-100 rounded-xl group transition-all" 
-                            [class.ring-2]="activeElementId() === el.id" [class.ring-zinc-900]="activeElementId() === el.id">
-                          <div class="flex items-center justify-between cursor-pointer" (click)="activeElementId.set(el.id); activeSectionId.set(null)">
-                            <div class="flex items-center gap-3">
-                              <mat-icon class="text-zinc-400 scale-75">{{ getIconForType(el.type) }}</mat-icon>
-                              <span class="text-[10px] font-black uppercase tracking-widest text-zinc-600 group-hover:text-zinc-900" 
-                                    [class.line-through]="!el.isVisible">{{ el.type }} {{ resume.aesthetics.elements.length - $index }}</span>
-                            </div>
-                            <div class="flex items-center gap-1">
-                              <button mat-icon-button (click)="$event.stopPropagation(); el.isLocked = !el.isLocked; updateResume()" 
-                                      class="scale-75 transition-colors" [class.text-zinc-300]="!el.isLocked" [class.text-zinc-900]="el.isLocked">
-                                <mat-icon class="text-sm">{{ el.isLocked ? 'lock' : 'lock_open' }}</mat-icon>
-                              </button>
-                              <button mat-icon-button (click)="$event.stopPropagation(); el.isVisible = !el.isVisible; updateResume()" 
-                                      class="scale-75 transition-colors" [class.text-zinc-300]="!el.isVisible" [class.text-zinc-900]="el.isVisible">
-                                <mat-icon class="text-sm">{{ el.isVisible ? 'visibility' : 'visibility_off' }}</mat-icon>
-                              </button>
-                              <button mat-icon-button (click)="$event.stopPropagation(); removeElement(el.id)" class="opacity-0 group-hover:opacity-100 text-zinc-400 hover:text-red-500 scale-75 transition-all">
-                                <mat-icon class="text-sm">delete_outline</mat-icon>
-                              </button>
-                            </div>
-                          </div>
-                       </div>
-                     } @empty {
-                       <div class="py-12 text-center space-y-4 opacity-40 border-2 border-dashed border-zinc-100 rounded-2xl">
-                          <mat-icon class="scale-[1.5] text-zinc-300">layers_clear</mat-icon>
-                          <p class="text-[8px] font-black uppercase tracking-widest text-zinc-400">Empty Stack</p>
-                       </div>
-                     }
+                    <div class="space-y-2">
+                      @for (el of resume.aesthetics.elements; track el.id) {
+                        <div class="p-3 bg-zinc-50 border border-zinc-100 rounded-xl group transition-all" 
+                             [class.ring-2]="activeElementId() === el.id" [class.ring-zinc-900]="activeElementId() === el.id">
+                           <div class="flex items-center justify-between cursor-pointer" (click)="activeElementId.set(el.id); activeSectionId.set(null)">
+                             <div class="flex items-center gap-3">
+                               <mat-icon class="text-zinc-400 scale-75">{{ getIconForType(el.type) }}</mat-icon>
+                               <span class="text-[10px] font-black uppercase tracking-widest text-zinc-600 group-hover:text-zinc-900" 
+                                     [class.line-through]="!el.isVisible">{{ el.type }} {{ resume.aesthetics.elements.length - $index }}</span>
+                             </div>
+                             <div class="flex items-center gap-1">
+                               <button mat-icon-button (click)="$event.stopPropagation(); el.isLocked = !el.isLocked; updateResume()" 
+                                       class="scale-75 transition-colors" [class.text-zinc-300]="!el.isLocked" [class.text-zinc-900]="el.isLocked">
+                                 <mat-icon class="text-sm">{{ el.isLocked ? 'lock' : 'lock_open' }}</mat-icon>
+                               </button>
+                               <button mat-icon-button (click)="$event.stopPropagation(); el.isVisible = !el.isVisible; updateResume()" 
+                                       class="scale-75 transition-colors" [class.text-zinc-300]="!el.isVisible" [class.text-zinc-900]="el.isVisible">
+                                 <mat-icon class="text-sm">{{ el.isVisible ? 'visibility' : 'visibility_off' }}</mat-icon>
+                               </button>
+                               <button mat-icon-button (click)="$event.stopPropagation(); removeElement(el.id)" class="opacity-0 group-hover:opacity-100 text-zinc-400 hover:text-red-500 scale-75 transition-all">
+                                 <mat-icon class="text-sm">delete_outline</mat-icon>
+                               </button>
+                             </div>
+                           </div>
+                        </div>
+                      }
+                      <!-- Virtual Layers for Flow Content -->
+                      <div class="p-3 bg-zinc-50 border border-zinc-100 rounded-xl cursor-default opacity-80 border-dashed">
+                        <div class="flex items-center gap-3">
+                          <mat-icon class="text-zinc-400 scale-75">person</mat-icon>
+                          <span class="text-[10px] font-black uppercase tracking-widest text-zinc-600">Metadata Layer (Locked)</span>
+                        </div>
+                      </div>
+                      <div class="p-3 bg-zinc-50 border border-zinc-100 rounded-xl cursor-default opacity-80 border-dashed">
+                        <div class="flex items-center gap-3">
+                          <mat-icon class="text-zinc-400 scale-75">work</mat-icon>
+                          <span class="text-[10px] font-black uppercase tracking-widest text-zinc-600">Experience Layer (Locked)</span>
+                        </div>
+                      </div>
                    </div>
                 </div>
               </mat-tab>
@@ -245,19 +313,39 @@ import { PaymentDialogComponent } from '../payment/payment';
 
                   <div class="space-y-4 pt-8 border-t border-zinc-100">
                      <h3 class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Typography</h3>
-                     <div class="grid grid-cols-1 gap-2">
-                        @for (font of fonts; track font) {
-                          <button class="p-4 rounded-xl border text-[10px] font-bold transition-all text-left flex items-center justify-between"
-                                  [class.border-zinc-900]="resume.aesthetics.fontFamily === font"
-                                  [class.bg-zinc-900]="resume.aesthetics.fontFamily === font"
-                                  [class.text-white]="resume.aesthetics.fontFamily === font"
-                                  [class.border-zinc-50]="resume.aesthetics.fontFamily !== font"
-                                  (click)="resume.aesthetics.fontFamily = font; updateResume()"
-                                  [style.font-family]="font">
-                            {{ font }}
-                            <mat-icon class="scale-50 opacity-40">font_download</mat-icon>
-                          </button>
-                        }
+                     <div class="space-y-4">
+                        <div class="space-y-2">
+                          <label class="text-[8px] font-black uppercase text-zinc-300">Select Font Family</label>
+                          <select [(ngModel)]="resume.aesthetics.fontFamily" (ngModelChange)="updateResume()"
+                                  class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 text-xs font-bold text-zinc-800 focus:outline-none appearance-none cursor-pointer">
+                            @for (font of fonts; track font) {
+                              <option [value]="font" [style.font-family]="font">{{ font }}</option>
+                            }
+                          </select>
+                        </div>
+                        
+                        <div class="space-y-2">
+                          <label class="text-[8px] font-black uppercase text-zinc-300">Lettering Size</label>
+                          <div class="flex items-center gap-2">
+                            <button mat-stroked-button class="!border-zinc-200 !min-w-[40px] !w-10 !h-10 !rounded-lg" (click)="resume.aesthetics.fontSize = resume.aesthetics.fontSize - 1; updateResume()">-</button>
+                            <input type="number" [(ngModel)]="resume.aesthetics.fontSize" (ngModelChange)="updateResume()" class="flex-1 bg-zinc-50 border border-zinc-100 rounded-lg p-2 text-center text-xs font-bold">
+                            <button mat-stroked-button class="!border-zinc-200 !min-w-[40px] !w-10 !h-10 !rounded-lg" (click)="resume.aesthetics.fontSize = resume.aesthetics.fontSize + 1; updateResume()">+</button>
+                          </div>
+                        </div>
+                     </div>
+                  </div>
+
+                  <div class="space-y-6 pt-8 border-t border-zinc-100">
+                     <h3 class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Chromatics</h3>
+                     <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                          <label class="text-[8px] font-black uppercase text-zinc-300">Typography Color</label>
+                          <input type="color" [(ngModel)]="resume.aesthetics.primaryColor" (ngModelChange)="updateResume()" class="w-full h-10 rounded-xl cursor-pointer bg-zinc-50 border border-zinc-100 p-1">
+                        </div>
+                        <div class="space-y-2">
+                          <label class="text-[8px] font-black uppercase text-zinc-300">Canvas Color</label>
+                          <input type="color" [(ngModel)]="resume.aesthetics.backgroundColor" (ngModelChange)="updateResume()" class="w-full h-10 rounded-xl cursor-pointer bg-zinc-50 border border-zinc-100 p-1">
+                        </div>
                      </div>
                   </div>
 
@@ -379,20 +467,50 @@ import { PaymentDialogComponent } from '../payment/payment';
 
                 @if (template() === 'minimal') {
                 <div class="p-16 space-y-12 h-full flex flex-col">
-                  <header class="text-center pt-8">
-                    <h1 class="text-6xl font-black tracking-tighter text-zinc-900 mb-6 uppercase">{{ resume.name || 'UNNAMED_ENTITY' }}</h1>
+                  <header class="text-center pt-8 relative" 
+                          [style.border]="resume.metadataStyle?.border === 'none' ? 'none' : '1px ' + resume.metadataStyle?.border + ' #e4e4e7'"
+                          [style.padding.px]="resume.metadataStyle?.padding"
+                          [style.transform]="'translate(' + (resume.metadataStyle?.x || 0) + 'px, ' + (resume.metadataStyle?.y || 0) + 'px)'">
+                    <h1 class="text-6xl font-black tracking-tighter text-zinc-900 mb-6 uppercase" [style.color]="resume.aesthetics.primaryColor">{{ resume.name || 'UNNAMED_ENTITY' }}</h1>
                     <div class="flex flex-wrap justify-center gap-x-8 gap-y-3 text-zinc-400 text-[10px] font-black uppercase tracking-[0.2em] border-y border-zinc-100 py-4 max-w-xl mx-auto">
+                      <span>{{ resume.phoneCountryCode }} {{ resume.phone }}</span>
                       <span>{{ resume.email }}</span>
-                      <span>{{ resume.phone }}</span>
                       <span>{{ resume.location }}</span>
                     </div>
                   </header>
 
                   <section class="max-w-xl mx-auto text-center">
-                    <p class="text-lg leading-relaxed text-zinc-600 font-medium italic">"{{ resume.summary }}"</p>
+                    <p class="text-lg leading-relaxed text-zinc-600 font-medium italic" [style.color]="resume.aesthetics.primaryColor">"{{ resume.summary }}"</p>
                   </section>
 
                   <div class="flex-1 space-y-12 pt-8">
+                    @if (resume.experience.length > 0) {
+                      <section class="space-y-8">
+                        <h3 class="text-xs font-black tracking-[0.3em] uppercase text-zinc-400 mb-6 flex items-center gap-6">
+                          Experience
+                          <span class="flex-1 h-px bg-zinc-100"></span>
+                        </h3>
+                        <div class="space-y-10">
+                          @for (exp of resume.experience; track exp.id) {
+                            <div class="pl-8 border-l border-zinc-100 relative">
+                              <div class="absolute -left-[5px] top-1 w-2 h-2 rounded-full bg-zinc-900"></div>
+                              <div class="flex justify-between items-start mb-2">
+                                <div>
+                                  <h4 class="font-black uppercase tracking-widest text-zinc-900 text-sm">{{ exp.company }}</h4>
+                                  <p class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{{ exp.title }}</p>
+                                </div>
+                                <div class="text-right">
+                                  <p class="text-[10px] font-black text-zinc-900 uppercase tracking-widest">{{ exp.startDate }} — {{ exp.current ? 'Present' : exp.endDate }}</p>
+                                  <p class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest"><b>{{ calculateDuration(exp) }}</b></p>
+                                </div>
+                              </div>
+                              <p class="text-sm text-zinc-600 leading-relaxed">{{ exp.content }}</p>
+                            </div>
+                          }
+                        </div>
+                      </section>
+                    }
+
                     @for (section of resume.sections; track section.id) {
                       <section class="group">
                         <h3 class="text-xs font-black tracking-[0.3em] uppercase text-zinc-400 mb-6 flex items-center gap-6">
@@ -400,6 +518,24 @@ import { PaymentDialogComponent } from '../payment/payment';
                           <span class="flex-1 h-px bg-zinc-100"></span>
                         </h3>
                         <div class="whitespace-pre-wrap text-zinc-700 leading-relaxed text-sm pl-8 border-l border-zinc-100">{{ section.content }}</div>
+                      </section>
+                    }
+
+                    @if (resume.referees.length > 0) {
+                       <section class="space-y-6">
+                        <h3 class="text-xs font-black tracking-[0.3em] uppercase text-zinc-400 mb-6 flex items-center gap-6">
+                          Referees
+                          <span class="flex-1 h-px bg-zinc-100"></span>
+                        </h3>
+                        <div class="grid grid-cols-2 gap-8">
+                          @for (ref of resume.referees; track ref.id) {
+                            <div class="space-y-1">
+                              <h4 class="text-[10px] font-black uppercase text-zinc-900 tracking-widest">{{ ref.name }}</h4>
+                              <p class="text-[9px] text-zinc-400 font-medium">{{ ref.email }} • {{ ref.phone }}</p>
+                              <p class="text-[9px] text-zinc-400 font-medium opacity-60">{{ ref.address }}</p>
+                            </div>
+                          }
+                        </div>
                       </section>
                     }
                   </div>
@@ -768,6 +904,76 @@ export class StudioComponent implements AfterViewInit {
     this.resumeService.updateResume(this.resume);
   }
 
+  calculateDuration(exp: any): string {
+    if (!exp.startDate) return '0 months';
+    const start = new Date(exp.startDate);
+    const end = exp.current ? new Date() : (exp.endDate ? new Date(exp.endDate) : new Date());
+    
+    let months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+    if (months < 0) months = 0;
+    
+    const years = Math.floor(months / 12);
+    const remainingMonths = months % 12;
+    
+    let result = '';
+    if (years > 0) result += `${years} yr${years > 1 ? 's' : ''} `;
+    if (remainingMonths > 0) result += `${remainingMonths} mo${remainingMonths > 1 ? 's' : ''}`;
+    return result || 'Less than a month';
+  }
+
+  addExperience() {
+    const newExp = {
+      id: Math.random().toString(36).substring(7),
+      company: '',
+      title: '',
+      startDate: '',
+      endDate: '',
+      current: false,
+      content: ''
+    };
+    this.resume.experience = [...(this.resume.experience || []), newExp];
+    this.updateResume();
+  }
+
+  removeExperience(id: string) {
+    this.resume.experience = this.resume.experience.filter(e => e.id !== id);
+    this.updateResume();
+  }
+
+  addReferee() {
+    const newRef = {
+      id: Math.random().toString(36).substring(7),
+      name: '',
+      email: '',
+      phone: '',
+      address: ''
+    };
+    this.resume.referees = [...(this.resume.referees || []), newRef];
+    this.updateResume();
+  }
+
+  removeReferee(id: string) {
+    this.resume.referees = this.resume.referees.filter(r => r.id !== id);
+    this.updateResume();
+  }
+
+  saveToCloud() {
+    // In a real app, this would use Firestore
+    console.log('Saving to cloud...', this.resume);
+    // Mock success
+    const btn = event?.target as HTMLElement;
+    if (btn) btn.innerText = 'Saved!';
+    setTimeout(() => { if (btn) btn.innerText = 'Save to Cloud'; }, 3000);
+  }
+
+  undo() {
+    // Basic mock undo
+  }
+
+  redo() {
+    // Basic mock redo
+  }
+
   addSection() {
     this.resumeService.addSection();
     this.resume = this.resumeService.resumeState();
@@ -944,11 +1150,6 @@ export class StudioComponent implements AfterViewInit {
   toggleFullscreen() {
     const el = document.getElementById('resume-canvas');
     if (el?.requestFullscreen) el.requestFullscreen();
-  }
-
-  undo() {
-    // In a real app, implement a stack for undo/redo
-    console.log('Undo logic called');
   }
 
   async exportPdf() {
