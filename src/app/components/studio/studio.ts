@@ -1,62 +1,74 @@
-import { Component, inject, signal, ElementRef, ViewChild, AfterViewInit, HostListener } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatDialog } from '@angular/material/dialog';
-import { MatSliderModule } from '@angular/material/slider';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { DragDropModule, CdkDragEnd } from '@angular/cdk/drag-drop';
-import { ResumeService, ResumeSection, ResumeElement } from '../../services/resume';
-import { PaymentDialogComponent } from '../payment/payment';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import * as QRCode from 'qrcode';
+import {
+  Component,
+  inject,
+  signal,
+  ElementRef,
+  ViewChild,
+  AfterViewInit,
+  HostListener,
+} from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { FormsModule } from "@angular/forms";
+import { MatButtonModule } from "@angular/material/button";
+import { MatIconModule } from "@angular/material/icon";
+import { MatTooltipModule } from "@angular/material/tooltip";
+import { MatTabsModule } from "@angular/material/tabs";
+import { MatButtonToggleModule } from "@angular/material/button-toggle";
+import { MatDialog } from "@angular/material/dialog";
+import { MatSliderModule } from "@angular/material/slider";
+import { MatProgressBarModule } from "@angular/material/progress-bar";
+import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
+import { DragDropModule, CdkDragEnd } from "@angular/cdk/drag-drop";
+import {
+  ResumeService,
+  ResumeSection,
+  ResumeElement,
+} from "../../services/resume";
+import { PaymentDialogComponent } from "../payment/payment";
+import * as QRCode from "qrcode";
+import * as d3 from "d3";
 
-declare const GEMINI_API_KEY: string;
+const OPENAI_API_KEY = "ADD API KEY";
 
 const MOOD_PRESETS: Record<string, any> = {
   executive: {
-    fontFamily: 'Playfair Display',
-    primaryColor: '#0f172a',
-    backgroundColor: '#ffffff',
+    fontFamily: "Playfair Display",
+    primaryColor: "#0f172a",
+    backgroundColor: "#ffffff",
     fontSize: 14,
-    metadataStyle: { border: 'solid', padding: 20, x: 0, y: 0 }
+    metadataStyle: { border: "solid", padding: 20, x: 0, y: 0 },
   },
   creative: {
-    fontFamily: 'Outfit',
-    primaryColor: '#4f46e5',
-    backgroundColor: '#f8fafc',
+    fontFamily: "Outfit",
+    primaryColor: "#4f46e5",
+    backgroundColor: "#f8fafc",
     fontSize: 15,
-    metadataStyle: { border: 'dashed', padding: 30, x: 5, y: -10 }
+    metadataStyle: { border: "dashed", padding: 30, x: 5, y: -10 },
   },
   startup: {
-    fontFamily: 'Inter',
-    primaryColor: '#10b981',
-    backgroundColor: '#ffffff',
+    fontFamily: "Inter",
+    primaryColor: "#10b981",
+    backgroundColor: "#ffffff",
     fontSize: 13,
-    metadataStyle: { border: 'none', padding: 0, x: 0, y: 0 }
-  }
+    metadataStyle: { border: "none", padding: 0, x: 0, y: 0 },
+  },
 };
 
 @Component({
-  selector: 'app-studio',
+  selector: "app-studio",
   standalone: true,
   imports: [
-    CommonModule, 
-    FormsModule, 
-    MatButtonModule, 
-    MatIconModule, 
-    MatTooltipModule, 
+    CommonModule,
+    FormsModule,
+    MatButtonModule,
+    MatIconModule,
+    MatTooltipModule,
     MatTabsModule,
     MatButtonToggleModule,
     MatSliderModule,
     MatProgressBarModule,
     MatProgressSpinnerModule,
-    DragDropModule
+    DragDropModule,
   ],
   template: `
     <div class="h-screen w-full flex flex-col bg-[#F3F4F6] overflow-hidden font-sans select-none">
@@ -118,17 +130,32 @@ const MOOD_PRESETS: Record<string, any> = {
                 </ng-template>
                 <div class="p-8 space-y-8">
                   <div class="space-y-6">
-                    <h3 class="text-[10px] font-black uppercase tracking-widest text-zinc-400 pl-1">Identity</h3>
-                    <div class="grid grid-cols-1 gap-5">
-                      <div class="space-y-2 group">
-                        <label for="fullName" class="text-[10px] font-black uppercase tracking-widest text-zinc-300 group-focus-within:text-zinc-900 transition-colors">Field: Full Name</label>
-                        <input id="fullName" name="fullName" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 text-sm font-bold text-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900/5 focus:border-zinc-900 transition-all" 
-                               [(ngModel)]="resume.name" (ngModelChange)="updateResume()">
-                      </div>
-                      <div class="space-y-2 group">
-                        <label for="email" class="text-[10px] font-black uppercase tracking-widest text-zinc-300 group-focus-within:text-zinc-900 transition-colors">Field: Professional Email</label>
-                        <input id="email" name="email" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 text-sm font-bold text-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900/5 focus:border-zinc-900 transition-all" 
-                               [(ngModel)]="resume.email" (ngModelChange)="updateResume()">
+                      <div class="space-y-4 pt-8 border-t border-zinc-100">
+                        <div class="flex justify-between items-center">
+                          <h3 class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Identity</h3>
+                        </div>
+                        <div class="grid grid-cols-1 gap-5">
+                          <div class="space-y-2 group">
+                            <label for="fullName" class="text-[10px] font-black uppercase tracking-widest text-zinc-300 group-focus-within:text-zinc-900 transition-colors">Field: Full Name</label>
+                            <input id="fullName" name="fullName" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 text-sm font-bold text-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900/5 focus:border-zinc-900 transition-all" 
+                                   [(ngModel)]="resume.name" (ngModelChange)="updateResume()">
+                          </div>
+                          <div class="space-y-2 group">
+                            <label for="email" class="text-[10px] font-black uppercase tracking-widest text-zinc-300 group-focus-within:text-zinc-900 transition-colors">Field: Professional Email</label>
+                            <input id="email" name="email" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 text-sm font-bold text-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900/5 focus:border-zinc-900 transition-all" 
+                                   [(ngModel)]="resume.email" (ngModelChange) ="updateResume()">
+                          </div>
+                          <div class="space-y-2 group">
+                            <div class="flex justify-between items-center mb-2">
+                              <label for="summary" class="text-[10px] font-black uppercase tracking-widest text-zinc-300 group-focus-within:text-zinc-900 transition-colors">Professional Abstract</label>
+                              <button (click)="polishSummary()" class="text-[8px] font-black uppercase tracking-widest px-3 py-1 bg-zinc-900 text-white rounded-full hover:scale-105 active:scale-95 transition-all flex items-center gap-1">
+                                <mat-icon class="text-[10px] h-3 w-3">auto_awesome</mat-icon> AI Polish
+                              </button>
+                            </div>
+                            <textarea id="summary" name="summary" rows="4" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 text-sm font-medium text-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900/5 focus:border-zinc-900 transition-all resize-none" 
+                                   [(ngModel)]="resume.summary" (ngModelChange)="updateResume()" placeholder="Describe your career objective and key value proposition..."></textarea>
+                          </div>
+                        </div>
                       </div>
                       <div class="grid grid-cols-3 gap-4">
                         <div class="space-y-2 group">
@@ -148,12 +175,6 @@ const MOOD_PRESETS: Record<string, any> = {
                         </div>
                       </div>
                     </div>
-                  </div>
-
-                  <div class="space-y-4">
-                    <h3 class="text-[10px] font-black uppercase tracking-widest text-zinc-400 pl-1">Professional Abstract</h3>
-                    <textarea class="w-full h-40 bg-zinc-50 border border-zinc-100 rounded-2xl p-6 text-sm leading-relaxed text-zinc-600 focus:outline-none focus:ring-2 focus:ring-zinc-900/5 focus:border-zinc-900 resize-none transition-all placeholder:italic" 
-                              [(ngModel)]="resume.summary" (ngModelChange)="updateResume()" placeholder="Synthesize your executive presence..."></textarea>
                   </div>
 
                   <div class="space-y-6 pt-8 border-t border-zinc-100">
@@ -176,13 +197,16 @@ const MOOD_PRESETS: Record<string, any> = {
                         <input type="number" [(ngModel)]="resume.metadataStyle!.x" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-xs font-bold">
                       </div>
                       <div class="space-y-1">
-                        <label class="text-[8px] font-black uppercase text-zinc-300">Y Offset</label>
-                        <input type="number" [(ngModel)]="resume.metadataStyle!.y" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-xs font-bold">
+                        <label for="metaWidth" class="text-[8px] font-black uppercase text-zinc-300">Block Width</label>
+                        <input id="metaWidth" name="metaWidth" type="number" [(ngModel)]="resume.metadataStyle!.width" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-xs font-bold">
+                      </div>
+                      <div class="space-y-1">
+                        <label for="metaY" class="text-[8px] font-black uppercase text-zinc-300">Y Offset</label>
+                        <input id="metaY" name="metaY" type="number" [(ngModel)]="resume.metadataStyle!.y" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-xs font-bold">
                       </div>
                     </div>
                   </div>
-                </div>
-              </mat-tab>
+                </mat-tab>
 
               <mat-tab>
                 <ng-template mat-tab-label>
@@ -199,14 +223,18 @@ const MOOD_PRESETS: Record<string, any> = {
                        <button mat-icon-button (click)="addExperience()" class="hover:bg-zinc-100 scale-75"><mat-icon>add</mat-icon></button>
                      </div>
                      <div class="space-y-4">
-                       @for (exp of resume.experience; track exp.id) {
+                       @for (exp of resume.experience; track exp.id; let i = $index) {
                          <div class="p-4 bg-zinc-50 border border-zinc-100 rounded-[1.5rem] space-y-4 group">
                            <div class="flex items-center justify-between">
                              <div class="flex items-center gap-3">
                                <mat-icon class="text-zinc-300 scale-75">work_outline</mat-icon>
-                               <span class="text-[10px] font-black uppercase tracking-widest text-zinc-800">{{ exp.company || 'New Company' }}</span>
+                               <input [(ngModel)]="exp.company" (ngModelChange)="updateResume()" placeholder="Company Name" class="bg-transparent border-none p-0 text-[10px] font-black uppercase tracking-widest text-zinc-800 focus:ring-0 placeholder:text-zinc-200">
                              </div>
                              <button mat-icon-button (click)="removeExperience(exp.id)" class="opacity-0 group-hover:opacity-100 scale-75 text-zinc-400 hover:text-red-500 transition-all"><mat-icon>delete</mat-icon></button>
+                           </div>
+                           <div class="space-y-1">
+                             <label class="text-[8px] font-black uppercase tracking-widest text-zinc-300">Job Title</label>
+                             <input [(ngModel)]="exp.title" (ngModelChange)="updateResume()" placeholder="e.g. Senior Software Engineer" class="w-full bg-white border border-zinc-100 rounded-lg p-2 text-[10px] font-bold text-zinc-800">
                            </div>
                            <div class="grid grid-cols-2 gap-3">
                              <div class="space-y-1">
@@ -222,8 +250,17 @@ const MOOD_PRESETS: Record<string, any> = {
                              <input type="checkbox" [(ngModel)]="exp.current" (ngModelChange)="updateResume()" class="rounded border-zinc-300">
                              <label class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">I currently work here</label>
                            </div>
-                           <div class="p-3 bg-zinc-900 rounded-xl text-center">
-                             <span class="text-[10px] font-black text-white uppercase tracking-widest">Duration: {{ calculateDuration(exp) }}</span>
+                           <div class="space-y-2">
+                             <div class="flex justify-between items-center px-1">
+                               <label class="text-[8px] font-black uppercase tracking-widest text-zinc-300">Impact Description</label>
+                               <button (click)="suggestExperienceDescription(i)" class="text-[8px] font-black uppercase tracking-widest px-3 py-1 bg-zinc-900 text-white rounded-full hover:scale-105 active:scale-95 transition-all flex items-center gap-1">
+                                 <mat-icon class="text-[10px] h-3 w-3">auto_awesome</mat-icon> AI Suggest
+                               </button>
+                             </div>
+                             <textarea [(ngModel)]="exp.content" (ngModelChange)="updateResume()" rows="4" class="w-full bg-white border border-zinc-100 rounded-xl p-3 text-[10px] font-medium leading-relaxed resize-none focus:outline-none focus:ring-1 focus:ring-zinc-900 transition-all" placeholder="Outline your key achievements..."></textarea>
+                           </div>
+                           <div class="p-3 bg-zinc-100/50 rounded-xl text-center">
+                             <span class="text-[8px] font-black text-zinc-400 uppercase tracking-widest">Duration: {{ calculateDuration(exp) }}</span>
                            </div>
                          </div>
                        }
@@ -300,17 +337,41 @@ const MOOD_PRESETS: Record<string, any> = {
                            </div>
                         </div>
                       }
-                      <!-- Virtual Layers for Flow Content -->
-                      <div class="p-3 bg-zinc-50 border border-zinc-100 rounded-xl cursor-default opacity-80 border-dashed">
-                        <div class="flex items-center gap-3">
-                          <mat-icon class="text-zinc-400 scale-75">person</mat-icon>
-                          <span class="text-[10px] font-black uppercase tracking-widest text-zinc-600">Metadata Layer (Locked)</span>
+                      <!-- Dynamic Layers for Metadata/Experience -->
+                      <div class="p-3 bg-zinc-50 border border-zinc-100 rounded-xl group transition-all">
+                        <div class="flex items-center justify-between">
+                          <div class="flex items-center gap-3">
+                            <mat-icon class="text-zinc-400 scale-75">person</mat-icon>
+                            <span class="text-[10px] font-black uppercase tracking-widest text-zinc-600" [class.line-through]="!resume.metadataStyle?.isVisible">Metadata Layer</span>
+                          </div>
+                          <div class="flex items-center gap-1">
+                            <button mat-icon-button (click)="resume.metadataStyle!.isLocked = !resume.metadataStyle!.isLocked; updateResume()" 
+                                    class="scale-75 transition-colors" [class.text-zinc-300]="!resume.metadataStyle?.isLocked" [class.text-zinc-900]="resume.metadataStyle?.isLocked">
+                              <mat-icon class="text-sm">{{ resume.metadataStyle?.isLocked ? 'lock' : 'lock_open' }}</mat-icon>
+                            </button>
+                            <button mat-icon-button (click)="resume.metadataStyle!.isVisible = !resume.metadataStyle!.isVisible; updateResume()" 
+                                    class="scale-75 transition-colors" [class.text-zinc-300]="!resume.metadataStyle?.isVisible" [class.text-zinc-900]="resume.metadataStyle?.isVisible">
+                              <mat-icon class="text-sm">{{ resume.metadataStyle?.isVisible ? 'visibility' : 'visibility_off' }}</mat-icon>
+                            </button>
+                          </div>
                         </div>
                       </div>
-                      <div class="p-3 bg-zinc-50 border border-zinc-100 rounded-xl cursor-default opacity-80 border-dashed">
-                        <div class="flex items-center gap-3">
-                          <mat-icon class="text-zinc-400 scale-75">work</mat-icon>
-                          <span class="text-[10px] font-black uppercase tracking-widest text-zinc-600">Experience Layer (Locked)</span>
+                      <div class="p-3 bg-zinc-50 border border-zinc-100 rounded-xl group transition-all">
+                        <div class="flex items-center justify-between">
+                          <div class="flex items-center gap-3">
+                            <mat-icon class="text-zinc-400 scale-75">work</mat-icon>
+                            <span class="text-[10px] font-black uppercase tracking-widest text-zinc-600" [class.line-through]="!resume.experienceStyle?.isVisible">Experience Layer</span>
+                          </div>
+                          <div class="flex items-center gap-1">
+                            <button mat-icon-button (click)="resume.experienceStyle!.isLocked = !resume.experienceStyle!.isLocked; updateResume()" 
+                                    class="scale-75 transition-colors" [class.text-zinc-300]="!resume.experienceStyle?.isLocked" [class.text-zinc-900]="resume.experienceStyle?.isLocked">
+                              <mat-icon class="text-sm">{{ resume.experienceStyle?.isLocked ? 'lock' : 'lock_open' }}</mat-icon>
+                            </button>
+                            <button mat-icon-button (click)="resume.experienceStyle!.isVisible = !resume.experienceStyle!.isVisible; updateResume()" 
+                                    class="scale-75 transition-colors" [class.text-zinc-300]="!resume.experienceStyle?.isVisible" [class.text-zinc-900]="resume.experienceStyle?.isVisible">
+                              <mat-icon class="text-sm">{{ resume.experienceStyle?.isVisible ? 'visibility' : 'visibility_off' }}</mat-icon>
+                            </button>
+                          </div>
                         </div>
                       </div>
                    </div>
@@ -417,6 +478,17 @@ const MOOD_PRESETS: Record<string, any> = {
                         <button mat-icon-button (click)="addSkill()" class="hover:bg-zinc-100 scale-75"><mat-icon>add</mat-icon></button>
                       </div>
                       <div class="space-y-3">
+                         <div class="space-y-4">
+                            <label class="text-[8px] font-black uppercase tracking-widest text-zinc-300">Portfolio / Social URL</label>
+                            <div class="flex gap-2">
+                               <input [(ngModel)]="resume.skillUrl" (ngModelChange)="updateResume(); generateQRCode()" placeholder="https://linkedin.com/in/username" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-[10px] font-bold">
+                               <div class="w-10 h-10 bg-zinc-100 rounded-xl flex items-center justify-center shrink-0">
+                                  <mat-icon class="scale-75 text-zinc-400">qr_code_2</mat-icon>
+                               </div>
+                            </div>
+                            <p class="text-[8px] font-medium text-zinc-400">This URL will be encoded into the QR code at the bottom of your resume.</p>
+                         </div>
+                         
                          @for (skill of resume.skills; track skill.name) {
                            <div class="p-4 bg-zinc-50 border border-zinc-100 rounded-2xl space-y-2 group">
                               <div class="flex items-center justify-between">
@@ -508,12 +580,12 @@ const MOOD_PRESETS: Record<string, any> = {
                      <h3 class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Chromatics</h3>
                      <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-2">
-                          <label class="text-[8px] font-black uppercase text-zinc-300">Typography Color</label>
-                          <input type="color" [(ngModel)]="resume.aesthetics.primaryColor" (ngModelChange)="updateResume()" class="w-full h-10 rounded-xl cursor-pointer bg-zinc-50 border border-zinc-100 p-1">
+                          <label for="typoColor" class="text-[8px] font-black uppercase text-zinc-300">Typography Color</label>
+                          <input id="typoColor" name="typoColor" type="color" [(ngModel)]="resume.aesthetics.primaryColor" (ngModelChange)="updateResume()" class="w-full h-10 rounded-xl cursor-pointer bg-zinc-50 border border-zinc-100 p-1">
                         </div>
                         <div class="space-y-2">
-                          <label class="text-[8px] font-black uppercase text-zinc-300">Canvas Color</label>
-                          <input type="color" [(ngModel)]="resume.aesthetics.backgroundColor" (ngModelChange)="updateResume()" class="w-full h-10 rounded-xl cursor-pointer bg-zinc-50 border border-zinc-100 p-1">
+                          <label for="canvasColor" class="text-[8px] font-black uppercase text-zinc-300">Canvas Color</label>
+                          <input id="canvasColor" name="canvasColor" type="color" [(ngModel)]="resume.aesthetics.backgroundColor" (ngModelChange)="updateResume()" class="w-full h-10 rounded-xl cursor-pointer bg-zinc-50 border border-zinc-100 p-1">
                         </div>
                      </div>
                   </div>
@@ -537,8 +609,20 @@ const MOOD_PRESETS: Record<string, any> = {
           <div class="p-6 bg-zinc-50 border-t border-zinc-100">
              <div class="flex items-center justify-between mb-4">
                <span class="text-[8px] font-black uppercase tracking-widest text-zinc-400">Autosave Status</span>
-               <span class="text-[8px] font-black uppercase tracking-widest text-zinc-900 animate-pulse">Syncing...</span>
+               @if (resumeService.isPaid()) {
+                 <span class="text-[8px] font-black uppercase tracking-widest text-emerald-500 flex items-center gap-1">
+                   <mat-icon class="text-[10px] w-3 h-3">cloud_done</mat-icon> Live Sync Active
+                 </span>
+               } @else {
+                 <span class="text-[8px] font-black uppercase tracking-[0.2em] text-amber-600 bg-amber-50 px-2 py-1 rounded">PRO FEATURE ONLY</span>
+               }
              </div>
+             @if (!resumeService.isPaid()) {
+               <div class="mb-4 p-3 bg-zinc-900 rounded-xl text-white">
+                 <p class="text-[8px] font-black uppercase tracking-widest mb-2">Upgrade to Unlock Cloud Sync</p>
+                 <button class="w-full h-8 bg-emerald-400 text-zinc-900 rounded-lg text-[8px] font-black hover:bg-emerald-300 transition-colors">GO PRO NOW</button>
+               </div>
+             }
              <button mat-flat-button class="w-full !bg-zinc-200 !text-zinc-600 !rounded-xl h-10 !text-[9px] !font-black !uppercase !tracking-widest" (click)="restoreDefaults()">
                 Reset Blueprint
              </button>
@@ -636,10 +720,19 @@ const MOOD_PRESETS: Record<string, any> = {
 
                 @if (template() === 'minimal') {
                 <div class="p-16 space-y-12 h-full flex flex-col">
-                  <header class="text-center pt-8 relative" 
+                  <header class="text-center pt-8 relative cursor-move group/meta" 
+                          cdkDrag
+                          [cdkDragDisabled]="resume.metadataStyle?.isLocked"
+                          (cdkDragEnded)="onMetadataDragEnd($event)"
+                          *ngIf="resume.metadataStyle?.isVisible !== false"
                           [style.border]="resume.metadataStyle?.border === 'none' ? 'none' : '1px ' + resume.metadataStyle?.border + ' #e4e4e7'"
                           [style.padding.px]="resume.metadataStyle?.padding"
+                          [style.width.px]="resume.metadataStyle?.width"
                           [style.transform]="'translate(' + (resume.metadataStyle?.x || 0) + 'px, ' + (resume.metadataStyle?.y || 0) + 'px)'">
+                    <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-zinc-900 text-white text-[8px] px-2 py-1 rounded opacity-0 group-hover/meta:opacity-100 uppercase font-black tracking-widest transition-opacity pointer-events-none flex items-center gap-2">
+                       <mat-icon class="scale-50">{{ resume.metadataStyle?.isLocked ? 'lock' : 'open_with' }}</mat-icon>
+                       Metadata
+                    </div>
                     <h1 class="text-6xl font-black tracking-tighter text-zinc-900 mb-6 uppercase" [style.color]="resume.aesthetics.primaryColor">{{ resume.name || 'UNNAMED_ENTITY' }}</h1>
                     <div class="flex flex-wrap justify-center gap-x-8 gap-y-3 text-zinc-400 text-[10px] font-black uppercase tracking-[0.2em] border-y border-zinc-100 py-4 max-w-xl mx-auto">
                       <span>{{ resume.phoneCountryCode }} {{ resume.phone }}</span>
@@ -654,13 +747,22 @@ const MOOD_PRESETS: Record<string, any> = {
 
                   <div class="flex-1 space-y-12 pt-8">
                     @if (resume.experience.length > 0) {
-                      <section class="space-y-8">
+                      <section class="space-y-8 relative cursor-move group/exp"
+                               cdkDrag
+                               [cdkDragDisabled]="resume.experienceStyle?.isLocked"
+                               (cdkDragEnded)="onExperienceDragEnd($event)"
+                               *ngIf="resume.experienceStyle?.isVisible !== false"
+                               [style.transform]="'translate(' + (resume.experienceStyle?.x || 0) + 'px, ' + (resume.experienceStyle?.y || 0) + 'px)'">
+                        <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-zinc-900 text-white text-[8px] px-2 py-1 rounded opacity-0 group-hover/exp:opacity-100 uppercase font-black tracking-widest transition-opacity pointer-events-none flex items-center gap-2">
+                           <mat-icon class="scale-50">{{ resume.experienceStyle?.isLocked ? 'lock' : 'open_with' }}</mat-icon>
+                           Experience
+                        </div>
                         <h3 class="text-xs font-black tracking-[0.3em] uppercase text-zinc-400 mb-6 flex items-center gap-6">
                           Experience
                           <span class="flex-1 h-px bg-zinc-100"></span>
                         </h3>
                         <div class="space-y-10">
-                          @for (exp of resume.experience; track exp.id) {
+                          @for (exp of resume.experience; track exp.id; let i = $index) {
                             <div class="pl-8 border-l border-zinc-100 relative">
                               <div class="absolute -left-[5px] top-1 w-2 h-2 rounded-full bg-zinc-900"></div>
                               <div class="flex justify-between items-start mb-2">
@@ -680,24 +782,14 @@ const MOOD_PRESETS: Record<string, any> = {
                       </section>
                     }
 
-                    @if (resume.skills.length > 0) {
+    @if (resume.skills.length > 0) {
                       <section class="space-y-8">
                         <h3 class="text-xs font-black tracking-[0.3em] uppercase text-zinc-400 mb-6 flex items-center gap-6">
                           Proficiencies
                           <span class="flex-1 h-px bg-zinc-100"></span>
                         </h3>
-                        <div class="grid grid-cols-3 gap-x-12 gap-y-10 pl-8">
-                          @for (skill of resume.skills; track skill.name) {
-                            <div class="space-y-3">
-                               <div class="flex justify-between items-end">
-                                  <span class="text-[10px] font-black uppercase tracking-widest text-zinc-900">{{ skill.name }}</span>
-                                  <span class="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">{{ skill.level }}%</span>
-                               </div>
-                               <div class="h-1 bg-zinc-100 rounded-full overflow-hidden">
-                                  <div class="h-full bg-zinc-900 transition-all duration-1000" [style.width.%]="skill.level" [style.background-color]="resume.aesthetics.primaryColor"></div>
-                               </div>
-                            </div>
-                          }
+                        <div class="flex justify-center py-10 bg-zinc-50/50 rounded-3xl border border-zinc-50">
+                           <div id="skills-radar-chart" class="w-[300px] h-[300px]"></div>
                         </div>
                       </section>
                     }
@@ -732,12 +824,11 @@ const MOOD_PRESETS: Record<string, any> = {
                   </div>
                   
                   
-                  <footer class="pt-20 text-center opacity-20 flex flex-col items-center gap-4">
+                  <footer class="pt-20 text-center opacity-40 flex flex-col items-center gap-4">
                     @if (qrCodeUrl()) {
-                       <img [src]="qrCodeUrl()" class="w-16 h-16 grayscale">
+                       <img [src]="qrCodeUrl()" class="w-16 h-16 grayscale" alt="Portfolio QR Code">
                        <p class="text-[6px] font-black uppercase tracking-widest text-zinc-900 mb-2">Scan for Portfolio Link</p>
                     }
-                    <p class="text-[8px] font-black uppercase tracking-[0.4em] text-zinc-900">Generated via Creative Studio System</p>
                   </footer>
                 </div>
               }
@@ -992,93 +1083,116 @@ const MOOD_PRESETS: Record<string, any> = {
       </div>
     </div>
   `,
-  styles: [`
-    @reference "tailwindcss";
-    :host { display: block; }
-    
-    .a4-paper {
-      width: 210mm;
-      height: 297mm;
-      min-width: 210mm;
-      min-height: 297mm;
-    }
+  styles: [
+    `
+      @reference "tailwindcss";
+      :host {
+        display: block;
+      }
 
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      .a4-paper {
+        width: 210mm;
+        height: 297mm;
+        min-width: 210mm;
+        min-height: 297mm;
+      }
 
-    ::ng-deep .studio-tabs .mat-mdc-tab-header {
-      border-bottom: 1px solid #f4f4f5;
-    }
-    ::ng-deep .studio-tabs .mat-mdc-tab .mdc-tab__text-label {
-      color: #71717a !important;
-    }
-    ::ng-deep .studio-tabs .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label {
-      color: #09090b !important;
-    }
-    ::ng-deep .studio-tabs .mat-mdc-tab-ink-bar {
-      height: 2px !important;
-      background-color: #09090b !important;
-    }
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
 
-    ::ng-deep .studio-toggle-group {
-      border: 1px solid #f4f4f5 !important;
-      border-radius: 0.75rem !important;
-      overflow: hidden;
-      height: 40px !important;
-    }
-    ::ng-deep .studio-toggle-group .mat-button-toggle {
-      background-color: #fafafa !important;
-      border-left: 1px solid #f4f4f5 !important;
-    }
-    ::ng-deep .studio-toggle-group .mat-button-toggle-checked {
-      background-color: #09090b !important;
-      color: white !important;
-    }
-    ::ng-deep .studio-toggle-group .mat-button-toggle .mat-button-toggle-label-content {
-      font-size: 8px !important;
-      font-weight: 900 !important;
-      text-transform: uppercase !important;
-      letter-spacing: 0.1em !important;
-    }
-  `]
+      ::ng-deep .studio-tabs .mat-mdc-tab-header {
+        border-bottom: 1px solid #f4f4f5;
+      }
+      ::ng-deep .studio-tabs .mat-mdc-tab .mdc-tab__text-label {
+        color: #71717a !important;
+      }
+      ::ng-deep .studio-tabs .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label {
+        color: #09090b !important;
+      }
+      ::ng-deep .studio-tabs .mat-mdc-tab-ink-bar {
+        height: 2px !important;
+        background-color: #09090b !important;
+      }
+
+      ::ng-deep .studio-toggle-group {
+        border: 1px solid #f4f4f5 !important;
+        border-radius: 0.75rem !important;
+        overflow: hidden;
+        height: 40px !important;
+      }
+      ::ng-deep .studio-toggle-group .mat-button-toggle {
+        background-color: #fafafa !important;
+        border-left: 1px solid #f4f4f5 !important;
+      }
+      ::ng-deep .studio-toggle-group .mat-button-toggle-checked {
+        background-color: #09090b !important;
+        color: white !important;
+      }
+      ::ng-deep
+        .studio-toggle-group
+        .mat-button-toggle
+        .mat-button-toggle-label-content {
+        font-size: 8px !important;
+        font-weight: 900 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.1em !important;
+      }
+    `,
+  ],
 })
 export class StudioComponent implements AfterViewInit {
-  private resumeService = inject(ResumeService);
+  public resumeService = inject(ResumeService);
   private dialog = inject(MatDialog);
-  
+
   resume = this.resumeService.resumeState();
-  template = signal<string>('minimal');
+  template = signal<string>("minimal");
   scale = signal(75);
-  sidebarPosition = signal<'left' | 'right'>('left');
+  sidebarPosition = signal<"left" | "right">("left");
   activeSectionId = signal<string | null>(null);
   activeElementId = signal<string | null>(null);
   enhancingSections = signal(new Set<string>());
   isPremium = this.resumeService.isPremium;
 
   frameworks = [
-    { id: 'blank', name: 'Ultra Blank' },
-    { id: 'minimal', name: 'Swiss Minimalist' },
-    { id: 'modern', name: 'Bento Modern' },
-    { id: 'classic', name: 'Ivy League Classic' },
-    { id: 'executive', name: 'Premium Executive' },
-    { id: 'creative', name: 'Gradient Bold' },
-    { id: 'technical', name: 'Dev Console' },
-    { id: 'startup', name: 'Monochrome Startup' },
-    { id: 'academic', name: 'Oxford Serif' },
-    { id: 'brutalist', name: 'Neo-Brutalist' },
-    { id: 'glitch', name: 'Digital Glitch' },
-    { id: 'elegant', name: 'Vogue Editorial' },
+    { id: "blank", name: "Ultra Blank" },
+    { id: "minimal", name: "Swiss Minimalist" },
+    { id: "modern", name: "Bento Modern" },
+    { id: "classic", name: "Ivy League Classic" },
+    { id: "executive", name: "Premium Executive" },
+    { id: "creative", name: "Gradient Bold" },
+    { id: "technical", name: "Dev Console" },
+    { id: "startup", name: "Monochrome Startup" },
+    { id: "academic", name: "Oxford Serif" },
+    { id: "brutalist", name: "Neo-Brutalist" },
+    { id: "glitch", name: "Digital Glitch" },
+    { id: "elegant", name: "Vogue Editorial" },
   ];
 
-  fonts = ['Inter', 'Space Grotesk', 'Outfit', 'Playfair Display', 'JetBrains Mono', 'Fira Code', 'Montserrat', 'Roboto', 'Syne', 'Clash Display'];
+  fonts = [
+    "Inter",
+    "Space Grotesk",
+    "Outfit",
+    "Playfair Display",
+    "JetBrains Mono",
+    "Fira Code",
+    "Montserrat",
+    "Roboto",
+    "Syne",
+    "Clash Display",
+  ];
 
-  @ViewChild('canvasContainer') canvasContainer!: ElementRef;
-  
+  @ViewChild("canvasContainer") canvasContainer!: ElementRef;
+
   isAnalyzing = signal(false);
   isMapping = signal(false);
   coachReport: { atsScore: number; suggestions: string[] } | null = null;
-  jobUrl = '';
-  qrCodeUrl = signal('');
+  jobUrl = "";
+  qrCodeUrl = signal("");
 
   onImageTrigger(input: HTMLInputElement) {
     input.click();
@@ -1087,16 +1201,18 @@ export class StudioComponent implements AfterViewInit {
   ngAfterViewInit() {
     this.autoScale();
     this.generateQRCode();
+    setTimeout(() => this.renderSkillsChart(), 500);
   }
 
-  @HostListener('window:resize')
+  @HostListener("window:resize")
   onResize() {
     this.autoScale();
   }
 
   autoScale() {
     if (this.canvasContainer) {
-      const containerWidth = this.canvasContainer.nativeElement.offsetWidth - 160;
+      const containerWidth =
+        this.canvasContainer.nativeElement.offsetWidth - 160;
       const paperWidth = 210 * 3.78; // approximation for mm to px at 96dpi
       const ratio = containerWidth / paperWidth;
       this.scale.set(Math.floor(ratio * 100));
@@ -1104,127 +1220,404 @@ export class StudioComponent implements AfterViewInit {
   }
 
   updateResume() {
-    this.resumeService.updateResume(this.resume);
+    if (this.resumeService.isPaid()) {
+      this.resumeService.updateResume(this.resume);
+      console.log("Autosave: Intelligence sync verified.");
+    }
     this.resumeService.commit();
     this.generateQRCode();
+    this.renderSkillsChart();
   }
 
-  calculateDuration(exp: any): string {
-    if (!exp.startDate) return '0 months';
+  calculateDuration(exp: {
+    startDate: string;
+    endDate: string;
+    current: boolean;
+  }): string {
+    if (!exp.startDate) return "0 months";
     const start = new Date(exp.startDate);
-    const end = exp.current ? new Date() : (exp.endDate ? new Date(exp.endDate) : new Date());
-    
-    let months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+    const end = exp.current
+      ? new Date()
+      : exp.endDate
+        ? new Date(exp.endDate)
+        : new Date();
+
+    let months =
+      (end.getFullYear() - start.getFullYear()) * 12 +
+      (end.getMonth() - start.getMonth());
     if (months < 0) months = 0;
-    
+
     const years = Math.floor(months / 12);
     const remainingMonths = months % 12;
-    
-    let result = '';
-    if (years > 0) result += `${years} yr${years > 1 ? 's' : ''} `;
-    if (remainingMonths > 0) result += `${remainingMonths} mo${remainingMonths > 1 ? 's' : ''}`;
-    return result || 'Less than a month';
+
+    let result = "";
+    if (years > 0) result += `${years} yr${years > 1 ? "s" : ""} `;
+    if (remainingMonths > 0)
+      result += `${remainingMonths} mo${remainingMonths > 1 ? "s" : ""}`;
+    return result || "Less than a month";
   }
 
   addExperience() {
     const newExp = {
       id: Math.random().toString(36).substring(7),
-      company: '',
-      title: '',
-      startDate: '',
-      endDate: '',
+      company: "",
+      title: "",
+      startDate: "",
+      endDate: "",
       current: false,
-      content: ''
+      content: "",
     };
     this.resume.experience = [...(this.resume.experience || []), newExp];
     this.updateResume();
   }
 
   removeExperience(id: string) {
-    this.resume.experience = this.resume.experience.filter(e => e.id !== id);
+    this.resume.experience = this.resume.experience.filter((e) => e.id !== id);
     this.updateResume();
   }
 
   addReferee() {
     const newRef = {
       id: Math.random().toString(36).substring(7),
-      name: '',
-      email: '',
-      phone: '',
-      address: ''
+      name: "",
+      email: "",
+      phone: "",
+      address: "",
     };
     this.resume.referees = [...(this.resume.referees || []), newRef];
     this.updateResume();
   }
 
   removeReferee(id: string) {
-    this.resume.referees = this.resume.referees.filter(r => r.id !== id);
+    this.resume.referees = this.resume.referees.filter((r) => r.id !== id);
     this.updateResume();
   }
 
   async runCoachAnalysis() {
-    if (!GEMINI_API_KEY) return;
     this.isAnalyzing.set(true);
     try {
-      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-      const prompt = `Analyze this resume data for ATS scoring and refinement:
-      ${JSON.stringify(this.resume)}
-      Provide a JSON response with 'atsScore' (0-100) and 'suggestions' (string array of action-verb improvements).`;
-      
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
-      const cleanJson = text.replace(/```json|```/g, "").trim();
-      this.coachReport = JSON.parse(cleanJson);
+      const response = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: "gpt-4o",
+            messages: [
+              {
+                role: "system",
+                content:
+                  "You are a professional resume coach. Provide ATS scoring and refinement suggestions in JSON format.",
+              },
+              {
+                role: "user",
+                content: `Analyze this resume data for ATS scoring and refinement:
+              ${JSON.stringify(this.resume)}
+              Provide a JSON response with 'atsScore' (0-100) and 'suggestions' (string array of action-verb improvements).`,
+              },
+            ],
+            response_format: { type: "json_object" },
+          }),
+        },
+      );
+
+      const data = await response.json();
+      if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+        throw new Error("Invalid or empty response from OpenAI API. Please check your token or quota.");
+      }
+      const content = data.choices[0].message.content;
+      this.coachReport = JSON.parse(content);
     } catch (e) {
-      console.error("Coach analysis failed", e);
+      console.error("AI Gen failed", e);
+      // alert("AI analysis failed: " + (e instanceof Error ? e.message : String(e)));
     } finally {
       this.isAnalyzing.set(false);
     }
   }
 
-  async mapToJob() {
-    if (!GEMINI_API_KEY || !this.jobUrl) return;
+  async polishSummary() {
+    if (!this.resume.summary) return;
     this.isMapping.set(true);
     try {
-      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-      const prompt = `Rewrite elements of this resume to better map to this job description: ${this.jobUrl}. 
-      Target specifically the Summary and Key projects. 
-      Original Data: ${JSON.stringify(this.resume)}
-      Return ONLY the updated ResumeData JSON object.`;
-      
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
-      const cleanJson = text.replace(/```json|```/g, "").trim();
-      const updatedData = JSON.parse(cleanJson);
+      const response = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: "gpt-4o",
+            messages: [
+              {
+                role: "system",
+                content:
+                  "You are a professional resume writer. Polish the following professional summary to be more impactful and professional.",
+              },
+              {
+                role: "user",
+                content: this.resume.summary,
+              },
+            ],
+          }),
+        },
+      );
+
+      const data = await response.json();
+      if (data.choices && data.choices[0] && data.choices[0].message) {
+        this.resume.summary = data.choices[0].message.content;
+        this.updateResume();
+      } else {
+        throw new Error("AI could not process the summary. Check API limits.");
+      }
+    } catch (e) {
+      console.error("AI Gen failed", e);
+    } finally {
+      this.isMapping.set(false);
+    }
+  }
+
+  async suggestExperienceDescription(index: number) {
+    const exp = this.resume.experience[index];
+    if (!exp.title || !exp.company) return;
+
+    this.isMapping.set(true);
+    try {
+      const response = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: "gpt-4o",
+            messages: [
+              {
+                role: "system",
+                content:
+                  "You are a professional resume writer. Generate 3-4 impactful bullet points for a job description based on the title and company.",
+              },
+              {
+                role: "user",
+                content: `Job Title: ${exp.title}\nCompany: ${exp.company}\nDescription: ${exp.content}`,
+              },
+            ],
+          }),
+        },
+      );
+
+      const data = await response.json();
+      if (data.choices && data.choices[0] && data.choices[0].message) {
+        this.resume.experience[index].content = data.choices[0].message.content;
+        this.updateResume();
+      } else {
+        throw new Error("AI could not generate description. Check API limits.");
+      }
+    } catch (e) {
+      console.error("AI Gen failed", e);
+    } finally {
+      this.isMapping.set(false);
+    }
+  }
+
+  async mapToJob() {
+    if (!this.jobUrl) return;
+    this.isMapping.set(true);
+    try {
+      const response = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: "gpt-4o",
+            messages: [
+              {
+                role: "system",
+                content:
+                  "You are a professional resume writer. Rewrite resume elements to match job descriptions.",
+              },
+              {
+                role: "user",
+                content: `Rewrite elements of this resume to better map to this job description: ${this.jobUrl}. 
+              Target specifically the Summary and Key projects. 
+              Original Data: ${JSON.stringify(this.resume)}
+              Return ONLY the updated ResumeData JSON object.`,
+              },
+            ],
+            response_format: { type: "json_object" },
+          }),
+        },
+      );
+
+      const data = await response.json();
+      if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+        throw new Error("AI mapping failed. Check API limits.");
+      }
+      const content = data.choices[0].message.content;
+      const updatedData = JSON.parse(content);
       this.resume = { ...this.resume, ...updatedData };
       this.updateResume();
     } catch (e) {
-      console.error("Job mapping failed", e);
+      console.error("AI Gen failed", e);
     } finally {
       this.isMapping.set(false);
     }
   }
 
   addSkill() {
-    this.resume.skills = [...(this.resume.skills || []), { name: 'New Skill', level: 50 }];
+    this.resume.skills = [
+      ...(this.resume.skills || []),
+      { name: "New Skill", level: 50 },
+    ];
     this.updateResume();
   }
 
   removeSkill(name: string) {
-    this.resume.skills = this.resume.skills.filter(s => s.name !== name);
+    this.resume.skills = this.resume.skills.filter((s) => s.name !== name);
     this.updateResume();
   }
 
-  async generateQRCode() {
-    const url = this.resume.website || `https://linkedin.com/in/${this.resume.name.replace(/\s/g, '').toLowerCase()}`;
+  renderSkillsChart() {
+    const container = document.getElementById("skills-radar-chart");
+    if (!container || !this.resume.skills.length) return;
+
+    // Basic D3 Radar Chart implementation
+    d3.select(container).selectAll("*").remove();
+
+    const width = 300;
+    const height = 300;
+    const margin = 50;
+    const radius = Math.min(width, height) / 2 - margin;
+
+    const svg = d3
+      .select(container)
+      .append("svg")
+      .attr("width", "100%")
+      .attr("height", "100%")
+      .attr("viewBox", `0 0 ${width} ${height}`)
+      .append("g")
+      .attr("transform", `translate(${width / 2}, ${height / 2})`);
+
+    const data = this.resume.skills;
+    const angleSlice = (Math.PI * 2) / data.length;
+    const rScale = d3
+      .scaleLinear<number, number>()
+      .range([0, radius])
+      .domain([0, 100]);
+
+    // Grid
+    const levels = 5;
+    for (let j = 0; j < levels; j++) {
+      const levelFactor = radius * ((j + 1) / levels);
+      svg
+        .selectAll(".levels")
+        .data(data)
+        .enter()
+        .append("line")
+        .attr(
+          "x1",
+          (d: any, i: number) =>
+            levelFactor * Math.cos(angleSlice * i - Math.PI / 2),
+        )
+        .attr(
+          "y1",
+          (d: any, i: number) =>
+            levelFactor * Math.sin(angleSlice * i - Math.PI / 2),
+        )
+        .attr(
+          "x2",
+          (d: any, i: number) =>
+            levelFactor * Math.cos(angleSlice * (i + 1) - Math.PI / 2),
+        )
+        .attr(
+          "y2",
+          (d: any, i: number) =>
+            levelFactor * Math.sin(angleSlice * (i + 1) - Math.PI / 2),
+        )
+        .attr("class", "line")
+        .style("stroke", "#f4f4f5")
+        .style("stroke-width", "1px");
+    }
+
+    // Axes
+    const axis = svg
+      .selectAll(".axis")
+      .data(data)
+      .enter()
+      .append("g")
+      .attr("class", "axis");
+
+    axis
+      .append("line")
+      .attr("x1", 0)
+      .attr("y1", 0)
+      .attr(
+        "x2",
+        (d: any, i: number) => radius * Math.cos(angleSlice * i - Math.PI / 2),
+      )
+      .attr(
+        "y2",
+        (d: any, i: number) => radius * Math.sin(angleSlice * i - Math.PI / 2),
+      )
+      .style("stroke", "#f4f4f5")
+      .style("stroke-width", "1px");
+
+    // Labels
+    axis
+      .append("text")
+      .attr("class", "legend")
+      .style("font-size", "8px")
+      .style("font-weight", "900")
+      .attr("text-anchor", "middle")
+      .attr("dy", "0.35em")
+      .attr(
+        "x",
+        (d: any, i: number) =>
+          (radius + 20) * Math.cos(angleSlice * i - Math.PI / 2),
+      )
+      .attr(
+        "y",
+        (d: any, i: number) =>
+          (radius + 20) * Math.sin(angleSlice * i - Math.PI / 2),
+      )
+      .text((d: any) => d.name.toUpperCase());
+
+    // Radar Area
+    const radarLine = d3
+      .lineRadial<{ name: string; level: number }>()
+      .radius((d: { level: number }) => rScale(d.level))
+      .angle((d: any, i: number) => i * angleSlice)
+      .curve(d3.curveLinearClosed);
+
+    svg
+      .append("path")
+      .datum(data)
+      .attr("d", radarLine as any)
+      .style("fill", this.resume.aesthetics.primaryColor)
+      .style("fill-opacity", 0.1)
+      .style("stroke", this.resume.aesthetics.primaryColor)
+      .style("stroke-width", "2px");
+  }
+
+   async generateQRCode() {
+    const url =
+      this.resume.skillUrl ||
+      this.resume.website ||
+      `https://linkedin.com/in/${this.resume.name.replace(/\s/g, "").toLowerCase()}`;
     try {
       this.qrCodeUrl.set(await QRCode.toDataURL(url));
     } catch (err) {
-      console.error(err);
+      console.error("QR Generation failed:", err);
     }
   }
 
@@ -1252,7 +1645,7 @@ export class StudioComponent implements AfterViewInit {
 
   saveToCloud() {
     // Mock save
-    console.log('Syncing blueprint to edge nodes...', this.resume);
+    console.log("Syncing blueprint to edge nodes...", this.resume);
   }
 
   addSection() {
@@ -1270,58 +1663,71 @@ export class StudioComponent implements AfterViewInit {
   }
 
   getIconForType(type: string): string {
-    switch(type) {
-      case 'image': return 'image';
-      case 'line': return 'horizontal_rule';
-      case 'box': return 'crop_square';
-      case 'text': return 'title';
-      default: return 'help_outline';
+    switch (type) {
+      case "image":
+        return "image";
+      case "line":
+        return "horizontal_rule";
+      case "box":
+        return "crop_square";
+      case "text":
+        return "title";
+      default:
+        return "help_outline";
     }
   }
 
   convertToUnit(value: number, unit?: string): string {
-    if (!unit || unit === 'px') return value + 'px';
+    if (!unit || unit === "px") return value + "px";
     return value + unit;
   }
 
   getTransform(el: ResumeElement): string {
-    let transform = '';
+    let transform = "";
     if (el.rotation) transform += ` rotate(${el.rotation}deg)`;
-    return transform || 'none';
+    return transform || "none";
   }
 
   getImageMirror(el: ResumeElement): string {
-    let mirror = '';
-    if (el.mirror?.horizontal) mirror += ' scaleX(-1)';
-    if (el.mirror?.vertical) mirror += ' scaleY(-1)';
-    return mirror || 'none';
+    let mirror = "";
+    if (el.mirror?.horizontal) mirror += " scaleX(-1)";
+    if (el.mirror?.vertical) mirror += " scaleY(-1)";
+    return mirror || "none";
   }
 
-  addElement(type: 'image' | 'line' | 'box' | 'text') {
+  addElement(type: "image" | "line" | "box" | "text") {
     const newElement: ResumeElement = {
       id: Math.random().toString(36).substring(7),
       type,
       x: 300,
       y: 300,
-      width: type === 'line' ? 400 : 200,
-      height: type === 'line' ? 2 : (type === 'text' ? 100 : 200),
+      width: type === "line" ? 400 : 200,
+      height: type === "line" ? 2 : type === "text" ? 100 : 200,
       rotation: 0,
       isLocked: false,
       isVisible: true,
-      unit: 'px',
-      content: type === 'text' ? 'Double click to edit text...' : undefined,
-      url: type === 'image' ? 'https://picsum.photos/seed/' + Math.random() + '/400/400' : undefined,
-      style: { 
-        backgroundColor: type === 'line' ? '#09090b' : (type === 'box' ? 'transparent' : 'transparent'),
-        borderStyle: 'solid',
+      unit: "px",
+      content: type === "text" ? "Double click to edit text..." : undefined,
+      url:
+        type === "image"
+          ? "https://picsum.photos/seed/" + Math.random() + "/400/400"
+          : undefined,
+      style: {
+        backgroundColor:
+          type === "line"
+            ? "#09090b"
+            : type === "box"
+              ? "transparent"
+              : "transparent",
+        borderStyle: "solid",
         borderRadius: 0,
         borderWidth: 1,
-        borderColor: '#e4e4e7',
+        borderColor: "#e4e4e7",
         fontSize: 14,
-        color: '#09090b',
-        fontWeight: '400',
-        textAlign: 'left'
-      }
+        color: "#09090b",
+        fontWeight: "400",
+        textAlign: "left",
+      },
     };
     this.resume.aesthetics.elements.unshift(newElement); // Add to top of stack
     this.updateResume();
@@ -1330,31 +1736,47 @@ export class StudioComponent implements AfterViewInit {
   }
 
   removeElement(id: string) {
-    this.resume.aesthetics.elements = this.resume.aesthetics.elements.filter(el => el.id !== id);
+    this.resume.aesthetics.elements = this.resume.aesthetics.elements.filter(
+      (el) => el.id !== id,
+    );
     this.updateResume();
     if (this.activeElementId() === id) this.activeElementId.set(null);
   }
 
   getActiveElement() {
-    return this.resume.aesthetics.elements.find(el => el.id === this.activeElementId());
+    return this.resume.aesthetics.elements.find(
+      (el) => el.id === this.activeElementId(),
+    );
   }
 
   onDragEnd(event: CdkDragEnd, element: ResumeElement) {
     const { x, y } = event.source.getFreeDragPosition();
-    // Element position is relative to its starting point in cdkDrag usually
-    // but we can update its state x and y.
-    // However, if we use [cdkDragFreeDragPosition] it's better.
-    // For now, let's just calculate the new position.
-    
-    // Actually, getFreeDragPosition returns the offset from start.
-    // I'll update the resume state with the NEW total position.
     element.x += x;
     element.y += y;
-    
-    // Reset the internal position of cdkDrag so it doesn't "double add" next time
     event.source.reset();
-    
     this.updateResume();
+  }
+
+  onMetadataDragEnd(event: CdkDragEnd) {
+    if (this.resume.metadataStyle) {
+      const { x, y } = event.source.getFreeDragPosition();
+      this.resume.metadataStyle.x = (this.resume.metadataStyle.x || 0) + x;
+      this.resume.metadataStyle.y = (this.resume.metadataStyle.y || 0) + y;
+      event.source.reset();
+      this.updateResume();
+      console.log("Metadata position updated:", this.resume.metadataStyle.x, this.resume.metadataStyle.y);
+    }
+  }
+
+  onExperienceDragEnd(event: CdkDragEnd) {
+    if (this.resume.experienceStyle) {
+      const { x, y } = event.source.getFreeDragPosition();
+      this.resume.experienceStyle.x = (this.resume.experienceStyle.x || 0) + x;
+      this.resume.experienceStyle.y = (this.resume.experienceStyle.y || 0) + y;
+      event.source.reset();
+      this.updateResume();
+      console.log("Experience position updated:", this.resume.experienceStyle.x, this.resume.experienceStyle.y);
+    }
   }
 
   onImageUpload(event: any) {
@@ -1365,7 +1787,7 @@ export class StudioComponent implements AfterViewInit {
         const url = e.target.result;
         const newElement: ResumeElement = {
           id: Math.random().toString(36).substring(7),
-          type: 'image',
+          type: "image",
           x: 200,
           y: 200,
           width: 200,
@@ -1373,10 +1795,10 @@ export class StudioComponent implements AfterViewInit {
           rotation: 0,
           isLocked: false,
           isVisible: true,
-          unit: 'px',
+          unit: "px",
           mirror: { horizontal: false, vertical: false },
           url: url,
-          style: {}
+          style: {},
         };
         this.resume.aesthetics.elements.unshift(newElement);
         this.updateResume();
@@ -1406,30 +1828,34 @@ export class StudioComponent implements AfterViewInit {
   }
 
   async enhanceSection(section: ResumeSection) {
-    this.enhancingSections.update(s => {
+    this.enhancingSections.update((s) => {
       s.add(section.id);
       return new Set(s);
     });
-    
+
     const improved = await this.resumeService.enhanceText(section.content);
     section.content = improved;
     this.updateResume();
 
-    this.enhancingSections.update(s => {
+    this.enhancingSections.update((s) => {
       s.delete(section.id);
       return new Set(s);
     });
   }
 
-  zoomIn() { this.scale.update(s => Math.min(s + 10, 200)); }
-  zoomOut() { this.scale.update(s => Math.max(s - 10, 10)); }
-  
+  zoomIn() {
+    this.scale.update((s) => Math.min(s + 10, 200));
+  }
+  zoomOut() {
+    this.scale.update((s) => Math.max(s - 10, 10));
+  }
+
   toggleSidebarPosition() {
-    this.sidebarPosition.update(p => p === 'left' ? 'right' : 'left');
+    this.sidebarPosition.update((p) => (p === "left" ? "right" : "left"));
   }
 
   toggleFullscreen() {
-    const el = document.getElementById('resume-canvas');
+    const el = document.getElementById("resume-canvas");
     if (el?.requestFullscreen) el.requestFullscreen();
   }
 
@@ -1438,18 +1864,18 @@ export class StudioComponent implements AfterViewInit {
     if (res.canDownload) {
       this.resumeService.downloadPdf();
     } else {
-      this.dialog.open(PaymentDialogComponent, { width: '500px' });
+      this.dialog.open(PaymentDialogComponent, { width: "500px" });
     }
   }
 
   share() {
     const url = window.location.href;
     navigator.clipboard.writeText(url);
-    alert('Studio link replicated. Copied to clipboard.');
+    alert("Studio link replicated. Copied to clipboard.");
   }
 
   restoreDefaults() {
-    if (confirm('Reset document to initial blueprint? (Irreversible)')) {
+    if (confirm("Reset document to initial blueprint? (Irreversible)")) {
       // Implementation for reset
     }
   }

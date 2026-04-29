@@ -6,9 +6,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ResumeService } from '../../services/resume';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 
-declare const GEMINI_API_KEY: string;
+const OPENAI_API_KEY = "ADD API KEY";
 
 @Component({
   selector: 'app-cover-letter',
@@ -85,9 +84,7 @@ export class CoverLetterComponent {
     this.isGenerating.set(true);
     try {
       const resume = this.resumeService.resumeState();
-      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-
+      
       const prompt = `Draft a professional cover letter for a ${this.data.positionTitle || 'job'} at ${this.data.institutionName || 'the company'}.
       
       Job Description: ${this.data.jobDescription}
@@ -99,8 +96,29 @@ export class CoverLetterComponent {
       
       The letter should be professional, compelling, and exactly reflect the user's expertise. Use a formal tone.`;
 
-      const result = await model.generateContent(prompt);
-      this.data.generatedLetter = result.response.text();
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4o",
+          messages: [
+            {
+              role: "system",
+              content: "You are a professional cover letter writer."
+            },
+            {
+              role: "user",
+              content: prompt
+            }
+          ]
+        })
+      });
+
+      const data = await response.json();
+      this.data.generatedLetter = data.choices[0].message.content;
     } catch (e) {
       console.error('AI Gen failed', e);
       this.data.generatedLetter = "An error occurred during AI generation. Please try again.";

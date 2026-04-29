@@ -40,7 +40,7 @@ export interface ResumeElement {
   isVisible?: boolean;
   mirror?: { horizontal: boolean; vertical: boolean };
   unit?: 'px' | 'cm' | 'mm';
-  style?: Record<string, any>;
+  style?: Record<string, string | number>;
 }
 
 export interface Aesthetics {
@@ -77,7 +77,16 @@ export interface ResumeData {
     width?: number;
     x?: number;
     y?: number;
+    isLocked?: boolean;
+    isVisible?: boolean;
   };
+  experienceStyle?: {
+    x?: number;
+    y?: number;
+    isLocked?: boolean;
+    isVisible?: boolean;
+  };
+  skillUrl?: string;
 }
 
 export interface CoverLetterData {
@@ -118,8 +127,17 @@ export class ResumeService {
       border: 'none',
       padding: 0,
       x: 0,
-      y: 0
+      y: 0,
+      isLocked: true,
+      isVisible: true
     },
+    experienceStyle: {
+      x: 0,
+      y: 0,
+      isLocked: true,
+      isVisible: true
+    },
+    skillUrl: '',
     aesthetics: {
       fontFamily: 'Inter',
       primaryColor: '#09090b',
