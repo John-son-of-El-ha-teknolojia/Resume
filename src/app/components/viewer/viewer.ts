@@ -1,5 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
@@ -20,174 +21,223 @@ import { PaymentDialogComponent } from '../payment/payment';
     MatDialogModule
   ],
   template: `
-    <div class="resume-container pb-24">
-      <header class="flex flex-col md:flex-row items-center justify-between gap-6 mb-12">
-        <div class="text-center md:text-left">
-          <h1 class="text-3xl md:text-4xl font-black text-slate-800 uppercase tracking-tight">Final Preview</h1>
-          <p class="text-slate-500 font-medium">Select a refined template for your document.</p>
+    <div class="min-h-screen bg-[#F3F4F6] py-12 px-6 overflow-x-hidden">
+      <header class="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 mb-12 bg-white p-4 rounded-2xl border border-zinc-200">
+        <div class="flex items-center gap-6">
+          <button (click)="backToDashboard()" class="flex items-center gap-2 group">
+            <div class="w-8 h-8 bg-zinc-100 rounded-lg flex items-center justify-center group-hover:bg-zinc-900 transition-colors">
+              <mat-icon class="text-zinc-500 scale-75 group-hover:text-white">arrow_back</mat-icon>
+            </div>
+            <span class="text-[10px] font-black uppercase tracking-widest text-zinc-400 group-hover:text-zinc-900 transition-colors">Dashboard</span>
+          </button>
+          <div class="h-6 w-px bg-zinc-200"></div>
+          <button (click)="backToStudio()" class="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-zinc-900 transition-colors">Studio</button>
+          <div class="h-6 w-px bg-zinc-200"></div>
+          <h1 class="text-[10px] font-black uppercase tracking-widest text-zinc-900 border-b-2 border-zinc-900 pb-1">Viewer</h1>
         </div>
         
-        <div class="flex flex-wrap justify-center items-center gap-4 bg-white/50 p-2 rounded-2xl border border-slate-200 backdrop-blur-sm">
-           <div class="hidden sm:block text-[10px] uppercase font-black text-slate-400 mx-2 tracking-widest">Aesthetic</div>
-           <mat-button-toggle-group [value]="template()" (change)="template.set($event.value)" color="primary" class="!border-none !shadow-none">
-            <mat-button-toggle value="minimal" class="!rounded-lg">Minimal</mat-button-toggle>
-            <mat-button-toggle value="modern" class="!rounded-lg">Modern</mat-button-toggle>
-            <mat-button-toggle value="classic" class="!rounded-lg">Classic</mat-button-toggle>
-          </mat-button-toggle-group>
-          
-          <div class="w-px h-6 bg-slate-200 hidden sm:block"></div>
-          
-          <button mat-flat-button class="!bg-blue-600 !text-white h-10 px-6 rounded-lg font-bold shadow-lg shadow-blue-100" (click)="exportPdf()">
-            <mat-icon class="mr-1">download</mat-icon> Export
+        <div class="flex items-center gap-4">
+          <button mat-flat-button class="!bg-zinc-900 !text-white h-10 px-8 rounded-xl !text-[10px] !font-black !uppercase !tracking-widest shadow-xl shadow-zinc-200" (click)="exportPdf()">
+            <mat-icon class="mr-1 text-sm">download</mat-icon> Export Document
           </button>
-          
-          @if (isPremium()) {
-            <button mat-stroked-button class="!border-slate-200 !text-slate-600 h-10 px-4 rounded-lg font-bold" (click)="shareLink()">
-              <mat-icon class="text-sm">share</mat-icon>
-            </button>
-          }
         </div>
       </header>
 
-      <!-- Resume Canvas -->
-      <div class="bg-white shadow-2xl rounded-sm overflow-hidden min-h-[1100px] border border-slate-100 max-w-4xl mx-auto" [ngClass]="'template-' + template()">
-        
-        <!-- Minimal Template -->
-        @if (template() === 'minimal') {
-          <div class="p-16 font-sans space-y-12">
-            <header class="text-center">
-              <h1 class="text-5xl font-black tracking-tighter text-slate-900 mb-4">{{ resume().name || 'JONATHAN DOE' }}</h1>
-              <div class="flex flex-wrap justify-center gap-x-6 gap-y-2 text-slate-400 text-[10px] font-bold uppercase tracking-widest">
-                <span>{{ resume().email }}</span>
-                <span>•</span>
-                <span>{{ resume().phone }}</span>
-                <span>•</span>
-                <span>{{ resume().location }}</span>
-              </div>
-            </header>
-
-            <section class="max-w-2xl mx-auto text-center">
-              <p class="text-lg leading-relaxed text-slate-600 font-medium italic">"{{ resume().summary }}"</p>
-            </section>
-
-            <div class="space-y-12">
-              @for (section of resume().sections; track section.id) {
-                <section>
-                  <h3 class="text-xs font-black tracking-[0.3em] uppercase text-zinc-400 mb-6 flex items-center gap-4">
-                    {{ section.title }}
-                    <span class="flex-1 h-px bg-slate-100"></span>
-                  </h3>
-                  <div class="whitespace-pre-wrap text-slate-700 leading-relaxed pl-4 border-l-2 border-slate-50">{{ section.content }}</div>
-                </section>
+      <div class="flex justify-center items-start overflow-auto no-scrollbar pb-20">
+         <div 
+           id="resume-canvas"
+           class="a4-paper bg-white shadow-2xl relative shrink-0 overflow-hidden"
+           [style.transform]="'scale(' + scale() + ')'"
+           [style.font-family]="resume().aesthetics.fontFamily">
+           
+           <!-- Elements Layer -->
+           <div class="absolute inset-0 pointer-events-none overflow-hidden">
+              @for (el of resume().aesthetics.elements; track el.id) {
+                 @if (el.isVisible !== false) {
+                    <div class="absolute"
+                         [style.left]="convertToUnit(el.x, el.unit)"
+                         [style.top]="convertToUnit(el.y, el.unit)"
+                         [style.width]="convertToUnit(el.width, el.unit)"
+                         [style.height]="convertToUnit(el.height, el.unit)"
+                         [style.transform]="getTransform(el)">
+                       
+                       @if (el.type === 'image') {
+                          <img [src]="el.url" class="w-full h-full object-cover shadow-sm" referrerpolicy="no-referrer"
+                               [style.border-radius.px]="el.style?.['borderRadius'] || 0"
+                               [style.opacity]="el.style?.['opacity'] ?? 1"
+                               [style.transform]="getImageMirror(el)" alt="">
+                       } @else if (el.type === 'line') {
+                          <div class="w-full h-full" 
+                               [style.border-top-width.px]="el.style?.['thickness'] || 2"
+                               [style.border-top-style]="el.style?.['borderStyle'] || 'solid'"
+                               [style.border-top-color]="el.style?.['backgroundColor']"></div>
+                       } @else if (el.type === 'box') {
+                          <div class="w-full h-full flex items-center justify-center text-center p-2" 
+                               [style.background-color]="el.style?.['backgroundColor']"
+                               [style.border-radius.px]="el.style?.['borderRadius'] || 0"
+                               [style.border-width.px]="el.style?.['borderWidth'] || 0"
+                               [style.border-style]="el.style?.['borderStyle'] || 'none'"
+                               [style.border-color]="el.style?.['borderColor'] || '#e4e4e7'"
+                               [style.color]="el.style?.['color'] || '#09090b'"
+                               [style.font-size.px]="el.style?.['fontSize'] || 12">
+                               {{ el.content }}
+                          </div>
+                       } @else if (el.type === 'text') {
+                          <div class="w-full h-full p-2 outline-none whitespace-pre-wrap" 
+                               [style.font-size.px]="el.style?.['fontSize'] || 12"
+                               [style.color]="el.style?.['color'] || '#09090b'"
+                               [style.font-weight]="el.style?.['fontWeight'] || '400'"
+                               [style.text-align]="el.style?.['textAlign'] || 'left'"
+                               [style.border]="el.style?.['borderWidth'] ? (el.style?.['borderWidth'] + 'px ' + (el.style?.['borderStyle'] || 'solid') + ' ' + (el.style?.['borderColor'] || '#000')) : 'none'">{{ el.content }}</div>
+                       }
+                    </div>
+                 }
               }
-            </div>
-          </div>
-        }
+           </div>
 
-        <!-- Modern Template -->
-        @if (template() === 'modern') {
-          <div class="flex flex-col min-h-inherit font-sans">
-            <header class="p-12 border-b-8 border-blue-600 bg-slate-50">
-              <h1 class="text-4xl font-black text-slate-800 tracking-tighter mb-2 uppercase">{{ resume().name || 'JONATHAN DOE' }}</h1>
-              <p class="text-blue-600 font-black tracking-[0.2em] text-xs uppercase mb-6">Expert Executive</p>
-              <div class="flex flex-wrap gap-6 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                <span class="flex items-center gap-1"><mat-icon class="text-[14px] w-4 h-4">location_on</mat-icon> {{ resume().location }}</span>
-                <span class="flex items-center gap-1"><mat-icon class="text-[14px] w-4 h-4">email</mat-icon> {{ resume().email }}</span>
-                <span class="flex items-center gap-1"><mat-icon class="text-[14px] w-4 h-4">phone</mat-icon> {{ resume().phone }}</span>
+           <!-- Standard Layout Content -->
+           <div class="p-16 h-full flex flex-col relative" [style.background-color]="resume().aesthetics.backgroundColor">
+              <header class="text-center pt-8" 
+                      *ngIf="resume().metadataStyle?.isVisible !== false"
+                      [style.transform]="'translate(' + (resume().metadataStyle?.x || 0) + 'px, ' + (resume().metadataStyle?.y || 0) + 'px)'"
+                      [style.border]="resume().metadataStyle?.border === 'none' ? 'none' : '1px ' + resume().metadataStyle?.border + ' #e4e4e7'"
+                      [style.padding.px]="resume().metadataStyle?.padding"
+                      [style.width.px]="resume().metadataStyle?.width">
+                 <h1 class="text-6xl font-black tracking-tighter mb-6 uppercase" [style.color]="resume().aesthetics.primaryColor">{{ resume().name || 'IDENTITY_UNDEFINED' }}</h1>
+                 <div class="flex flex-wrap justify-center gap-x-8 gap-y-3 text-zinc-400 text-[10px] font-black uppercase tracking-[0.2em] border-y border-zinc-100 py-4 max-w-xl mx-auto">
+                    <span>{{ resume().phoneCountryCode }} {{ resume().phone }}</span>
+                    <span>{{ resume().email }}</span>
+                    <span>{{ resume().location }}</span>
+                 </div>
+              </header>
+
+              <section class="max-w-xl mx-auto text-center mt-12 mb-12">
+                 <p class="text-lg leading-relaxed text-zinc-600 font-medium italic" [style.color]="resume().aesthetics.primaryColor">"{{ resume().summary }}"</p>
+              </section>
+
+              <div class="flex-1 space-y-12">
+                 @if (resume().experience.length > 0 && resume().experienceStyle?.isVisible !== false) {
+                    <section class="space-y-8" [style.transform]="'translate(' + (resume().experienceStyle?.x || 0) + 'px, ' + (resume().experienceStyle?.y || 0) + 'px)'">
+                       <h3 class="text-xs font-black tracking-[0.3em] uppercase text-zinc-400 mb-6 flex items-center gap-6">
+                         Experience
+                         <span class="flex-1 h-px bg-zinc-100"></span>
+                       </h3>
+                       <div class="space-y-10">
+                          @for (exp of resume().experience; track exp.id) {
+                             <div class="pl-8 border-l border-zinc-100 relative">
+                                <div class="absolute -left-[5px] top-1 w-2 h-2 rounded-full bg-zinc-900"></div>
+                                <div class="flex justify-between items-start mb-2">
+                                   <div>
+                                      <h4 class="font-black uppercase tracking-widest text-zinc-900 text-sm">{{ exp.company }}</h4>
+                                      <p class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{{ exp.title }}</p>
+                                   </div>
+                                   <div class="text-right text-[10px] font-black text-zinc-900 uppercase tracking-widest">
+                                      {{ exp.startDate }} — {{ exp.current ? 'Present' : exp.endDate }}
+                                   </div>
+                                </div>
+                                <p class="text-sm text-zinc-600 leading-relaxed">{{ exp.content }}</p>
+                             </div>
+                          }
+                       </div>
+                    </section>
+                 }
+
+                 @if (resume().skills.length > 0) {
+                    <section class="space-y-12 pb-12">
+                       <h3 class="text-xs font-black tracking-[0.3em] uppercase text-zinc-400 mb-6 flex items-center gap-6">
+                         Skills
+                         <span class="flex-1 h-px bg-zinc-100"></span>
+                       </h3>
+                       <div class="grid grid-cols-2 gap-x-12 gap-y-8">
+                          @for (skill of resume().skills; track skill.name) {
+                             <div class="space-y-3">
+                                <div class="flex justify-between items-end mb-1">
+                                   <span class="text-[10px] font-black uppercase tracking-widest text-zinc-900 border-b border-zinc-900 pb-1">{{ skill.name }}</span>
+                                   @if (skill.displayMode !== 'text') {
+                                     <span class="text-[9px] font-black text-zinc-400">{{ skill.level }}%</span>
+                                   }
+                                </div>
+                                
+                                @if (skill.displayMode === 'horizontal_bar') {
+                                   <div class="h-1.5 w-full bg-zinc-100 rounded-full overflow-hidden">
+                                      <div class="h-full bg-zinc-900" [style.width.%]="skill.level"></div>
+                                   </div>
+                                }
+                                @if (skill.displayMode === 'vertical_bar') {
+                                   <div class="h-20 w-8 bg-zinc-100 rounded-lg overflow-hidden relative mx-auto">
+                                      <div class="absolute bottom-0 left-0 right-0 bg-zinc-900" [style.height.%]="skill.level"></div>
+                                   </div>
+                                }
+                             </div>
+                          }
+                       </div>
+                    </section>
+                 }
               </div>
-            </header>
-
-            <div class="p-12 grid grid-cols-12 gap-12">
-              <aside class="col-span-12 md:col-span-4 space-y-10">
-                <section>
-                  <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Profile</h3>
-                  <p class="text-xs text-slate-600 leading-relaxed">{{ resume().summary }}</p>
-                </section>
-
-                @for (section of resume().sections.slice(2); track section.id) {
-                  <section>
-                    <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">{{ section.title }}</h3>
-                    <div class="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap">{{ section.content }}</div>
-                  </section>
-                }
-              </aside>
-              
-              <main class="col-span-12 md:col-span-8 space-y-10">
-                @for (section of resume().sections.slice(0, 2); track section.id) {
-                  <section>
-                    <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest mb-6 flex items-center gap-3">
-                      <span class="w-8 h-1 bg-blue-600"></span>
-                      {{ section.title }}
-                    </h3>
-                    <div class="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap pl-11">{{ section.content }}</div>
-                  </section>
-                }
-              </main>
-            </div>
-          </div>
-        }
-
-        <!-- Classic Template -->
-        @if (template() === 'classic') {
-          <div class="p-20 font-serif space-y-10 text-slate-800">
-            <header class="text-center space-y-4">
-              <h1 class="text-5xl font-bold tracking-tight mb-2">{{ resume().name || 'Jonathan Doe' }}</h1>
-              <div class="text-xs font-medium tracking-widest uppercase text-slate-400 border-y border-slate-100 py-3">
-                {{ resume().email }} &bull; {{ resume().phone }} &bull; {{ resume().location }}
-              </div>
-            </header>
-
-            <section>
-              <h2 class="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 text-center mb-6">Executive Summary</h2>
-              <p class="leading-relaxed text-center max-w-2xl mx-auto italic text-lg text-slate-600">"{{ resume().summary }}"</p>
-            </section>
-
-            <div class="space-y-10">
-              @for (section of resume().sections; track section.id) {
-                <section>
-                  <h2 class="text-xs font-black uppercase tracking-[0.2em] border-b-2 border-slate-800 pb-2 mb-6">{{ section.title }}</h2>
-                  <div class="whitespace-pre-wrap leading-relaxed text-slate-700">{{ section.content }}</div>
-                </section>
-              }
-            </div>
-          </div>
-        }
-
+           </div>
+         </div>
       </div>
     </div>
   `,
   styles: [`
     :host { display: block; }
-    .min-h-inherit { min-height: inherit; }
-    mat-button-toggle-group { background-color: transparent !important; border: none !important; }
-    .mat-button-toggle-checked { background-color: rgb(15, 23, 42) !important; color: white !important; border-radius: 0.5rem !important; }
-    .mat-button-toggle { color: rgb(100, 116, 139) !important; font-weight: 700 !important; transition: all 0.2s !important; border: none !important; }
+    .a4-paper {
+      width: 210mm;
+      height: 297mm;
+      min-height: 297mm;
+    }
+    @media (max-width: 210mm) {
+      .a4-paper {
+        width: 100vw;
+        height: auto;
+        min-height: 100vh;
+      }
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   `]
 })
 export class ViewerComponent {
   private resumeService = inject(ResumeService);
   private dialog = inject(MatDialog);
+  private router = inject(Router);
   
   resume = this.resumeService.resumeState;
-  template = signal<'minimal' | 'modern' | 'classic'>('minimal');
   isPremium = this.resumeService.isPremium;
+  scale = signal(1);
 
-  shareLink() {
-    const url = window.location.href;
-    navigator.clipboard.writeText(url);
-    alert('Shareable link copied to clipboard!');
+  backToDashboard() {
+    this.router.navigate(['/dashboard']);
+  }
+
+  backToStudio() {
+    this.router.navigate(['/writer']);
+  }
+
+  convertToUnit(value: number, unit?: string): string {
+    if (!unit || unit === "px") return value + "px";
+    return value + unit;
+  }
+
+  getTransform(el: any): string {
+    let transform = "";
+    if (el.rotation) transform += ` rotate(${el.rotation}deg)`;
+    return transform || "none";
+  }
+
+  getImageMirror(el: any): string {
+    let mirror = "";
+    if (el.mirror?.horizontal) mirror += " scaleX(-1)";
+    if (el.mirror?.vertical) mirror += " scaleY(-1)";
+    return mirror || "none";
   }
 
   async exportPdf() {
     const res = await this.resumeService.checkEligibility();
-    
     if (res.canDownload) {
       this.resumeService.downloadPdf();
     } else {
-      this.dialog.open(PaymentDialogComponent, {
-        width: '500px',
-        maxWidth: '95vw'
-      });
+      this.dialog.open(PaymentDialogComponent, { width: '500px' });
     }
   }
 }

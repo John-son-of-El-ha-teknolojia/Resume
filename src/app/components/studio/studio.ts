@@ -19,6 +19,7 @@ import { MatSliderModule } from "@angular/material/slider";
 import { MatProgressBarModule } from "@angular/material/progress-bar";
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 import { DragDropModule, CdkDragEnd } from "@angular/cdk/drag-drop";
+import { Router } from "@angular/router";
 import {
   ResumeService,
   ResumeSection,
@@ -26,7 +27,6 @@ import {
 } from "../../services/resume";
 import { PaymentDialogComponent } from "../payment/payment";
 import * as QRCode from "qrcode";
-import * as d3 from "d3";
 
 const OPENAI_API_KEY = "ADD API KEY";
 
@@ -75,11 +75,22 @@ const MOOD_PRESETS: Record<string, any> = {
       
       <!-- TOOLBAR -->
       <header class="h-14 bg-white border-b border-zinc-200 flex items-center justify-between px-6 z-50 shrink-0">
-        <div class="flex items-center gap-4">
-          <div class="w-8 h-8 bg-zinc-900 rounded-lg flex items-center justify-center">
-            <mat-icon class="text-white scale-75">category</mat-icon>
+        <div class="flex items-center gap-6">
+          <button (click)="backToDashboard()" class="flex items-center gap-2 group">
+            <div class="w-8 h-8 bg-zinc-100 rounded-lg flex items-center justify-center group-hover:bg-zinc-900 transition-colors">
+              <mat-icon class="text-zinc-500 scale-75 group-hover:text-white">arrow_back</mat-icon>
+            </div>
+            <span class="text-[10px] font-black uppercase tracking-widest text-zinc-400 group-hover:text-zinc-900 transition-colors">Dashboard</span>
+          </button>
+          <div class="h-6 w-px bg-zinc-200"></div>
+          <div class="flex items-center gap-4">
+             <div class="w-8 h-8 bg-zinc-900 rounded-lg flex items-center justify-center">
+               <mat-icon class="text-white scale-75">category</mat-icon>
+             </div>
+             <h1 class="text-xs font-black uppercase tracking-[0.2em] text-zinc-900">Studio</h1>
           </div>
-          <h1 class="text-xs font-black uppercase tracking-[0.2em] text-zinc-900">Resume Studio <span class="text-zinc-400 font-bold ml-2">v3.0</span></h1>
+          <div class="h-6 w-px bg-zinc-200"></div>
+          <button (click)="goToViewer()" class="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-zinc-900 transition-colors">Viewer</button>
         </div>
 
         <div class="flex items-center gap-3">
@@ -311,7 +322,7 @@ const MOOD_PRESETS: Record<string, any> = {
                      </div>
                    </div>
                    
-                    <div class="space-y-2">
+                    <div class="space-y-2 mb-10">
                       @for (el of resume.aesthetics.elements; track el.id) {
                         <div class="p-3 bg-zinc-50 border border-zinc-100 rounded-xl group transition-all" 
                              [class.ring-2]="activeElementId() === el.id" [class.ring-zinc-900]="activeElementId() === el.id">
@@ -375,6 +386,119 @@ const MOOD_PRESETS: Record<string, any> = {
                         </div>
                       </div>
                    </div>
+
+                   <!-- Layer Element Properties Section -->
+                   @if (getActiveElement(); as activeEl) {
+                     <div class="space-y-6 pt-6 border-t border-zinc-100 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <h3 class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Layer Elements Properties</h3>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                           @if (activeEl.type === 'box' || activeEl.type === 'text' || activeEl.type === 'image') {
+                             <div class="space-y-1">
+                               <label class="text-[8px] font-black uppercase text-zinc-300">Width</label>
+                               <input type="number" [(ngModel)]="activeEl.width" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-xs font-bold">
+                             </div>
+                             <div class="space-y-1">
+                               <label class="text-[8px] font-black uppercase text-zinc-300">Height</label>
+                               <input type="number" [(ngModel)]="activeEl.height" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-xs font-bold">
+                             </div>
+                           }
+
+                           @if (activeEl.type === 'box') {
+                             <div class="space-y-1">
+                               <label class="text-[8px] font-black uppercase text-zinc-300">Border Type</label>
+                               <select [(ngModel)]="activeEl.style!['borderStyle']" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-[10px] font-black uppercase">
+                                 <option value="none">None</option>
+                                 <option value="solid">Solid</option>
+                                 <option value="dashed">Dashed</option>
+                                 <option value="dotted">Dotted</option>
+                               </select>
+                             </div>
+                             <div class="space-y-1">
+                               <label class="text-[8px] font-black uppercase text-zinc-300">Fill Color</label>
+                               <input type="color" [(ngModel)]="activeEl.style!['backgroundColor']" (ngModelChange)="updateResume()" class="w-full h-10 rounded-xl cursor-pointer">
+                             </div>
+                             <div class="space-y-1 col-span-2">
+                               <label class="text-[8px] font-black uppercase text-zinc-300">Box Content</label>
+                               <input type="text" [(ngModel)]="activeEl.content" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-xs font-bold">
+                             </div>
+                             <div class="space-y-1">
+                               <label class="text-[8px] font-black uppercase text-zinc-300">Corner Radius</label>
+                               <input type="number" [(ngModel)]="activeEl.style!['borderRadius']" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-xs font-bold">
+                             </div>
+                           }
+
+                           @if (activeEl.type === 'text') {
+                             <div class="space-y-1">
+                               <label class="text-[8px] font-black uppercase text-zinc-300">Font Weight</label>
+                               <select [(ngModel)]="activeEl.style!['fontWeight']" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-[10px] font-black uppercase">
+                                 <option value="400">Regular</option>
+                                 <option value="600">Semibold</option>
+                                 <option value="900">Black</option>
+                               </select>
+                             </div>
+                             <div class="space-y-1">
+                               <label class="text-[8px] font-black uppercase text-zinc-300">Size</label>
+                               <input type="number" [(ngModel)]="activeEl.style!['fontSize']" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-xs font-bold">
+                             </div>
+                             <div class="space-y-1">
+                               <label class="text-[8px] font-black uppercase text-zinc-300">Color</label>
+                               <input type="color" [(ngModel)]="activeEl.style!['color']" (ngModelChange)="updateResume()" class="w-full h-10 rounded-xl cursor-pointer">
+                             </div>
+                             <div class="space-y-1 col-span-2">
+                               <label class="text-[8px] font-black uppercase text-zinc-300">Text Content</label>
+                               <textarea [(ngModel)]="activeEl.content" (ngModelChange)="updateResume()" rows="3" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-xs font-bold"></textarea>
+                             </div>
+                           }
+
+                           @if (activeEl.type === 'line') {
+                             <div class="space-y-1">
+                               <label class="text-[8px] font-black uppercase text-zinc-300">Thickness</label>
+                               <input type="number" [(ngModel)]="activeEl.style!['thickness']" (ngModelChange)="activeEl.height = activeEl.style!['thickness'] || 2; updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-xs font-bold">
+                             </div>
+                             <div class="space-y-1">
+                               <label class="text-[8px] font-black uppercase text-zinc-300">Length</label>
+                               <input type="number" [(ngModel)]="activeEl.width" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-xs font-bold">
+                             </div>
+                             <div class="space-y-1">
+                               <label class="text-[8px] font-black uppercase text-zinc-300">Color</label>
+                               <input type="color" [(ngModel)]="activeEl.style!['backgroundColor']" (ngModelChange)="updateResume()" class="w-full h-10 rounded-xl cursor-pointer">
+                             </div>
+                             <div class="space-y-1">
+                               <label class="text-[8px] font-black uppercase text-zinc-300">Line Type</label>
+                               <select [(ngModel)]="activeEl.style!['borderStyle']" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-[10px] font-black uppercase">
+                                 <option value="solid">Straight</option>
+                                 <option value="dashed">Dashed</option>
+                                 <option value="dotted">Dotted</option>
+                               </select>
+                             </div>
+                           }
+
+                           @if (activeEl.type === 'image') {
+                             <div class="space-y-1">
+                               <label class="text-[8px] font-black uppercase text-zinc-300">Opacity</label>
+                               <input type="range" min="0" max="1" step="0.1" [(ngModel)]="activeEl.style!['opacity']" (ngModelChange)="updateResume()" class="w-full accent-zinc-900">
+                             </div>
+                             <div class="space-y-1">
+                               <label class="text-[8px] font-black uppercase text-zinc-300">Corner Radius</label>
+                               <input type="number" [(ngModel)]="activeEl.style!['borderRadius']" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-xs font-bold">
+                             </div>
+                             <div class="col-span-2 flex gap-4">
+                               <button (click)="activeEl.mirror!.horizontal = !activeEl.mirror!.horizontal; updateResume()" 
+                                       class="flex-1 p-3 border rounded-xl text-[8px] font-black uppercase tracking-widest transition-all"
+                                       [class.bg-zinc-900]="activeEl.mirror?.horizontal" [class.text-white]="activeEl.mirror?.horizontal">
+                                 Mirror H
+                               </button>
+                               <button (click)="activeEl.mirror!.vertical = !activeEl.mirror!.vertical; updateResume()" 
+                                       class="flex-1 p-3 border rounded-xl text-[8px] font-black uppercase tracking-widest transition-all"
+                                       [class.bg-zinc-900]="activeEl.mirror?.vertical" [class.text-white]="activeEl.mirror?.vertical">
+                                 Mirror V
+                               </button>
+                             </div>
+                           }
+                        </div>
+                     </div>
+                   }
                 </div>
               </mat-tab>
 
@@ -666,25 +790,33 @@ const MOOD_PRESETS: Record<string, any> = {
                          (click)="activeElementId.set(el.id); activeSectionId.set(null); $event.stopPropagation()">
                       
                       @if (el.type === 'image') {
-                        <img [src]="el.url" class="w-full h-full object-cover rounded-sm shadow-sm" referrerpolicy="no-referrer"
+                        <img [src]="el.url" class="w-full h-full object-cover shadow-sm transition-all" referrerpolicy="no-referrer"
+                             [style.border-radius.px]="el.style?.['borderRadius'] || 0"
+                             [style.opacity]="el.style?.['opacity'] ?? 1"
                              [style.transform]="getImageMirror(el)" alt="Canvas element">
                       } @else if (el.type === 'line') {
-                        <div class="w-full h-full" [style.background-color]="el.style?.['backgroundColor']" 
-                             [class.border-t-2]="el.style?.['borderStyle'] === 'dashed' || el.style?.['borderStyle'] === 'dotted'"
+                        <div class="w-full h-full transition-all" 
+                             [style.border-top-width.px]="el.style?.['thickness'] || 2"
                              [style.border-top-style]="el.style?.['borderStyle'] || 'solid'"
                              [style.border-top-color]="el.style?.['backgroundColor']"></div>
                       } @else if (el.type === 'box') {
-                        <div class="w-full h-full border border-zinc-200" [style.background-color]="el.style?.['backgroundColor']"
+                        <div class="w-full h-full transition-all flex items-center justify-center text-center p-2" 
+                             [style.background-color]="el.style?.['backgroundColor']"
                              [style.border-radius.px]="el.style?.['borderRadius'] || 0"
-                             [style.border-width.px]="el.style?.['borderWidth'] || 1"
-                             [style.border-style]="el.style?.['borderStyle'] || 'solid'"
-                             [style.border-color]="el.style?.['borderColor'] || '#e4e4e7'"></div>
+                             [style.border-width.px]="el.style?.['borderWidth'] || 0"
+                             [style.border-style]="el.style?.['borderStyle'] || 'none'"
+                             [style.border-color]="el.style?.['borderColor'] || '#e4e4e7'"
+                             [style.color]="el.style?.['color'] || '#09090b'"
+                             [style.font-size.px]="el.style?.['fontSize'] || 12">
+                             {{ el.content }}
+                        </div>
                       } @else if (el.type === 'text') {
-                        <div class="w-full h-full p-2 outline-none whitespace-pre-wrap select-text" 
+                        <div class="w-full h-full p-2 outline-none whitespace-pre-wrap select-text transition-all" 
                              [style.font-size.px]="el.style?.['fontSize'] || 12"
                              [style.color]="el.style?.['color'] || '#09090b'"
                              [style.font-weight]="el.style?.['fontWeight'] || '400'"
                              [style.text-align]="el.style?.['textAlign'] || 'left'"
+                             [style.border]="el.style?.['borderWidth'] ? (el.style?.['borderWidth'] + 'px ' + (el.style?.['borderStyle'] || 'solid') + ' ' + (el.style?.['borderColor'] || '#000')) : 'none'"
                              [contentEditable]="!el.isLocked"
                              (blur)="el.content = $any($event.target).innerText; updateResume()">{{ el.content }}</div>
                       }
@@ -782,14 +914,37 @@ const MOOD_PRESETS: Record<string, any> = {
                       </section>
                     }
 
-    @if (resume.skills.length > 0) {
+                    @if (resume.skills.length > 0) {
                       <section class="space-y-8">
                         <h3 class="text-xs font-black tracking-[0.3em] uppercase text-zinc-400 mb-6 flex items-center gap-6">
-                          Proficiencies
+                          Skills
                           <span class="flex-1 h-px bg-zinc-100"></span>
                         </h3>
-                        <div class="flex justify-center py-10 bg-zinc-50/50 rounded-3xl border border-zinc-50">
-                           <div id="skills-radar-chart" class="w-[300px] h-[300px]"></div>
+                        
+                        <!-- WYSIWYG Skills Rendering -->
+                        <div class="grid grid-cols-2 gap-x-12 gap-y-6">
+                           @for (skill of resume.skills; track skill.name) {
+                              <div class="space-y-3">
+                                 <div class="flex justify-between items-end">
+                                    <span class="text-[10px] font-black uppercase tracking-widest text-zinc-900 border-b border-zinc-900 pb-1">{{ skill.name }}</span>
+                                    @if (skill.displayMode !== 'text') {
+                                      <span class="text-[9px] font-bold text-zinc-400 uppercase tracking-tighter">{{ skill.level }}%</span>
+                                    }
+                                 </div>
+                                 
+                                 @if (skill.displayMode === 'horizontal_bar') {
+                                    <div class="h-1.5 w-full bg-zinc-100 rounded-full overflow-hidden">
+                                       <div class="h-full bg-zinc-900 transition-all duration-1000" [style.width.%]="skill.level"></div>
+                                    </div>
+                                 }
+
+                                 @if (skill.displayMode === 'vertical_bar') {
+                                    <div class="h-20 w-8 bg-zinc-100 rounded-lg overflow-hidden relative mx-auto">
+                                       <div class="absolute bottom-0 left-0 right-0 bg-zinc-900 transition-all duration-1000" [style.height.%]="skill.level"></div>
+                                    </div>
+                                 }
+                              </div>
+                           }
                         </div>
                       </section>
                     }
@@ -1148,6 +1303,7 @@ const MOOD_PRESETS: Record<string, any> = {
 export class StudioComponent implements AfterViewInit {
   public resumeService = inject(ResumeService);
   private dialog = inject(MatDialog);
+  private router = inject(Router);
 
   resume = this.resumeService.resumeState();
   template = signal<string>("minimal");
@@ -1194,6 +1350,14 @@ export class StudioComponent implements AfterViewInit {
   jobUrl = "";
   qrCodeUrl = signal("");
 
+  backToDashboard() {
+    this.router.navigate(["/dashboard"]);
+  }
+
+  goToViewer() {
+    this.router.navigate(["/viewer"]);
+  }
+
   onImageTrigger(input: HTMLInputElement) {
     input.click();
   }
@@ -1201,7 +1365,6 @@ export class StudioComponent implements AfterViewInit {
   ngAfterViewInit() {
     this.autoScale();
     this.generateQRCode();
-    setTimeout(() => this.renderSkillsChart(), 500);
   }
 
   @HostListener("window:resize")
@@ -1226,7 +1389,6 @@ export class StudioComponent implements AfterViewInit {
     }
     this.resumeService.commit();
     this.generateQRCode();
-    this.renderSkillsChart();
   }
 
   calculateDuration(exp: {
@@ -1477,7 +1639,7 @@ export class StudioComponent implements AfterViewInit {
   addSkill() {
     this.resume.skills = [
       ...(this.resume.skills || []),
-      { name: "New Skill", level: 50 },
+      { name: "New Skill", level: 50, displayMode: "horizontal_bar" },
     ];
     this.updateResume();
   }
@@ -1487,127 +1649,7 @@ export class StudioComponent implements AfterViewInit {
     this.updateResume();
   }
 
-  renderSkillsChart() {
-    const container = document.getElementById("skills-radar-chart");
-    if (!container || !this.resume.skills.length) return;
 
-    // Basic D3 Radar Chart implementation
-    d3.select(container).selectAll("*").remove();
-
-    const width = 300;
-    const height = 300;
-    const margin = 50;
-    const radius = Math.min(width, height) / 2 - margin;
-
-    const svg = d3
-      .select(container)
-      .append("svg")
-      .attr("width", "100%")
-      .attr("height", "100%")
-      .attr("viewBox", `0 0 ${width} ${height}`)
-      .append("g")
-      .attr("transform", `translate(${width / 2}, ${height / 2})`);
-
-    const data = this.resume.skills;
-    const angleSlice = (Math.PI * 2) / data.length;
-    const rScale = d3
-      .scaleLinear<number, number>()
-      .range([0, radius])
-      .domain([0, 100]);
-
-    // Grid
-    const levels = 5;
-    for (let j = 0; j < levels; j++) {
-      const levelFactor = radius * ((j + 1) / levels);
-      svg
-        .selectAll(".levels")
-        .data(data)
-        .enter()
-        .append("line")
-        .attr(
-          "x1",
-          (d: any, i: number) =>
-            levelFactor * Math.cos(angleSlice * i - Math.PI / 2),
-        )
-        .attr(
-          "y1",
-          (d: any, i: number) =>
-            levelFactor * Math.sin(angleSlice * i - Math.PI / 2),
-        )
-        .attr(
-          "x2",
-          (d: any, i: number) =>
-            levelFactor * Math.cos(angleSlice * (i + 1) - Math.PI / 2),
-        )
-        .attr(
-          "y2",
-          (d: any, i: number) =>
-            levelFactor * Math.sin(angleSlice * (i + 1) - Math.PI / 2),
-        )
-        .attr("class", "line")
-        .style("stroke", "#f4f4f5")
-        .style("stroke-width", "1px");
-    }
-
-    // Axes
-    const axis = svg
-      .selectAll(".axis")
-      .data(data)
-      .enter()
-      .append("g")
-      .attr("class", "axis");
-
-    axis
-      .append("line")
-      .attr("x1", 0)
-      .attr("y1", 0)
-      .attr(
-        "x2",
-        (d: any, i: number) => radius * Math.cos(angleSlice * i - Math.PI / 2),
-      )
-      .attr(
-        "y2",
-        (d: any, i: number) => radius * Math.sin(angleSlice * i - Math.PI / 2),
-      )
-      .style("stroke", "#f4f4f5")
-      .style("stroke-width", "1px");
-
-    // Labels
-    axis
-      .append("text")
-      .attr("class", "legend")
-      .style("font-size", "8px")
-      .style("font-weight", "900")
-      .attr("text-anchor", "middle")
-      .attr("dy", "0.35em")
-      .attr(
-        "x",
-        (d: any, i: number) =>
-          (radius + 20) * Math.cos(angleSlice * i - Math.PI / 2),
-      )
-      .attr(
-        "y",
-        (d: any, i: number) =>
-          (radius + 20) * Math.sin(angleSlice * i - Math.PI / 2),
-      )
-      .text((d: any) => d.name.toUpperCase());
-
-    // Radar Area
-    const radarLine = d3
-      .lineRadial<{ name: string; level: number }>()
-      .radius((d: { level: number }) => rScale(d.level))
-      .angle((d: any, i: number) => i * angleSlice)
-      .curve(d3.curveLinearClosed);
-
-    svg
-      .append("path")
-      .datum(data)
-      .attr("d", radarLine as any)
-      .style("fill", this.resume.aesthetics.primaryColor)
-      .style("fill-opacity", 0.1)
-      .style("stroke", this.resume.aesthetics.primaryColor)
-      .style("stroke-width", "2px");
-  }
 
    async generateQRCode() {
     const url =
@@ -1717,7 +1759,7 @@ export class StudioComponent implements AfterViewInit {
           type === "line"
             ? "#09090b"
             : type === "box"
-              ? "transparent"
+              ? "#f4f4f5"
               : "transparent",
         borderStyle: "solid",
         borderRadius: 0,
@@ -1727,6 +1769,8 @@ export class StudioComponent implements AfterViewInit {
         color: "#09090b",
         fontWeight: "400",
         textAlign: "left",
+        opacity: 1,
+        thickness: 2
       },
     };
     this.resume.aesthetics.elements.unshift(newElement); // Add to top of stack

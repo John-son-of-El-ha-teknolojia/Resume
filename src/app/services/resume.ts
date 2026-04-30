@@ -40,7 +40,21 @@ export interface ResumeElement {
   isVisible?: boolean;
   mirror?: { horizontal: boolean; vertical: boolean };
   unit?: 'px' | 'cm' | 'mm';
-  style?: Record<string, string | number>;
+  style?: {
+    backgroundColor?: string;
+    borderRadius?: number;
+    borderWidth?: number;
+    borderStyle?: string;
+    borderColor?: string;
+    fontSize?: number;
+    color?: string;
+    fontWeight?: string | number;
+    textAlign?: string;
+    opacity?: number;
+    lineType?: 'solid' | 'dashed' | 'dotted';
+    thickness?: number;
+    [key: string]: any;
+  };
 }
 
 export interface Aesthetics {
@@ -54,6 +68,7 @@ export interface Aesthetics {
 export interface Skill {
   name: string;
   level: number; // 0-100
+  displayMode?: 'text' | 'vertical_bar' | 'horizontal_bar';
 }
 
 export interface ResumeData {
