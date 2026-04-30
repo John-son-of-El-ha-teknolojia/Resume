@@ -102,6 +102,7 @@ export interface ResumeData {
     isVisible?: boolean;
   };
   skillUrl?: string;
+  pageCount?: number;
 }
 
 export interface CoverLetterData {
@@ -153,6 +154,7 @@ export class ResumeService {
       isVisible: true
     },
     skillUrl: '',
+    pageCount: 1,
     aesthetics: {
       fontFamily: 'Inter',
       primaryColor: '#09090b',
@@ -295,6 +297,22 @@ export class ResumeService {
       ...prev,
       sections: prev.sections.map(s => s.id === id ? { ...s, content } : s)
     }));
+  }
+
+  addPage() {
+    this.resumeState.update(prev => ({
+      ...prev,
+      pageCount: (prev.pageCount || 1) + 1
+    }));
+    this.commit();
+  }
+
+  removePage() {
+    this.resumeState.update(prev => ({
+      ...prev,
+      pageCount: Math.max(1, (prev.pageCount || 1) - 1)
+    }));
+    this.commit();
   }
 
   async extractResume(fileName: string) {

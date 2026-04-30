@@ -762,6 +762,9 @@ const MOOD_PRESETS: Record<string, any> = {
             <button mat-icon-button (click)="zoomIn()"><mat-icon class="scale-75">add</mat-icon></button>
             <div class="w-px h-4 bg-zinc-200 mx-2"></div>
             <button mat-icon-button (click)="toggleFullscreen()"><mat-icon class="scale-75">fullscreen</mat-icon></button>
+            <div class="w-px h-4 bg-zinc-200 mx-2"></div>
+            <button mat-icon-button (click)="resumeService.addPage()" matTooltip="Add Page"><mat-icon class="scale-75">note_add</mat-icon></button>
+            <button mat-icon-button (click)="resumeService.removePage()" matTooltip="Remove Page" [disabled]="resume.pageCount === 1"><mat-icon class="scale-75">delete_sweep</mat-icon></button>
           </div>
 
           <!-- The Paper -->
@@ -770,7 +773,16 @@ const MOOD_PRESETS: Record<string, any> = {
               id="resume-canvas"
               class="a4-paper bg-white shadow-2xl relative transition-all duration-300 origin-top shrink-0"
               [style.transform]="'scale(' + (scale() / 100) + ')'"
+              [style.height.mm]="(resume.pageCount || 1) * 297"
               [ngClass]="'template-' + template()">
+              
+              <!-- Page Dividers -->
+              @for (i of [].constructor((resume.pageCount || 1) - 1); track $index) {
+                <div class="absolute w-full h-px border-t border-dashed border-zinc-200 z-[1] pointer-events-none" 
+                     [style.top.mm]="($index + 1) * 297">
+                  <div class="absolute right-0 -top-6 bg-zinc-100 px-2 py-1 rounded text-[8px] font-black text-zinc-400 uppercase tracking-widest">Page {{ $index + 2 }} Break</div>
+                </div>
+              }
               
               <!-- Content Rendering Logic -->
               <div class="absolute inset-0 pointer-events-none overflow-hidden" [style.font-family]="resume.aesthetics.fontFamily">
@@ -851,33 +863,35 @@ const MOOD_PRESETS: Record<string, any> = {
                 }
 
                 @if (template() === 'minimal') {
-                <div class="p-16 space-y-12 h-full flex flex-col">
-                  <header class="text-center pt-8 relative cursor-move group/meta" 
-                          cdkDrag
-                          [cdkDragDisabled]="resume.metadataStyle?.isLocked"
-                          (cdkDragEnded)="onMetadataDragEnd($event)"
-                          *ngIf="resume.metadataStyle?.isVisible !== false"
-                          [style.border]="resume.metadataStyle?.border === 'none' ? 'none' : '1px ' + resume.metadataStyle?.border + ' #e4e4e7'"
-                          [style.padding.px]="resume.metadataStyle?.padding"
-                          [style.width.px]="resume.metadataStyle?.width"
-                          [style.transform]="'translate(' + (resume.metadataStyle?.x || 0) + 'px, ' + (resume.metadataStyle?.y || 0) + 'px)'">
-                    <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-zinc-900 text-white text-[8px] px-2 py-1 rounded opacity-0 group-hover/meta:opacity-100 uppercase font-black tracking-widest transition-opacity pointer-events-none flex items-center gap-2">
-                       <mat-icon class="scale-50">{{ resume.metadataStyle?.isLocked ? 'lock' : 'open_with' }}</mat-icon>
-                       Metadata
-                    </div>
-                    <h1 class="text-6xl font-black tracking-tighter text-zinc-900 mb-6 uppercase" [style.color]="resume.aesthetics.primaryColor">{{ resume.name || 'UNNAMED_ENTITY' }}</h1>
-                    <div class="flex flex-wrap justify-center gap-x-8 gap-y-3 text-zinc-400 text-[10px] font-black uppercase tracking-[0.2em] border-y border-zinc-100 py-4 max-w-xl mx-auto">
-                      <span>{{ resume.phoneCountryCode }} {{ resume.phone }}</span>
-                      <span>{{ resume.email }}</span>
-                      <span>{{ resume.location }}</span>
-                    </div>
-                  </header>
+                <div class="px-16 pt-8 pb-16 h-full flex flex-col relative overflow-hidden">
+                  @if (resume.metadataStyle?.isVisible !== false) {
+                    <header class="flex flex-col justify-center items-center relative cursor-move group/meta overflow-hidden mb-8" 
+                            cdkDrag
+                            [cdkDragDisabled]="resume.metadataStyle?.isLocked"
+                            (cdkDragEnded)="onMetadataDragEnd($event)"
+                            [style.max-height]="((resume.pageCount || 1) * 297 * 0.05) + 'mm'"
+                            [style.border]="resume.metadataStyle?.border === 'none' ? 'none' : '1px ' + resume.metadataStyle?.border + ' #e4e4e7'"
+                            [style.padding.px]="resume.metadataStyle?.padding"
+                            [style.width.px]="resume.metadataStyle?.width"
+                            [style.transform]="'translate(' + (resume.metadataStyle?.x || 0) + 'px, ' + (resume.metadataStyle?.y || 0) + 'px)'">
+                      <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-zinc-900 text-white text-[8px] px-2 py-1 rounded opacity-0 group-hover/meta:opacity-100 uppercase font-black tracking-widest transition-opacity pointer-events-none flex items-center gap-2">
+                         <mat-icon class="scale-50">{{ resume.metadataStyle?.isLocked ? 'lock' : 'open_with' }}</mat-icon>
+                         Metadata
+                      </div>
+                      <h1 class="text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter text-zinc-900 uppercase leading-none mb-2" [style.color]="resume.aesthetics.primaryColor">{{ resume.name || 'UNNAMED_ENTITY' }}</h1>
+                      <div class="flex flex-wrap justify-center gap-x-6 gap-y-1 text-zinc-400 text-[8px] font-black uppercase tracking-[0.2em] py-2 max-w-xl mx-auto border-t border-zinc-100 mt-2">
+                        <span>{{ resume.phoneCountryCode }} {{ resume.phone }}</span>
+                        <span>{{ resume.email }}</span>
+                        <span>{{ resume.location }}</span>
+                      </div>
+                    </header>
+                  }
 
-                  <section class="max-w-xl mx-auto text-center">
-                    <p class="text-lg leading-relaxed text-zinc-600 font-medium italic" [style.color]="resume.aesthetics.primaryColor">"{{ resume.summary }}"</p>
+                  <section class="max-w-xl mx-auto text-center mb-8">
+                    <p class="text-xs md:text-sm lg:text-base leading-relaxed text-zinc-600 font-medium italic" [style.color]="resume.aesthetics.primaryColor">"{{ resume.summary }}"</p>
                   </section>
 
-                  <div class="flex-1 space-y-12 pt-8">
+                  <div class="flex-1 space-y-10 pt-4">
                     @if (resume.experience.length > 0) {
                       <section class="space-y-8 relative cursor-move group/exp"
                                cdkDrag
@@ -979,10 +993,10 @@ const MOOD_PRESETS: Record<string, any> = {
                   </div>
                   
                   
-                  <footer class="pt-20 text-center opacity-40 flex flex-col items-center gap-4">
+                  <footer class="absolute bottom-8 left-0 right-0 text-center opacity-40 flex flex-col items-center gap-2 pointer-events-none">
                     @if (qrCodeUrl()) {
-                       <img [src]="qrCodeUrl()" class="w-16 h-16 grayscale" alt="Portfolio QR Code">
-                       <p class="text-[6px] font-black uppercase tracking-widest text-zinc-900 mb-2">Scan for Portfolio Link</p>
+                       <img [src]="qrCodeUrl()" class="w-10 h-10 grayscale" alt="Portfolio QR Code">
+                       <p class="text-[5px] font-black uppercase tracking-widest text-zinc-900">Scan for Portfolio Link</p>
                     }
                   </footer>
                 </div>

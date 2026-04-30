@@ -8,6 +8,7 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ResumeService } from '../../services/resume';
 import { PaymentDialogComponent } from '../payment/payment';
+import * as QRCode from 'qrcode';
 
 @Component({
   selector: 'app-viewer',
@@ -48,7 +49,15 @@ import { PaymentDialogComponent } from '../payment/payment';
            id="resume-canvas"
            class="a4-paper bg-white shadow-2xl relative shrink-0 overflow-hidden"
            [style.transform]="'scale(' + scale() + ')'"
+           [style.height.mm]="(resume().pageCount || 1) * 297"
            [style.font-family]="resume().aesthetics.fontFamily">
+           
+           <!-- Page Dividers -->
+           @for (i of [].constructor((resume().pageCount || 1) - 1); track $index) {
+             <div class="absolute w-full h-px border-t border-dashed border-zinc-200 z-[1] pointer-events-none" 
+                  [style.top.mm]="($index + 1) * 297">
+             </div>
+           }
            
            <!-- Elements Layer -->
            <div class="absolute inset-0 pointer-events-none overflow-hidden">
@@ -96,26 +105,27 @@ import { PaymentDialogComponent } from '../payment/payment';
            </div>
 
            <!-- Standard Layout Content -->
-           <div class="p-16 h-full flex flex-col relative" [style.background-color]="resume().aesthetics.backgroundColor">
-              <header class="text-center pt-8" 
+           <div class="px-16 pt-8 pb-16 h-full flex flex-col relative overflow-hidden" [style.background-color]="resume().aesthetics.backgroundColor">
+              <header class="flex flex-col justify-center items-center relative overflow-hidden mb-8" 
                       *ngIf="resume().metadataStyle?.isVisible !== false"
+                      [style.max-height]="((resume().pageCount || 1) * 297 * 0.05) + 'mm'"
                       [style.transform]="'translate(' + (resume().metadataStyle?.x || 0) + 'px, ' + (resume().metadataStyle?.y || 0) + 'px)'"
                       [style.border]="resume().metadataStyle?.border === 'none' ? 'none' : '1px ' + resume().metadataStyle?.border + ' #e4e4e7'"
                       [style.padding.px]="resume().metadataStyle?.padding"
                       [style.width.px]="resume().metadataStyle?.width">
-                 <h1 class="text-6xl font-black tracking-tighter mb-6 uppercase" [style.color]="resume().aesthetics.primaryColor">{{ resume().name || 'IDENTITY_UNDEFINED' }}</h1>
-                 <div class="flex flex-wrap justify-center gap-x-8 gap-y-3 text-zinc-400 text-[10px] font-black uppercase tracking-[0.2em] border-y border-zinc-100 py-4 max-w-xl mx-auto">
+                 <h1 class="text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter text-zinc-900 uppercase leading-none mb-2" [style.color]="resume().aesthetics.primaryColor">{{ resume().name || 'IDENTITY_UNDEFINED' }}</h1>
+                 <div class="flex flex-wrap justify-center gap-x-6 gap-y-1 text-zinc-400 text-[8px] font-black uppercase tracking-[0.2em] py-2 max-w-xl mx-auto border-t border-zinc-100 mt-2">
                     <span>{{ resume().phoneCountryCode }} {{ resume().phone }}</span>
                     <span>{{ resume().email }}</span>
                     <span>{{ resume().location }}</span>
                  </div>
               </header>
 
-              <section class="max-w-xl mx-auto text-center mt-12 mb-12">
-                 <p class="text-lg leading-relaxed text-zinc-600 font-medium italic" [style.color]="resume().aesthetics.primaryColor">"{{ resume().summary }}"</p>
+              <section class="max-w-xl mx-auto text-center mb-8">
+                 <p class="text-xs md:text-sm lg:text-base leading-relaxed text-zinc-600 font-medium italic" [style.color]="resume().aesthetics.primaryColor">"{{ resume().summary }}"</p>
               </section>
 
-              <div class="flex-1 space-y-12">
+              <div class="flex-1 space-y-10 pt-4">
                  @if (resume().experience.length > 0 && resume().experienceStyle?.isVisible !== false) {
                     <section class="space-y-8" [style.transform]="'translate(' + (resume().experienceStyle?.x || 0) + 'px, ' + (resume().experienceStyle?.y || 0) + 'px)'">
                        <h3 class="text-xs font-black tracking-[0.3em] uppercase text-zinc-400 mb-6 flex items-center gap-6">
@@ -174,6 +184,13 @@ import { PaymentDialogComponent } from '../payment/payment';
                     </section>
                  }
               </div>
+
+              <footer class="absolute bottom-8 left-0 right-0 text-center opacity-40 flex flex-col items-center gap-2 pointer-events-none">
+                 @if (qrCodeUrl()) {
+                    <img [src]="qrCodeUrl()" class="w-10 h-10 grayscale" alt="Portfolio QR Code">
+                    <p class="text-[5px] font-black uppercase tracking-widest text-zinc-900">Scan for Portfolio Link</p>
+                 }
+              </footer>
            </div>
          </div>
       </div>
@@ -205,6 +222,28 @@ export class ViewerComponent {
   resume = this.resumeService.resumeState;
   isPremium = this.resumeService.isPremium;
   scale = signal(1);
+  qrCodeUrl = signal("");
+
+  constructor() {
+    this.generateQRCode();
+  }
+
+  async generateQRCode() {
+    const url = this.resume().skillUrl || `https://resume-studio.app/v/${this.resume().name.replace(/\s+/g, '-').toLowerCase()}`;
+    try {
+      const qrDataUrl = await QRCode.toDataURL(url, {
+        margin: 2,
+        width: 256,
+        color: {
+          dark: '#000000',
+          light: '#ffffff'
+        }
+      });
+      this.qrCodeUrl.set(qrDataUrl);
+    } catch (err) {
+      console.error('QR Generation failed:', err);
+    }
+  }
 
   backToDashboard() {
     this.router.navigate(['/dashboard']);
