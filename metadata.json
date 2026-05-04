@@ -1,6 +1,6 @@
 {
   "name": "AI Resume Builder",
-  "description": "A professional AI-powered resume builder with text enhancement, multiple templates, and PDF export.",
+  "description": "A professional AI-powered resume builder and PDF editor with intelligent text enhancement, layout preservation, and automatic cover letter generation.",
   "requestFramePermissions": [],
   "majorCapabilities": []
 }

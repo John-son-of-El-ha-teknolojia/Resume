@@ -36,6 +36,11 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'pdf-editor',
+    loadComponent: () => import('./components/pdf-editor/pdf-editor').then(m => m.PdfEditorComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: 'admin',
     loadComponent: () => import('./components/admin/admin').then(m => m.AdminDashboardComponent),
     canActivate: [adminGuard]

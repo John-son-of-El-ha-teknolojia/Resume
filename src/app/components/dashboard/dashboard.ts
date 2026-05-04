@@ -25,18 +25,35 @@ import { ResumeService } from '../../services/resume';
         </header>
 
         <!-- Main Actions -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
           <!-- Resume Builder Card -->
           <div class="bg-white p-10 rounded-[2.5rem] shadow-sm border border-zinc-100 flex flex-col gap-6 group hover:shadow-xl hover:-translate-y-1 transition-all duration-500 cursor-pointer" routerLink="/writer">
             <div class="w-16 h-16 bg-zinc-900 rounded-3xl flex items-center justify-center text-white rotate-3 group-hover:rotate-6 transition-transform">
               <mat-icon class="scale-[1.5]">description</mat-icon>
             </div>
             <div>
-              <h2 class="text-2xl font-black uppercase tracking-widest mb-2">Resume Builder</h2>
-              <p class="text-zinc-500 line-clamp-2">Craft stunning, AI-enhanced resumes using our professional studio tools.</p>
+              <h2 class="text-2xl font-black uppercase tracking-widest mb-2">Resume Studio</h2>
+              <p class="text-zinc-500 line-clamp-2">Craft stunning, AI-enhanced resumes using our professional studio tools from scratch.</p>
             </div>
             <div class="mt-auto pt-4 flex items-center gap-2 text-zinc-900 font-bold uppercase tracking-wider text-xs">
               Open Studio <mat-icon class="text-sm">arrow_forward</mat-icon>
+            </div>
+          </div>
+
+          <!-- PDF Editor Card -->
+          <div class="bg-white p-10 rounded-[2.5rem] shadow-sm border border-zinc-100 flex flex-col gap-6 group hover:shadow-xl hover:-translate-y-1 transition-all duration-500 cursor-pointer border-indigo-100/50" routerLink="/pdf-editor">
+            <div class="w-16 h-16 bg-indigo-600 rounded-3xl flex items-center justify-center text-white scale-110 group-hover:rotate-6 transition-transform">
+              <mat-icon class="scale-[1.5]">picture_as_pdf</mat-icon>
+            </div>
+            <div>
+              <div class="flex items-center gap-2 mb-2">
+                <h2 class="text-2xl font-black uppercase tracking-widest">PDF AI Editor</h2>
+                <span class="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[8px] font-black uppercase rounded-full">New</span>
+              </div>
+              <p class="text-zinc-500 line-clamp-2">Import an existing PDF resume. AI will deconstruct it, allowing you to edit and re-export instantly.</p>
+            </div>
+            <div class="mt-auto pt-4 flex items-center gap-2 text-indigo-600 font-bold uppercase tracking-wider text-xs">
+              Deconstruct PDF <mat-icon class="text-sm">history_edu</mat-icon>
             </div>
           </div>
 

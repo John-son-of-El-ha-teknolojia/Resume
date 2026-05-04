@@ -56,6 +56,11 @@ func main() {
 	mux.HandleFunc("/api/resume/check-eligibility", handleCheckEligibility)
 	mux.HandleFunc("/api/resume/pdf", handleResumePDF)
 
+	// PDF AI Operations
+	mux.HandleFunc("/api/ai/process-pdf-text", handlePdfAiProcess)
+	mux.HandleFunc("/api/ai/generate-cover-letter", handleGenerateCoverLetter)
+	mux.HandleFunc("/api/ai/save-blueprint", handleSaveBlueprint)
+
 	// Payment
 	mux.HandleFunc("/api/payment/initiate", handlePaymentInitiate)
 
@@ -220,4 +225,98 @@ func handleResumePDF(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/pdf")
 	w.Header().Set("Content-Disposition", "attachment; filename=resume.pdf")
 	w.Write([]byte("%PDF-1.4\n1 0 obj\n<< /Title (Go Resume) >>\nendobj\n%%EOF"))
+}
+
+func handlePdfAiProcess(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		Text   string `json:"text"`
+		Action string `json:"action"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	prompt := ""
+	switch body.Action {
+	case "rewrite":
+		prompt = "Rewrite this resume section to be more professional and impactful: " + body.Text
+	case "shorten":
+		prompt = "Shorten this resume section while keeping the key achievements: " + body.Text
+	case "expand":
+		prompt = "Expand this resume section with more detailed, results-oriented bullet points based on the context: " + body.Text
+	case "ats":
+		prompt = "Optimize this resume section for ATS by including relevant keywords and standard professional terminology: " + body.Text
+	default:
+		prompt = "Improve this resume section: " + body.Text
+	}
+
+	apiKey := os.Getenv("GEMINI_API_KEY")
+	if apiKey == "" {
+		json.NewEncoder(w).Encode(map[string]string{"result": body.Text + " (Mock: API Key missing)"})
+		return
+	}
+
+	ctx := context.Background()
+	client, err := genai.NewClient(ctx, option.WithAPIKey(apiKey))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer client.Close()
+
+	model := client.GenerativeModel("gemini-1.5-flash")
+	resp, err := model.GenerateContent(ctx, genai.Text(prompt))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	result := fmt.Sprintf("%v", resp.Candidates[0].Content.Parts[0])
+	json.NewEncoder(w).Encode(map[string]string{"result": result})
+}
+
+func handleGenerateCoverLetter(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		ResumeContent string `json:"resumeContent"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	apiKey := os.Getenv("GEMINI_API_KEY")
+	if apiKey == "" {
+		json.NewEncoder(w).Encode(map[string]string{"result": "Mock Cover Letter: Content based on resume"})
+		return
+	}
+
+	ctx := context.Background()
+	client, err := genai.NewClient(ctx, option.WithAPIKey(apiKey))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer client.Close()
+
+	model := client.GenerativeModel("gemini-1.5-flash")
+	prompt := "Generate a highly professional and tailored cover letter based on this resume content. Leave placeholders for [Hiring Manager Name] and [Company Name]:\n\n" + body.ResumeContent
+	resp, err := model.GenerateContent(ctx, genai.Text(prompt))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	result := fmt.Sprintf("%v", resp.Candidates[0].Content.Parts[0])
+	json.NewEncoder(w).Encode(map[string]string{"result": result})
+}
+
+func handleSaveBlueprint(w http.ResponseWriter, r *http.Request) {
+	var body interface{}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
 }
