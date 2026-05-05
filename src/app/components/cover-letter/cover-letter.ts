@@ -7,8 +7,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ResumeService } from '../../services/resume';
 
-const OPENAI_API_KEY = "ADD API KEY";
-
 @Component({
   selector: 'app-cover-letter',
   standalone: true,
@@ -21,6 +19,15 @@ const OPENAI_API_KEY = "ADD API KEY";
           <div>
             <h1 class="text-2xl font-black uppercase tracking-widest text-zinc-900">Cover Letter Assistant</h1>
             <p class="text-zinc-500 font-medium tracking-tight">AI-powered drafting based on your professional profile</p>
+          </div>
+          <div class="flex-1"></div>
+          <div class="flex flex-col">
+            <span class="text-[7px] font-black uppercase text-zinc-400 tracking-widest pl-1 leading-none">Model Selection</span>
+            <select (change)="onModelChange($event)" class="h-8 bg-transparent border-none text-[9px] font-black uppercase tracking-widest focus:ring-0 cursor-pointer">
+              @for (model of resumeService.SUPPORTED_MODELS; track model.id) {
+                <option [value]="model.id" [selected]="model.id === resumeService.getSelectedModel()">{{ model.name }}</option>
+              }
+            </select>
           </div>
         </header>
 
@@ -76,49 +83,25 @@ const OPENAI_API_KEY = "ADD API KEY";
   `,
 })
 export class CoverLetterComponent {
-  private resumeService = inject(ResumeService);
+  public resumeService = inject(ResumeService);
   isGenerating = signal(false);
   data = this.resumeService.coverLetterState();
+
+  onModelChange(event: any) {
+    this.resumeService.setModel(event.target.value);
+  }
 
   async generateLetter() {
     this.isGenerating.set(true);
     try {
       const resume = this.resumeService.resumeState();
-      
-      const prompt = `Draft a professional cover letter for a ${this.data.positionTitle || 'job'} at ${this.data.institutionName || 'the company'}.
-      
-      Job Description: ${this.data.jobDescription}
-      
-      User Profile:
-      Name: ${resume.name}
-      Summary: ${resume.summary}
-      Experience: ${JSON.stringify(resume.experience)}
-      
-      The letter should be professional, compelling, and exactly reflect the user's expertise. Use a formal tone.`;
-
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${OPENAI_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: "gpt-4o",
-          messages: [
-            {
-              role: "system",
-              content: "You are a professional cover letter writer."
-            },
-            {
-              role: "user",
-              content: prompt
-            }
-          ]
-        })
-      });
-
-      const data = await response.json();
-      this.data.generatedLetter = data.choices[0].message.content;
+      const response = await this.resumeService.generateCoverLetterDetailed(
+        resume,
+        this.data.institutionName || '',
+        this.data.positionTitle || '',
+        this.data.jobDescription || ''
+      );
+      this.data.generatedLetter = response.result;
     } catch (e) {
       console.error('AI Gen failed', e);
       this.data.generatedLetter = "An error occurred during AI generation. Please try again.";

@@ -91,6 +91,15 @@ const MOOD_PRESETS: Record<string, any> = {
           </div>
           <div class="h-6 w-px bg-zinc-200"></div>
           <button (click)="goToViewer()" class="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-zinc-900 transition-colors">Viewer</button>
+          <div class="h-6 w-px bg-zinc-200"></div>
+          <div class="flex flex-col">
+            <span class="text-[7px] font-black uppercase text-zinc-400 tracking-widest pl-1 leading-none">Model Selection</span>
+            <select (change)="onModelChange($event)" class="h-8 bg-transparent border-none text-[9px] font-black uppercase tracking-widest focus:ring-0 cursor-pointer">
+              @for (model of resumeService.SUPPORTED_MODELS; track model.id) {
+                <option [value]="model.id" [selected]="model.id === resumeService.getSelectedModel()">{{ model.name }}</option>
+              }
+            </select>
+          </div>
         </div>
 
         <div class="flex items-center gap-3">
@@ -1370,6 +1379,10 @@ export class StudioComponent implements AfterViewInit {
 
   goToViewer() {
     this.router.navigate(["/viewer"]);
+  }
+
+  onModelChange(event: any) {
+    this.resumeService.setModel(event.target.value);
   }
 
   onImageTrigger(input: HTMLInputElement) {

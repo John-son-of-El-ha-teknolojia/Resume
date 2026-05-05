@@ -45,7 +45,7 @@ interface ResumeSection {
 })
 export class PdfEditorComponent {
   private router = inject(Router);
-  private pdfAi = inject(PdfAiService);
+  public pdfAi = inject(PdfAiService);
   
   isUploading = signal(false);
   isProcessing = signal(false);
@@ -61,12 +61,14 @@ export class PdfEditorComponent {
     effect(() => {
       const currentSections = this.sections();
       if (currentSections.length > 0) {
-        // Debounce would be better here, but for simplicity we'll just log or trigger a save
-        // In a real app we'd use a subject.debounceTime
         console.log('Blueprint JSON updated, syncing with backend...');
         this.pdfAi.saveBlueprint(currentSections);
       }
     });
+  }
+
+  onModelChange(event: any) {
+    this.pdfAi.setModel(event.target.value);
   }
 
   async saveBlueprint() {

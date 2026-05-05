@@ -7,12 +7,34 @@ import { firstValueFrom } from 'rxjs';
 })
 export class PdfAiService {
   private http = inject(HttpClient);
+  private readonly API_BASE = 'http://localhost:8080';
+
+  // Supported models to be handled by the backend
+  public readonly SUPPORTED_MODELS = [
+    { id: 'python-ai-pro', name: 'Python AI Pro (High Precision)' },
+    { id: 'python-ai-base', name: 'Python AI Base (Fast)' },
+    { id: 'python-ai-custom', name: 'Python Custom AI' }
+  ];
+
+  private selectedModelId = 'python-ai-pro';
+
+  setModel(modelId: string) {
+    this.selectedModelId = modelId;
+  }
+
+  getSelectedModel() {
+    return this.selectedModelId;
+  }
 
   async processAction(text: string, action: 'rewrite' | 'shorten' | 'expand' | 'ats'): Promise<string> {
     if (!text.trim()) return text;
     try {
       const response = await firstValueFrom(
-        this.http.post<{ result: string }>('/api/ai/process-pdf-text', { text, action })
+        this.http.post<{ result: string }>(`${this.API_BASE}/api/ai/process-pdf-text`, { 
+          text, 
+          action,
+          model: this.selectedModelId
+        })
       );
       return response.result;
     } catch (error) {
@@ -24,7 +46,10 @@ export class PdfAiService {
   async generateCoverLetter(resumeContent: string): Promise<string> {
     try {
       const response = await firstValueFrom(
-        this.http.post<{ result: string }>('/api/ai/generate-cover-letter', { resumeContent })
+        this.http.post<{ result: string }>(`${this.API_BASE}/api/ai/generate-cover-letter`, { 
+          resumeContent,
+          model: this.selectedModelId
+        })
       );
       return response.result;
     } catch (error) {
@@ -33,9 +58,9 @@ export class PdfAiService {
     }
   }
 
-  async saveBlueprint(sections: any[]): Promise<boolean> {
+  async saveBlueprint(sections: unknown[]): Promise<boolean> {
     try {
-      await firstValueFrom(this.http.post('/api/ai/save-blueprint', { sections }));
+      await firstValueFrom(this.http.post(`${this.API_BASE}/api/ai/save-blueprint`, { sections }));
       return true;
     } catch (error) {
       console.error('Error saving blueprint:', error);

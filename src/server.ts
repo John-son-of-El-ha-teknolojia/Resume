@@ -5,8 +5,8 @@ import {
   writeResponseToNodeResponse,
 } from '@angular/ssr/node';
 import express from 'express';
-import {join} from 'node:path';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { join } from 'node:path';
+// Removed GoogleGenerativeAI as AI is now handled by external Python backend
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -58,34 +58,7 @@ app.get('/api/admin/stats', (req, res) => {
   });
 });
 
-// AI Enhance endpoint
-app.post('/api/ai/enhance', async (req, res) => {
-  const { sectionText } = req.body;
-  if (!sectionText) {
-    return res.status(400).json({ error: 'sectionText is required' });
-  }
-
-  try {
-    const apiKey = process.env['GEMINI_API_KEY'];
-    if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY') {
-      return res.json({ improvedText: sectionText + ' (AI enhancement requires a valid API key. This is a simulated improvement.)' });
-    }
-
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    
-    const prompt = `You are a professional resume writer. Improve the following resume section text to be more professional, action-oriented, and impactful. keep it concise. 
-    Text: ${sectionText}`;
-
-    const result = await model.generateContent(prompt);
-    const improvedText = result.response.text().trim();
-    
-    return res.json({ improvedText });
-  } catch (error) {
-    console.error('AI Enhancement Error:', error);
-    return res.status(500).json({ error: 'Failed to enhance text' });
-  }
-});
+// AI endpoints are now handled by external Python backend at http://localhost:8080
 
 // Resume Extraction (Simulated)
 app.post('/api/resume/extract', async (req, res) => {

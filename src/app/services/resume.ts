@@ -118,6 +118,24 @@ export interface CoverLetterData {
 })
 export class ResumeService {
   private http = inject(HttpClient);
+  private readonly API_BASE = 'http://localhost:8080';
+
+  // Supported models to be handled by the backend
+  public readonly SUPPORTED_MODELS = [
+    { id: 'python-ai-pro', name: 'Python AI Pro (High Precision)' },
+    { id: 'python-ai-base', name: 'Python AI Base (Fast)' },
+    { id: 'python-ai-custom', name: 'Python Custom AI' }
+  ];
+
+  private selectedModelId = 'python-ai-pro';
+
+  setModel(modelId: string) {
+    this.selectedModelId = modelId;
+  }
+
+  getSelectedModel() {
+    return this.selectedModelId;
+  }
   
   // History management
   private history: string[] = [];
@@ -318,7 +336,7 @@ export class ResumeService {
   async extractResume(fileName: string) {
     try {
       const response = await firstValueFrom(
-        this.http.post<ResumeData>('/api/resume/extract', { fileName })
+        this.http.post<ResumeData>(`${this.API_BASE}/api/resume/extract`, { fileName })
       );
       this.resumeState.set(response);
       return response;
@@ -335,7 +353,7 @@ export class ResumeService {
     try {
       const res = await firstValueFrom(
         this.http.post<{ canDownload: boolean; isPremium: boolean; hasFreeDownloadLeft: boolean }>(
-          '/api/resume/check-eligibility', { email }
+          `${this.API_BASE}/api/resume/check-eligibility`, { email }
         )
       );
       this.isPremium.set(res.isPremium);
@@ -352,7 +370,10 @@ export class ResumeService {
     if (!text.trim()) return text;
     try {
       const response = await firstValueFrom(
-        this.http.post<{ improvedText: string }>('/api/ai/enhance', { sectionText: text })
+        this.http.post<{ improvedText: string }>(`${this.API_BASE}/api/ai/enhance`, { 
+          sectionText: text,
+          model: this.selectedModelId
+        })
       );
       return response.improvedText;
     } catch (error) {
@@ -365,7 +386,7 @@ export class ResumeService {
     const email = this.resumeState().email;
     try {
       const response = await firstValueFrom(
-        this.http.post<{ success: boolean; transactionId: string }>('/api/payment/initiate', { 
+        this.http.post<{ success: boolean; transactionId: string }>(`${this.API_BASE}/api/payment/initiate`, { 
           amount, 
           phone, 
           email,
@@ -385,8 +406,59 @@ export class ResumeService {
 
   downloadPdf() {
     const email = this.resumeState().email;
-    window.open(`/api/resume/pdf?email=${encodeURIComponent(email)}`, '_blank');
+    window.open(`${this.API_BASE}/api/resume/pdf?email=${encodeURIComponent(email)}`, '_blank');
     // Refresh eligibility after download
     setTimeout(() => this.checkEligibility(), 2000);
+  }
+
+  async runCoachAnalysis(resumeData: unknown) {
+    return firstValueFrom(
+      this.http.post<{ atsScore: number; suggestions: string[] }>(`${this.API_BASE}/api/ai/coach`, { 
+        resumeData,
+        model: this.selectedModelId
+      })
+    );
+  }
+
+  async polishSummary(summary: string) {
+    return firstValueFrom(
+      this.http.post<{ result: string }>(`${this.API_BASE}/api/ai/polish-summary`, { 
+        summary,
+        model: this.selectedModelId
+      })
+    );
+  }
+
+  async suggestExperienceDescription(title: string, company: string, currentContent: string) {
+    return firstValueFrom(
+      this.http.post<{ result: string }>(`${this.API_BASE}/api/ai/suggest-experience`, { 
+        title, 
+        company, 
+        currentContent,
+        model: this.selectedModelId
+      })
+    );
+  }
+
+  async mapToJob(resumeData: unknown, jobUrl: string) {
+    return firstValueFrom(
+      this.http.post<any>(`${this.API_BASE}/api/ai/map-job`, { 
+        resumeData, 
+        jobUrl,
+        model: this.selectedModelId
+      })
+    );
+  }
+
+  async generateCoverLetterDetailed(resumeData: unknown, institutionName: string, positionTitle: string, jobDescription: string) {
+    return firstValueFrom(
+      this.http.post<{ result: string }>(`${this.API_BASE}/api/ai/generate-cover-letter-detailed`, { 
+        resumeData, 
+        institutionName, 
+        positionTitle, 
+        jobDescription,
+        model: this.selectedModelId
+      })
+    );
   }
 }

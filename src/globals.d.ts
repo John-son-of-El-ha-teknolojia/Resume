@@ -1,2 +1,2 @@
-declare const GEMINI_API_KEY: string;
-declare const OPENAI_API_KEY: string;
+// Global type declarations for the environment
+// Custom AI backend model identifiers and configurations can be added here
