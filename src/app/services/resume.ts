@@ -382,6 +382,20 @@ export class ResumeService {
     }
   }
 
+  async sendOtp(email: string): Promise<void> {
+  await firstValueFrom(
+    this.http.post<{ message: string }>(`${this.API_BASE}/api/auth/send-otp`, { email })
+  );
+}
+
+async verifyOtp(email: string, code: string): Promise<{ success: boolean }> {
+  return firstValueFrom(
+    this.http.post<{ success: boolean }>(`${this.API_BASE}/api/auth/verify-otp`, { email, code })
+  );
+}
+
+
+
   async initiatePayment(phone: string, tier: string, amount: number) {
     const email = this.resumeState().email;
     try {

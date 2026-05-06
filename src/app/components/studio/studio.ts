@@ -28,7 +28,7 @@ import {
 import { PaymentDialogComponent } from "../payment/payment";
 import * as QRCode from "qrcode";
 
-const OPENAI_API_KEY = "ADD API KEY";
+
 
 const MOOD_PRESETS: Record<string, any> = {
   executive: {
@@ -1481,187 +1481,69 @@ export class StudioComponent implements AfterViewInit {
     this.resume.referees = this.resume.referees.filter((r) => r.id !== id);
     this.updateResume();
   }
-
+ 
+  
   async runCoachAnalysis() {
-    this.isAnalyzing.set(true);
-    try {
-      const response = await fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${OPENAI_API_KEY}`,
-          },
-          body: JSON.stringify({
-            model: "gpt-4o",
-            messages: [
-              {
-                role: "system",
-                content:
-                  "You are a professional resume coach. Provide ATS scoring and refinement suggestions in JSON format.",
-              },
-              {
-                role: "user",
-                content: `Analyze this resume data for ATS scoring and refinement:
-              ${JSON.stringify(this.resume)}
-              Provide a JSON response with 'atsScore' (0-100) and 'suggestions' (string array of action-verb improvements).`,
-              },
-            ],
-            response_format: { type: "json_object" },
-          }),
-        },
-      );
-
-      const data = await response.json();
-      if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-        throw new Error("Invalid or empty response from OpenAI API. Please check your token or quota.");
-      }
-      const content = data.choices[0].message.content;
-      this.coachReport = JSON.parse(content);
-    } catch (e) {
-      console.error("AI Gen failed", e);
-      // alert("AI analysis failed: " + (e instanceof Error ? e.message : String(e)));
-    } finally {
-      this.isAnalyzing.set(false);
-    }
+  this.isAnalyzing.set(true);
+  try {
+    const report = await this.resumeService.runCoachAnalysis(this.resume);
+    this.coachReport = report;
+  } catch (e) {
+    console.error("Coach analysis failed", e);
+  } finally {
+    this.isAnalyzing.set(false);
   }
+}
+
+
+
 
   async polishSummary() {
-    if (!this.resume.summary) return;
-    this.isMapping.set(true);
-    try {
-      const response = await fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${OPENAI_API_KEY}`,
-          },
-          body: JSON.stringify({
-            model: "gpt-4o",
-            messages: [
-              {
-                role: "system",
-                content:
-                  "You are a professional resume writer. Polish the following professional summary to be more impactful and professional.",
-              },
-              {
-                role: "user",
-                content: this.resume.summary,
-              },
-            ],
-          }),
-        },
-      );
-
-      const data = await response.json();
-      if (data.choices && data.choices[0] && data.choices[0].message) {
-        this.resume.summary = data.choices[0].message.content;
-        this.updateResume();
-      } else {
-        throw new Error("AI could not process the summary. Check API limits.");
-      }
-    } catch (e) {
-      console.error("AI Gen failed", e);
-    } finally {
-      this.isMapping.set(false);
-    }
+  if (!this.resume.summary) return;
+  this.isMapping.set(true);
+  try {
+    const response = await this.resumeService.polishSummary(this.resume.summary);
+    this.resume.summary = response.result;
+    this.updateResume();
+  } catch (e) {
+    console.error("Polish summary failed", e);
+  } finally {
+    this.isMapping.set(false);
   }
+}
+
 
   async suggestExperienceDescription(index: number) {
-    const exp = this.resume.experience[index];
-    if (!exp.title || !exp.company) return;
-
-    this.isMapping.set(true);
-    try {
-      const response = await fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${OPENAI_API_KEY}`,
-          },
-          body: JSON.stringify({
-            model: "gpt-4o",
-            messages: [
-              {
-                role: "system",
-                content:
-                  "You are a professional resume writer. Generate 3-4 impactful bullet points for a job description based on the title and company.",
-              },
-              {
-                role: "user",
-                content: `Job Title: ${exp.title}\nCompany: ${exp.company}\nDescription: ${exp.content}`,
-              },
-            ],
-          }),
-        },
-      );
-
-      const data = await response.json();
-      if (data.choices && data.choices[0] && data.choices[0].message) {
-        this.resume.experience[index].content = data.choices[0].message.content;
-        this.updateResume();
-      } else {
-        throw new Error("AI could not generate description. Check API limits.");
-      }
-    } catch (e) {
-      console.error("AI Gen failed", e);
-    } finally {
-      this.isMapping.set(false);
-    }
+  const exp = this.resume.experience[index];
+  try {
+    const response = await this.resumeService.suggestExperienceDescription(
+      exp.title,
+      exp.company,
+      exp.content
+    );
+    // response is { result: string }, so use response.result
+    exp.content = response.result;
+    this.updateResume();
+  } catch (e) {
+    console.error("Suggest experience failed", e);
   }
+}
 
   async mapToJob() {
     if (!this.jobUrl) return;
     this.isMapping.set(true);
     try {
-      const response = await fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${OPENAI_API_KEY}`,
-          },
-          body: JSON.stringify({
-            model: "gpt-4o",
-            messages: [
-              {
-                role: "system",
-                content:
-                  "You are a professional resume writer. Rewrite resume elements to match job descriptions.",
-              },
-              {
-                role: "user",
-                content: `Rewrite elements of this resume to better map to this job description: ${this.jobUrl}. 
-              Target specifically the Summary and Key projects. 
-              Original Data: ${JSON.stringify(this.resume)}
-              Return ONLY the updated ResumeData JSON object.`,
-              },
-            ],
-            response_format: { type: "json_object" },
-          }),
-        },
-      );
-
-      const data = await response.json();
-      if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-        throw new Error("AI mapping failed. Check API limits.");
-      }
-      const content = data.choices[0].message.content;
-      const updatedData = JSON.parse(content);
+      const updatedData = await this.resumeService.mapToJob(this.resume, this.jobUrl);
+      // Merge updated resume data returned by backend
       this.resume = { ...this.resume, ...updatedData };
       this.updateResume();
     } catch (e) {
-      console.error("AI Gen failed", e);
+      console.error("Job mapping failed", e);
     } finally {
       this.isMapping.set(false);
     }
   }
+
 
   addSkill() {
     this.resume.skills = [

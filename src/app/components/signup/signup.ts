@@ -147,11 +147,18 @@ export class SignupComponent {
     role: new FormControl('', [Validators.required])
   });
 
-  goToVerification() {
-    if (this.signupForm.valid) {
-      this.step.set('verify');
+async goToVerification() {
+  if (this.signupForm.valid) {
+    const email = this.signupForm.get('email')?.value ?? '';
+    if (!email) {
+      this.error.set('Email is required');
+      return;
     }
+    await this.resumeService.sendOtp(email); // now always a string
+    this.step.set('verify');
   }
+}
+
 
   onDigitInput(event: Event, index: number) {
     const target = event.target as HTMLInputElement;
@@ -173,20 +180,32 @@ export class SignupComponent {
   }
 
   async verifyCode() {
-    this.loading.set(true);
-    this.error.set(null);
-    
-    // Simulate API delay
-    await new Promise(r => setTimeout(r, 1000));
-    
+  this.loading.set(true);
+  this.error.set(null);
+
+  const code = this.digits.join('');
+  const email = this.signupForm.get('email')?.value ?? '';
+  if (!email) {
+    this.error.set('Email is required');
+    this.loading.set(false);
+    return;
+  }
+
+  const response = await this.resumeService.verifyOtp(email, code);
+  if (response.success) {
     const data = this.signupForm.value as Record<string, string | null>;
     const success = await this.resumeService.signup(data);
-    
     if (success) {
       this.router.navigate(['/dashboard']);
     } else {
       this.error.set('Signup failed. Please try again.');
     }
-    this.loading.set(false);
+  } else {
+    this.error.set('Invalid or expired OTP.');
   }
+
+  this.loading.set(false);
+}
+
+
 }

@@ -6,6 +6,7 @@ export const authGuard = () => {
   const resumeService = inject(ResumeService);
   const router = inject(Router);
 
+  // Check if user is logged in
   if (resumeService.isLoggedIn()) {
     return true;
   }
@@ -18,10 +19,25 @@ export const adminGuard = () => {
   const resumeService = inject(ResumeService);
   const router = inject(Router);
 
+  // Check if user is logged in and has admin privileges
   if (resumeService.isLoggedIn() && resumeService.isAdmin()) {
     return true;
   }
 
   router.navigate(['/writer']);
+  return false;
+};
+
+// Optional: Premium guard for paid features
+export const premiumGuard = () => {
+  const resumeService = inject(ResumeService);
+  const router = inject(Router);
+
+  // Check if user is logged in and has premium tier
+  if (resumeService.isLoggedIn() && resumeService.isPremium()) {
+    return true;
+  }
+
+  router.navigate(['/account']); // redirect to account/upgrade page
   return false;
 };
