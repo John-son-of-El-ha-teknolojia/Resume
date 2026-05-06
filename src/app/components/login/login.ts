@@ -36,23 +36,21 @@ import { ResumeService } from '../../services/resume';
                    class="w-full bg-slate-50 border border-slate-100 rounded-xl p-4 text-slate-800 font-bold focus:outline-none focus:border-blue-400 transition-all">
           </div>
 
-          @if (error()) {
-            <p class="text-red-500 text-xs font-bold text-center bg-red-50 p-3 rounded-lg border border-red-100">{{ error() }}</p>
-          }
-
-          <button mat-flat-button class="!bg-blue-600 !text-white w-full h-14 rounded-xl text-sm font-black uppercase tracking-widest shadow-xl shadow-blue-100"
-                  [disabled]="loading()">
-            @if (loading()) {
-              <ng-container>
-                <mat-icon class="animate-spin mr-2">sync</mat-icon> Verifying...
-              </ng-container>
-            } @else {
-              <ng-container>
-                Sign In
-              </ng-container>
-            }
-          </button>
-        </form>
+           <p *ngIf="loginError" class="text-red-500 text-xs font-bold text-center bg-red-50 p-3 rounded-lg border border-red-100">
+            {{ loginError }}
+          </p>
+         
+  <button mat-flat-button
+          class="!bg-blue-600 !text-white w-full h-14 rounded-xl text-sm font-black uppercase tracking-widest shadow-xl shadow-blue-100"
+          [disabled]="loading">
+    <ng-container *ngIf="loading; else signInText">
+      <mat-icon class="animate-spin mr-2">sync</mat-icon> Verifying...
+    </ng-container>
+    <ng-template #signInText>
+      Sign In
+    </ng-template>
+  </button>
+</form>
 
         <p class="text-center text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-8">
           Don't have an account? <a routerLink="/signup" class="text-blue-600 hover:underline">Sign Up</a>
@@ -67,33 +65,25 @@ import { ResumeService } from '../../services/resume';
   `]
 })
 export class LoginComponent {
-  private resumeService = inject(ResumeService);
-  private router = inject(Router);
-
   email = '';
   password = '';
-  loading = signal(false);
-  error = signal<string | null>(null);
+  loginError: string | null = null;
+  loading = false;
+
+  constructor(private resumeService: ResumeService, private router: Router) {}
 
   async onLogin() {
-    if (!this.email || !this.password) {
-      this.error.set('Please fill all fields');
-      return;
-    }
-
-    this.loading.set(true);
-    this.error.set(null);
+    this.loading = true;
+    this.loginError = null;
 
     const success = await this.resumeService.login(this.email, this.password);
+
     if (success) {
-      if (this.resumeService.isAdmin()) {
-        this.router.navigate(['/admin']);
-      } else {
-        this.router.navigate(['/dashboard']);
-      }
+      this.router.navigate(['/dashboard']);
     } else {
-      this.error.set('Invalid credentials');
+      this.loginError = 'Incorrect email or password';
     }
-    this.loading.set(false);
+
+    this.loading = false;
   }
 }

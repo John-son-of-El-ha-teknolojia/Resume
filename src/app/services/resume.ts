@@ -234,26 +234,30 @@ export class ResumeService {
   currentTemplate = signal<'minimal' | 'modern' | 'classic'>('minimal');
 
   async login(email: string, password: string): Promise<boolean> {
-    try {
-      const response = await firstValueFrom(
-        this.http.post<{ success: boolean; email: string; isAdmin: boolean }>('/api/auth/login', { email, password })
-      );
-      if (response.success) {
-        this.isLoggedIn.set(true);
-        this.isAdmin.set(response.isAdmin);
-        this.userEmail.set(response.email);
-        this.resumeState.update(prev => ({ ...prev, email: response.email }));
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error('Login error:', error);
-      // Fallback for mock/demo
+  try {
+    const response = await firstValueFrom(
+      this.http.post<{ success: boolean; email: string; isAdmin: boolean }>(
+        '/api/auth/login',
+        { email, password }
+      )
+    );
+
+    if (response.success) {
       this.isLoggedIn.set(true);
-      this.userEmail.set(email);
+      this.isAdmin.set(response.isAdmin);
+      this.userEmail.set(response.email);
+      this.resumeState.update(prev => ({ ...prev, email: response.email }));
       return true;
     }
+
+    return false; // backend responded but success=false
+  } catch (error: any) {
+    console.error('Login error:', error);
+    this.isLoggedIn.set(false); // ensure not logged in
+    return false; // signal failure to caller
   }
+}
+
 
   async signup(data: Record<string, string | null>): Promise<boolean> {
     try {
@@ -274,6 +278,8 @@ export class ResumeService {
       return false;
     }
   }
+
+  
 
   logout() {
     this.isLoggedIn.set(false);
