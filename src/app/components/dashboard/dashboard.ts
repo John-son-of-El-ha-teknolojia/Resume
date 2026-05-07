@@ -4,7 +4,7 @@ import { Router, RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { ResumeService } from '../../services/resume';
-import { SafeUrlPipe } from '/home/mefil/curtis/Resume/src/app/pipes/safeUrl.pipe'
+import { SafeUrlPipe } from '../../pipes/safeUrl.pipe'
 import path from 'path';
 
 @Component({
