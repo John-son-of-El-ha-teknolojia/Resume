@@ -1,6 +1,7 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+  import { environment } from '../../environments/environments';
 
 export interface Referee {
   id: string;
@@ -118,7 +119,7 @@ export interface CoverLetterData {
 })
 export class ResumeService {
   private http = inject(HttpClient);
-  private readonly API_BASE = 'https://resume-backend-777-5555-1.onrender.com';
+  private readonly API_BASE = environment.apiUrl;
 
   // Supported models to be handled by the backend
   public readonly SUPPORTED_MODELS = [
@@ -237,7 +238,7 @@ export class ResumeService {
   try {
     const response = await firstValueFrom(
       this.http.post<{ success: boolean; email: string; isAdmin: boolean }>(
-        '/api/auth/login',
+        `${this.API_BASE}/api/auth/login`,
         { email, password }
       )
     );
@@ -289,7 +290,7 @@ export class ResumeService {
 
   async getAdminStats() {
     return firstValueFrom(
-      this.http.get<{ totalUsers: number; activeUsers: number; totalRevenue: number; tierCounts: Record<string, number> }>('/api/admin/stats')
+      this.http.get<{ totalUsers: number; activeUsers: number; totalRevenue: number; tierCounts: Record<string, number> }>(`${this.API_BASE}/api/admin/stats`)
     );
   }
 

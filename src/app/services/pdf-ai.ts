@@ -1,13 +1,13 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-
+import { environment } from '../../environments/environments';
 @Injectable({
   providedIn: 'root'
 })
 export class PdfAiService {
   private http = inject(HttpClient);
-  private readonly API_BASE = 'https://resume-backend-777-5555-1.onrender.com';
+  private readonly API_BASE = environment.apiUrl;
 
   // Supported models to be handled by the backend
   public readonly SUPPORTED_MODELS = [
