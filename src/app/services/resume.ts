@@ -102,6 +102,26 @@ export interface ResumeData {
     isLocked?: boolean;
     isVisible?: boolean;
   };
+  refereeStyle?: {
+    x?: number;
+    y?: number;
+    isLocked?: boolean;
+    isVisible?: boolean;
+  };
+  skillsStyle?: {
+    x?: number;
+    y?: number;
+    isLocked?: boolean;
+    isVisible?: boolean;
+  };
+  qrStyle?: {
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+    isLocked?: boolean;
+    isVisible?: boolean;
+  };
   skillUrl?: string;
   pageCount?: number;
 }
@@ -129,6 +149,15 @@ export class ResumeService {
   ];
 
   private selectedModelId = 'python-ai-pro';
+
+  templateHtml = signal<string | null>(null);
+
+  loadTemplate(path: string) {
+    this.http.get(path, { responseType: 'text' })
+      .subscribe(html => this.templateHtml.set(html));
+  }
+
+
 
   setModel(modelId: string) {
     this.selectedModelId = modelId;
@@ -172,6 +201,7 @@ export class ResumeService {
       isLocked: true,
       isVisible: true
     },
+    
     skillUrl: '',
     pageCount: 1,
     aesthetics: {

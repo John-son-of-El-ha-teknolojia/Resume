@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard, adminGuard } from './auth.guard';
-
+import { AccountComponent } from './components/account/account';
 export const routes: Routes = [
   { 
     path: 'login', 
@@ -22,7 +22,7 @@ export const routes: Routes = [
   },
   { 
     path: 'writer', 
-    loadComponent: () => import('./components/studio/studio').then(m => m.StudioComponent),
+    loadComponent: () => import('./components/studio/studio.components').then(m => m.StudioComponent),
     canActivate: [authGuard]
   },
   { 
@@ -30,11 +30,7 @@ export const routes: Routes = [
     loadComponent: () => import('./components/viewer/viewer').then(m => m.ViewerComponent),
     canActivate: [authGuard]
   },
-  { 
-    path: 'account', 
-    loadComponent: () => import('./components/account/account').then(m => m.AccountComponent),
-    canActivate: [authGuard]
-  },
+  { path: 'account', component: AccountComponent, canActivate: [authGuard] },
   {
     path: 'pdf-editor',
     loadComponent: () => import('./components/pdf-editor/pdf-editor').then(m => m.PdfEditorComponent),

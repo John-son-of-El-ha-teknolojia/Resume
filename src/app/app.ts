@@ -4,6 +4,7 @@ import { NavbarComponent } from './components/navbar/navbar';
 import { AsyncPipe } from '@angular/common';
 import { map, filter, startWith } from 'rxjs';
 
+
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-root',

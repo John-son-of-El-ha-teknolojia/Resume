@@ -7,7 +7,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ResumeService } from '../../services/resume';
 import { PaymentDialogComponent } from '../payment/payment';
-
+import { UserDetailsDialogComponent } from '../userDetail/user-details-dialog.component';
 @Component({
   selector: 'app-account',
   standalone: true,
@@ -25,9 +25,14 @@ import { PaymentDialogComponent } from '../payment/payment';
           <div class="w-28 h-28 bg-blue-50 border-4 border-blue-100 rounded-full flex items-center justify-center mb-6">
              <mat-icon class="text-blue-600 scale-[2.5]">fingerprint</mat-icon>
           </div>
-          <h2 class="text-xl font-black text-slate-800 mb-1 uppercase tracking-tight">{{ resume().name || 'ADMIN-USER' }}</h2>
-          <p class="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-6">{{ resume().email || 'AUTHENTICATED' }}</p>
-          <button mat-stroked-button class="w-full !border-slate-200 !text-slate-600 font-bold text-sm h-12 rounded-xl">View Details</button>
+          <h2 class="text-xl font-black text-slate-800 mb-1 uppercase tracking-tight">{{ resume().name || 'USER' }}</h2>
+          <p class="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-6">{{ resume().email || 'Email Not Verified' }}</p>
+           <button mat-stroked-button 
+          class="w-full !border-slate-200 !text-slate-600 font-bold text-sm h-12 rounded-xl"
+          (click)="viewDetails()">
+    View Details
+  </button>
+
         </mat-card>
 
         <!-- Subscription Card -->
@@ -130,6 +135,11 @@ export class AccountComponent {
   isPaid = this.resumeService.isPaid;
   isPremium = this.resumeService.isPremium;
   hasFreeDownloadLeft = this.resumeService.hasFreeDownloadLeft;
+   
+  viewDetails(): void {
+    // implement logic, e.g. open dialog or navigate
+    console.log("View details clicked");
+  }
 
   upgrade() {
     this.dialog.open(PaymentDialogComponent, {

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --accent: #1e40af;
+      --text: #111827;
+      --muted: #6b7280;
+      --light-bg: #f9fafb;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      line-height: 1.6;
+      color: var(--text);
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      background: var(--light-bg);
+    }
+    section { margin-bottom: 2.5rem; }
+    h2 {
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 0.3rem;
+      text-transform: uppercase;
+      font-size: 1.1rem;
+      letter-spacing: 1px;
+      color: var(--accent);
+    }
+    #metadata { text-align: center; margin-bottom: 3rem; }
+    #metadata h1 { margin: 0; font-size: 2.2rem; font-weight: 800; color: var(--primary); }
+    #metadata p { margin: 0.3rem 0; color: var(--muted); font-size: 0.95rem; }
+    .exp-item { margin-bottom: 1.5rem; padding: 1rem; background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .exp-header { display: flex; justify-content: space-between; font-weight: 600; font-size: 0.95rem; }
+    .exp-title { color: var(--primary); font-weight: 700; }
+    .exp-company { margin-top: 0.2rem; font-size: 0.9rem; color: var(--accent); }
+    .exp-dates { font-size: 0.85rem; color: var(--muted); }
+    .exp-desc { margin-top: 0.5rem; font-size: 0.9rem; color: var(--text); }
+    .ref-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; }
+    .ref-card { background: #fff; padding: 1rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .ref-name { font-weight: 700; font-size: 1rem; color: var(--primary); }
+    .ref-contact { font-size: 0.85rem; color: var(--muted); margin-top: 0.2rem; }
+  </style>
+</head>
+<body>
+
+  <!-- Metadata -->
+  <section id="metadata">
+    <h1>{{ resume.name || 'John Smith' }}</h1>
+    <p>{{ resume.email || 'john.smith@email.com' }} | {{ resume.phoneCountryCode || '+1' }} {{ resume.phone || '555-123-4567' }} | {{ resume.location || 'New York, USA' }}</p>
+    <p>{{ resume.summary || 'Experienced software engineer specializing in modern web applications and AI-driven solutions.' }}</p>
+  </section>
+
+  <!-- Experience -->
+  <section id="experience">
+    <h2>Professional Experience</h2>
+    {% for exp in resume.experience %}
+    <div class="exp-item">
+      <div class="exp-header">
+        <span class="exp-title">{{ exp.title || 'Senior Software Engineer' }}</span>
+        <span class="exp-dates">{{ exp.startDate || 'Jan 2020' }} - {% if exp.current %}Present{% else %}{{ exp.endDate || 'Dec 2023' }}{% endif %}</span>
+      </div>
+      <div class="exp-company">{{ exp.company || 'TechCorp Inc.' }}</div>
+      <div class="exp-desc">{{ exp.content || 'Led a team of developers building scalable cloud applications, improving performance by 30%.' }}</div>
+    </div>
+    {% endfor %}
+  </section>
+
+  <!-- Referees -->
+  <section id="referees">
+    <h2>Referees</h2>
+    <div class="ref-grid">
+      {% for ref in resume.referees %}
+      <div class="ref-card">
+        <div class="ref-name">{{ ref.name || 'Jane Doe' }}</div>
+        <div class="ref-contact">Email: {{ ref.email || 'jane.doe@company.com' }}</div>
+        <div class="ref-contact">Phone: {{ ref.phone || '+1 555-987-6543' }}</div>
+        <div class="ref-contact">{{ ref.address || 'Company HQ, San Francisco, CA' }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+</body>
+</html>

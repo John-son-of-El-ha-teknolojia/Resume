@@ -1,0 +1,100 @@
+@reference "tailwindcss";
+      :host {
+        display: block;
+      }
+
+      .a4-paper {
+        width: 210mm;
+        height: 297mm;
+        min-width: 210mm;
+        min-height: 297mm;
+      }
+
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
+      ::ng-deep .studio-tabs .mat-mdc-tab-header {
+        border-bottom: 1px solid #f4f4f5;
+      }
+      ::ng-deep .studio-tabs .mat-mdc-tab .mdc-tab__text-label {
+        color: #71717a !important;
+      }
+      ::ng-deep .studio-tabs .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label {
+        color: #09090b !important;
+      }
+      ::ng-deep .studio-tabs .mat-mdc-tab-ink-bar {
+        height: 2px !important;
+        background-color: #09090b !important;
+      }
+
+      ::ng-deep .studio-toggle-group {
+        border: 1px solid #f4f4f5 !important;
+        border-radius: 0.75rem !important;
+        overflow: hidden;
+        height: 40px !important;
+      }
+      ::ng-deep .studio-toggle-group .mat-button-toggle {
+        background-color: #fafafa !important;
+        border-left: 1px solid #f4f4f5 !important;
+      }
+      ::ng-deep .studio-toggle-group .mat-button-toggle-checked {
+        background-color: #09090b !important;
+        color: white !important;
+      }
+      ::ng-deep
+        .studio-toggle-group
+        .mat-button-toggle
+        .mat-button-toggle-label-content {
+        font-size: 8px !important;
+        font-weight: 900 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.1em !important;
+      }
+
+      /* Ensure text inside editable areas wraps correctly */
+.a4-paper div[contentEditable] {
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  line-height: 1.4;
+}
+
+/* Prevent truncation for all elements */
+.a4-paper * {
+  max-width: 100%;
+  word-break: break-word;
+}
+
+/* Balanced font sizing for text elements */
+.a4-paper [style*="font-size"] {
+  font-size: clamp(10px, 2vw, 14px);
+}
+
+/* Add spacing between resume sections */
+.a4-paper section {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #f4f4f5;
+}
+[cdkDrag] {
+  display: inline-block;   /* shrink to content */
+  vertical-align: top;
+}
+
+.selected {
+  outline: 1px solid #3b82f6;
+  box-shadow: 0 0 4px #3b82f6;
+}
+
+.align-btn {
+  width: 28px !important;
+  height: 28px !important;
+  padding: 0 !important;
+}
+.align-btn mat-icon {
+  font-size: 16px;
+}

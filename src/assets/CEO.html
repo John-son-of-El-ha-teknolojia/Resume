@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    :root {
+      --primary: #0f172a;   /* Deep navy for authority */
+      --accent: #2563eb;    /* Vibrant blue for highlights */
+      --text: #1e293b;      /* Neutral dark text */
+      --muted: #64748b;     /* Muted gray for secondary info */
+      --light-bg: #f8fafc;  /* Soft background */
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      line-height: 1.6;
+      color: var(--text);
+      max-width: 1000px;
+      margin: 2rem auto;
+      padding: 0 2rem;
+      background: var(--light-bg);
+    }
+    section { margin-bottom: 3rem; }
+    h2 {
+      border-bottom: 3px solid var(--accent);
+      padding-bottom: 0.4rem;
+      text-transform: uppercase;
+      font-size: 1.2rem;
+      letter-spacing: 1px;
+      color: var(--primary);
+    }
+    #metadata { text-align: center; margin-bottom: 3rem; }
+    #metadata h1 { margin: 0; font-size: 2.6rem; font-weight: 900; color: var(--primary); }
+    #metadata p { margin: 0.4rem 0; color: var(--muted); font-size: 1rem; }
+    .exp-item { margin-bottom: 2rem; padding: 1.5rem; background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .exp-header { display: flex; justify-content: space-between; font-weight: 600; font-size: 1rem; }
+    .exp-title { color: var(--accent); font-weight: 700; font-size: 1.1rem; }
+    .exp-company { margin-top: 0.3rem; font-size: 1rem; color: var(--primary); font-weight: 600; }
+    .exp-dates { font-size: 0.9rem; color: var(--muted); }
+    .exp-desc { margin-top: 0.7rem; font-size: 1rem; color: var(--text); }
+    .board-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; }
+    .board-card { background: #fff; padding: 1.2rem; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .board-name { font-weight: 700; font-size: 1.1rem; color: var(--accent); }
+    .board-role { font-size: 0.95rem; color: var(--muted); margin-top: 0.3rem; }
+  </style>
+</head>
+<body>
+
+  <!-- Metadata -->
+  <section id="metadata">
+    <h1>{{ resume.name || 'John Smith' }}</h1>
+    <p>{{ resume.email || 'john.smith@company.com' }} | {{ resume.phoneCountryCode || '+1' }} {{ resume.phone || '555-123-4567' }} | {{ resume.location || 'Seattle, USA' }}</p>
+    <p>{{ resume.summary || 'Visionary CEO with decades of experience leading multinational corporations, driving innovation, and delivering shareholder value.' }}</p>
+  </section>
+
+  <!-- Executive Experience -->
+  <section id="experience">
+    <h2>Executive Leadership</h2>
+    {% for exp in resume.experience %}
+    <div class="exp-item">
+      <div class="exp-header">
+        <span class="exp-title">{{ exp.title || 'Chief Executive Officer' }}</span>
+        <span class="exp-dates">{{ exp.startDate || 'Jan 2000' }} - {% if exp.current %}Present{% else %}{{ exp.endDate || 'Dec 2025' }}{% endif %}</span>
+      </div>
+      <div class="exp-company">{{ exp.company || 'GlobalTech Corporation' }}</div>
+      <div class="exp-desc">{{ exp.content || 'Directed corporate strategy, expanded global market share, and oversaw $10B in annual revenue growth.' }}</div>
+    </div>
+    {% endfor %}
+  </section>
+
+  <!-- Board Memberships -->
+  <section id="boards">
+    <h2>Board Memberships</h2>
+    <div class="board-grid">
+      {% for board in resume.boards %}
+      <div class="board-card">
+        <div class="board-name">{{ board.name || 'Philanthropy Foundation' }}</div>
+        <div class="board-role">{{ board.role || 'Board Member' }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Referees -->
+  <section id="referees">
+    <h2>Referees</h2>
+    <div class="board-grid">
+      {% for ref in resume.referees %}
+      <div class="board-card">
+        <div class="board-name">{{ ref.name || 'Jane Doe' }}</div>
+        <div class="board-role">Email: {{ ref.email || 'jane.doe@company.com' }}</div>
+        <div class="board-role">Phone: {{ ref.phone || '+1 555-987-6543' }}</div>
+        <div class="board-role">{{ ref.address || 'Company HQ, New York, NY' }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+</body>
+</html>

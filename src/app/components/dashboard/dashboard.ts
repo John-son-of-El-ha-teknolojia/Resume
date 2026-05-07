@@ -4,10 +4,12 @@ import { Router, RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { ResumeService } from '../../services/resume';
+import { SafeUrlPipe } from '/home/mefil/curtis/Resume/src/app/pipes/safeUrl.pipe'
+import path from 'path';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [CommonModule, RouterModule, MatButtonModule, MatIconModule],
+  imports: [CommonModule, RouterModule, MatButtonModule, MatIconModule, SafeUrlPipe],
   template: `
     <div class="min-h-screen bg-zinc-50 flex flex-col">
       <main class="flex-1 max-w-7xl mx-auto w-full p-8 space-y-12">
@@ -88,14 +90,20 @@ import { ResumeService } from '../../services/resume';
                    </div>
                    <!-- Mock template visual -->
                    <div class="w-full h-full bg-white shadow-2xl rounded-sm p-4 space-y-2 opacity-80 scale-90 group-hover:scale-100 transition-transform duration-500">
-                      <div class="h-4 bg-zinc-900 w-1/2 rounded"></div>
-                      <div class="h-2 bg-zinc-200 w-full rounded"></div>
-                      <div class="h-2 bg-zinc-200 w-3/4 rounded"></div>
-                      <div class="pt-4 grid grid-cols-2 gap-2">
-                         <div class="h-20 bg-zinc-50 rounded"></div>
-                         <div class="h-20 bg-zinc-50 rounded"></div>
-                      </div>
-                   </div>
+                   
+                   <ng-container *ngIf="resumeService.isLoggedIn()">
+                   <iframe 
+                      [src]="tmpl.path | safeUrl" 
+                      class="w-full h-40 rounded border border-zinc-200"
+                      style="pointer-events:none; transform:scale(0.5); transform-origin: top left;">
+                    </iframe>
+                    <div class="pt-2">
+                      <p class="text-sm font-bold text-zinc-800">{{ tmpl.name }}</p>
+                      <p class="text-xs text-zinc-500">{{ tmpl.tag }}</p>
+                    </div>
+                  </ng-container>
+                  </div>
+
                  </div>
                  <div class="p-6">
                    <h4 class="font-black uppercase tracking-widest text-sm">{{ tmpl.name }}</h4>
@@ -110,17 +118,22 @@ import { ResumeService } from '../../services/resume';
   `
 })
 export class DashboardComponent {
-  private resumeService = inject(ResumeService);
+  resumeService = inject(ResumeService);
   private router = inject(Router);
 
   frameworks = [
-    { id: 'minimal', name: 'Swiss Minimalist', tag: 'Professional' },
-    { id: 'modern', name: 'Bento Modern', tag: 'Creative' },
-    { id: 'classic', name: 'Ivy League', tag: 'Academic' }
+    { id: 'minimal', name: 'Swiss Minimalist', tag: 'Professional', path: 'assets/CEO.html' },
+    { id: 'modern', name: 'Bento Modern', tag: 'Creative', path: 'assets/modern.html' },
+    { id: 'classic', name: 'Ivy League', tag: 'Academic', path: 'assets/minimal.html' }
   ];
 
-  selectTemplate(id: any) {
-    this.resumeService.currentTemplate.set(id);
+  selectTemplate(id: string) {
+  const tmpl = this.frameworks.find(f => f.id === id);
+  if (tmpl?.path) {
+    this.resumeService.currentTemplate.set(tmpl.id as any);
+    this.resumeService.loadTemplate(tmpl.path);
     this.router.navigate(['/writer']);
   }
+}
+
 }
