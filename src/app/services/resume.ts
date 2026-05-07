@@ -118,7 +118,7 @@ export interface CoverLetterData {
 })
 export class ResumeService {
   private http = inject(HttpClient);
-  private readonly API_BASE = 'http://localhost:8080';
+  private readonly API_BASE = 'https://resume-backend-777-5555-1.onrender.com';
 
   // Supported models to be handled by the backend
   public readonly SUPPORTED_MODELS = [
