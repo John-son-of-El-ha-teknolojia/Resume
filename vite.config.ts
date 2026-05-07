@@ -7,7 +7,7 @@ export default defineConfig({
     host: 'localhost',
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'https://resume-backend-777-5555-1.onrender.com',
         changeOrigin: true,
         secure: false,
       },
