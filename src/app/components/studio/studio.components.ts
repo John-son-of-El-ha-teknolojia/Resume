@@ -26,7 +26,7 @@ import {
   ResumeElement,
 } from "../../services/resume";
 import { PaymentDialogComponent } from "../payment/payment";
-import * as QRCode from "qrcode";
+
 
 
 
@@ -74,7 +74,7 @@ const MOOD_PRESETS: Record<string, any> = {
   styleUrls: ["./studio.component.css"],
 })
 
-export class StudioComponent implements AfterViewInit {
+export class StudioComponent  {
   public resumeService = inject(ResumeService);
   private dialog = inject(MatDialog);
   private router = inject(Router);
@@ -131,43 +131,16 @@ export class StudioComponent implements AfterViewInit {
   isMapping = signal(false);
   coachReport: { atsScore: number; suggestions: string[] } | null = null;
   jobUrl = "";
-  qrCodeUrl = signal("");
+  
 
-  backToDashboard() {
-    this.router.navigate(["/dashboard"]);
-  }
 
-  goToViewer() {
-    this.router.navigate(["/viewer"]);
-  }
 
-  onModelChange(event: any) {
-    this.resumeService.setModel(event.target.value);
-  }
 
   onImageTrigger(input: HTMLInputElement) {
     input.click();
   }
 
-  ngAfterViewInit() {
-    this.autoScale();
-    this.generateQRCode();
-  }
 
-  @HostListener("window:resize")
-  onResize() {
-    this.autoScale();
-  }
-
-  autoScale() {
-    if (this.canvasContainer) {
-      const containerWidth =
-        this.canvasContainer.nativeElement.offsetWidth - 160;
-      const paperWidth = 210 * 3.78; // approximation for mm to px at 96dpi
-      const ratio = containerWidth / paperWidth;
-      this.scale.set(Math.floor(ratio * 100));
-    }
-  }
 
   updateResume() {
     if (this.resumeService.isPaid()) {
@@ -175,72 +148,13 @@ export class StudioComponent implements AfterViewInit {
       console.log("Autosave: Intelligence sync verified.");
     }
     this.resumeService.commit();
-    this.generateQRCode();
+    // this.generateQRCode();
   }
 
-  calculateDuration(exp: {
-    startDate: string;
-    endDate: string;
-    current: boolean;
-  }): string {
-    if (!exp.startDate) return "0 months";
-    const start = new Date(exp.startDate);
-    const end = exp.current
-      ? new Date()
-      : exp.endDate
-        ? new Date(exp.endDate)
-        : new Date();
+ 
 
-    let months =
-      (end.getFullYear() - start.getFullYear()) * 12 +
-      (end.getMonth() - start.getMonth());
-    if (months < 0) months = 0;
+  
 
-    const years = Math.floor(months / 12);
-    const remainingMonths = months % 12;
-
-    let result = "";
-    if (years > 0) result += `${years} yr${years > 1 ? "s" : ""} `;
-    if (remainingMonths > 0)
-      result += `${remainingMonths} mo${remainingMonths > 1 ? "s" : ""}`;
-    return result || "Less than a month";
-  }
-
-  addExperience() {
-    const newExp = {
-      id: Math.random().toString(36).substring(7),
-      company: "",
-      title: "",
-      startDate: "",
-      endDate: "",
-      current: false,
-      content: "",
-    };
-    this.resume.experience = [...(this.resume.experience || []), newExp];
-    this.updateResume();
-  }
-
-  removeExperience(id: string) {
-    this.resume.experience = this.resume.experience.filter((e) => e.id !== id);
-    this.updateResume();
-  }
-
-  addReferee() {
-    const newRef = {
-      id: Math.random().toString(36).substring(7),
-      name: "",
-      email: "",
-      phone: "",
-      address: "",
-    };
-    this.resume.referees = [...(this.resume.referees || []), newRef];
-    this.updateResume();
-  }
-
-  removeReferee(id: string) {
-    this.resume.referees = this.resume.referees.filter((r) => r.id !== id);
-    this.updateResume();
-  }
  
   
   async runCoachAnalysis() {
@@ -257,20 +171,6 @@ export class StudioComponent implements AfterViewInit {
 
 
 
-
-  async polishSummary() {
-  if (!this.resume.summary) return;
-  this.isMapping.set(true);
-  try {
-    const response = await this.resumeService.polishSummary(this.resume.summary);
-    this.resume.summary = response.result;
-    this.updateResume();
-  } catch (e) {
-    console.error("Polish summary failed", e);
-  } finally {
-    this.isMapping.set(false);
-  }
-}
 
 
   async suggestExperienceDescription(index: number) {
@@ -305,32 +205,7 @@ export class StudioComponent implements AfterViewInit {
   }
 
 
-  addSkill() {
-    this.resume.skills = [
-      ...(this.resume.skills || []),
-      { name: "New Skill", level: 50, displayMode: "horizontal_bar" },
-    ];
-    this.updateResume();
-  }
 
-  removeSkill(name: string) {
-    this.resume.skills = this.resume.skills.filter((s) => s.name !== name);
-    this.updateResume();
-  }
-
-
-
-   async generateQRCode() {
-    const url =
-      this.resume.skillUrl ||
-      this.resume.website ||
-      `https://linkedin.com/in/${this.resume.name.replace(/\s/g, "").toLowerCase()}`;
-    try {
-      this.qrCodeUrl.set(await QRCode.toDataURL(url));
-    } catch (err) {
-      console.error("QR Generation failed:", err);
-    }
-  }
 
   applyMood(moodKey: string) {
     const preset = MOOD_PRESETS[moodKey];
@@ -344,21 +219,8 @@ export class StudioComponent implements AfterViewInit {
     }
   }
 
-  undo() {
-    this.resumeService.undo();
-    this.resume = this.resumeService.resumeState();
-  }
 
-  redo() {
-    this.resumeService.redo();
-    this.resume = this.resumeService.resumeState();
-  }
-
-  saveToCloud() {
-    // Mock save
-    console.log("Syncing blueprint to edge nodes...", this.resume);
-  }
-
+  
   addSection() {
     this.resumeService.addSection();
     this.resume = this.resumeService.resumeState();
@@ -373,293 +235,15 @@ export class StudioComponent implements AfterViewInit {
     if (this.activeSectionId() === id) this.activeSectionId.set(null);
   }
 
-  getIconForType(type: string): string {
-    switch (type) {
-      case "image":
-        return "image";
-      case "line":
-        return "horizontal_rule";
-      case "box":
-        return "crop_square";
-      case "text":
-        return "title";
-      default:
-        return "help_outline";
-    }
-  }
-
-  convertToUnit(value: number, unit?: string): string {
-    if (!unit || unit === "px") return value + "px";
-    return value + unit;
-  }
-
-  getTransform(el: ResumeElement): string {
-    let transform = "";
-    if (el.rotation) transform += ` rotate(${el.rotation}deg)`;
-    return transform || "none";
-  }
-
-  getImageMirror(el: ResumeElement): string {
-    let mirror = "";
-    if (el.mirror?.horizontal) mirror += " scaleX(-1)";
-    if (el.mirror?.vertical) mirror += " scaleY(-1)";
-    return mirror || "none";
-  }
-
-  addElement(type: "image" | "line" | "box" | "text") {
-    const newElement: ResumeElement = {
-      id: Math.random().toString(36).substring(7),
-      type,
-      x: 300,
-      y: 300,
-      width: type === "line" ? 400 : 200,
-      height: type === "line" ? 2 : type === "text" ? 100 : 200,
-      rotation: 0,
-      isLocked: false,
-      isVisible: true,
-      unit: "px",
-      content: type === "text" ? "Double click to edit text..." : undefined,
-      url:
-        type === "image"
-          ? "https://picsum.photos/seed/" + Math.random() + "/400/400"
-          : undefined,
-      style: {
-        backgroundColor:
-          type === "line"
-            ? "#09090b"
-            : type === "box"
-              ? "#f4f4f5"
-              : "transparent",
-        borderStyle: "solid",
-        borderRadius: 0,
-        borderWidth: 1,
-        borderColor: "#e4e4e7",
-        fontSize: 14,
-        color: "#09090b",
-        fontWeight: "400",
-        textAlign: "left",
-        opacity: 1,
-        thickness: 2
-      },
-    };
-    this.resume.aesthetics.elements.unshift(newElement); // Add to top of stack
-    this.updateResume();
-    this.activeElementId.set(newElement.id);
-    this.activeSectionId.set(null);
-  }
-
-  removeElement(id: string) {
-    this.resume.aesthetics.elements = this.resume.aesthetics.elements.filter(
-      (el) => el.id !== id,
-    );
-    this.updateResume();
-    if (this.activeElementId() === id) this.activeElementId.set(null);
-  }
-
-  getActiveElement() {
-    return this.resume.aesthetics.elements.find(
-      (el) => el.id === this.activeElementId(),
-    );
-  }
-
-  private isInsideCanvas(x: number, y: number, width: number, height: number): boolean {
-  const canvas = document.getElementById('resume-canvas');
-  if (!canvas) return false;
-  const rect = canvas.getBoundingClientRect();
-  return !(x < 0 || y < 0 || x > rect.width - width || y > rect.height - height);
-}
-
-
-  private originalPositions: Record<string, { x: number; y: number }> = {};
-
-  onDragStart(el: ResumeElement){
-    this.originalPositions[el.id] = { x: el.x, y: el.y };
-  }
+  
 
 
 
-  onDragEnd(event: CdkDragEnd, el: ResumeElement) {
-  const canvas = document.getElementById('resume-canvas');
-  const rect = canvas?.getBoundingClientRect();
-  const { x, y } = event.source.getFreeDragPosition();
+ 
 
-  // If outside canvas bounds → reset
-  if (!rect || x < 0 || y < 0 || x > rect.width - el.width || y > rect.height - el.height) {
-    // Reset to original
-    const orig = this.originalPositions[el.id];
-    if (orig) {
-      el.x = orig.x;
-      el.y = orig.y;
-    }
-  } else {
-    el.x = x;
-    el.y = y;
-  }
+  
 
-  this.updateResume();
-  }
-
-  onMetadataDragEnd(event: CdkDragEnd) {
-    if (this.resume.metadataStyle) {
-      const { x, y } = event.source.getFreeDragPosition();
-      const width = this.resume.metadataStyle.width || 200;
-      const height = 40;
-
-      if (this.isInsideCanvas(x, y, width, height)) {
-        this.resume.metadataStyle.x = x;
-        this.resume.metadataStyle.y = y;
-      } else {
-        // Snap back to last valid position
-        event.source.reset();
-      }
-
-      this.updateResume();
-      console.log("Metadata position updated:", this.resume.metadataStyle.x, this.resume.metadataStyle.y);
-    }
-  }
-
-  onExperienceDragEnd(event: CdkDragEnd) {
-    if (this.resume.experienceStyle) {
-      const { x, y } = event.source.getFreeDragPosition();
-      const width = 400;
-      const height = 200;
-
-      if (this.isInsideCanvas(x, y, width, height)) {
-        this.resume.experienceStyle.x = x;
-        this.resume.experienceStyle.y = y;
-      } else {
-        event.source.reset();
-      }
-
-      this.updateResume();
-      console.log("Experience position updated:", this.resume.experienceStyle.x, this.resume.experienceStyle.y);
-    }
-  }
-
-
-  onImageUpload(event: any) {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e: any) => {
-        const url = e.target.result;
-        const newElement: ResumeElement = {
-          id: Math.random().toString(36).substring(7),
-          type: "image",
-          x: 200,
-          y: 200,
-          width: 200,
-          height: 200,
-          rotation: 0,
-          isLocked: false,
-          isVisible: true,
-          unit: "px",
-          mirror: { horizontal: false, vertical: false },
-          url: url,
-          style: {},
-        };
-        this.resume.aesthetics.elements.unshift(newElement);
-        this.updateResume();
-        this.activeElementId.set(newElement.id);
-        this.activeSectionId.set(null);
-      };
-      reader.readAsDataURL(file);
-    }
-  }
-
-  moveForward(el: ResumeElement) {
-    const idx = this.resume.aesthetics.elements.indexOf(el);
-    if (idx < this.resume.aesthetics.elements.length - 1) {
-      this.resume.aesthetics.elements.splice(idx, 1);
-      this.resume.aesthetics.elements.splice(idx + 1, 0, el);
-      this.updateResume();
-    }
-  }
-
-  moveBackward(el: ResumeElement) {
-    const idx = this.resume.aesthetics.elements.indexOf(el);
-    if (idx > 0) {
-      this.resume.aesthetics.elements.splice(idx, 1);
-      this.resume.aesthetics.elements.splice(idx - 1, 0, el);
-      this.updateResume();
-    }
-  }
-
-  selectedElementIds = new Set<string>();
-
-  toggleSelection(id: string, event: MouseEvent) {
-    event.stopPropagation();
-    if (this.selectedElementIds.has(id)) {
-      this.selectedElementIds.delete(id); // unselect if clicked again
-    } else {
-      this.selectedElementIds.add(id);    // select if not already
-    }
-    this.updateResume();
-  }
-
-
-  alignSelected(direction: 'left' | 'center' | 'right') {
-  const selected = this.resume.aesthetics.elements.filter(el => this.selectedElementIds.has(el.id));
-  if (selected.length < 2) return;
-
-  if (direction === 'left') {
-    const minX = Math.min(...selected.map(el => el.x));
-    selected.forEach(el => el.x = minX);
-  }
-  if (direction === 'center') {
-    const avgX = selected.reduce((sum, el) => sum + el.x, 0) / selected.length;
-    selected.forEach(el => el.x = avgX);
-  }
-  if (direction === 'right') {
-    const maxX = Math.max(...selected.map(el => el.x + el.width));
-    selected.forEach(el => el.x = maxX - el.width);
-  }
-
-  this.updateResume();
-}
-
-alignVertical(direction: 'top' | 'middle' | 'bottom') {
-  const selected = this.resume.aesthetics.elements.filter(el => this.selectedElementIds.has(el.id));
-  if (selected.length < 2) return;
-
-  if (direction === 'top') {
-    const minY = Math.min(...selected.map(el => el.y));
-    selected.forEach(el => el.y = minY);
-  }
-  if (direction === 'middle') {
-    const avgY = selected.reduce((sum, el) => sum + el.y, 0) / selected.length;
-    selected.forEach(el => el.y = avgY);
-  }
-  if (direction === 'bottom') {
-    const maxY = Math.max(...selected.map(el => el.y + el.height));
-    selected.forEach(el => el.y = maxY - el.height);
-  }
-
-  this.updateResume();
-}
-
-
-  distribute(direction: 'horizontal' | 'vertical') {
-  const selected = this.resume.aesthetics.elements
-    .filter(el => this.selectedElementIds.has(el.id))
-    .sort((a, b) => direction === 'horizontal' ? a.x - b.x : a.y - b.y);
-
-  if (selected.length < 3) return;
-
-  if (direction === 'horizontal') {
-    const minX = selected[0].x;
-    const maxX = selected[selected.length - 1].x;
-    const step = (maxX - minX) / (selected.length - 1);
-    selected.forEach((el, i) => el.x = minX + i * step);
-  } else {
-    const minY = selected[0].y;
-    const maxY = selected[selected.length - 1].y;
-    const step = (maxY - minY) / (selected.length - 1);
-    selected.forEach((el, i) => el.y = minY + i * step);
-  }
-
-  this.updateResume();
-}
+  // selectedElementIds = new Set<string>();
 
 
   async enhanceSection(section: ResumeSection) {
@@ -678,37 +262,12 @@ alignVertical(direction: 'top' | 'middle' | 'bottom') {
     });
   }
 
-  zoomIn() {
-    this.scale.update((s) => Math.min(s + 10, 200));
-  }
-  zoomOut() {
-    this.scale.update((s) => Math.max(s - 10, 10));
-  }
-
+ 
   toggleSidebarPosition() {
     this.sidebarPosition.update((p) => (p === "left" ? "right" : "left"));
   }
 
-  toggleFullscreen() {
-    const el = document.getElementById("resume-canvas");
-    if (el?.requestFullscreen) el.requestFullscreen();
-  }
-
-  async exportPdf() {
-    const res = await this.resumeService.checkEligibility();
-    if (res.canDownload) {
-      this.resumeService.downloadPdf();
-    } else {
-      this.dialog.open(PaymentDialogComponent, { width: "500px" });
-    }
-  }
-
-  share() {
-    const url = window.location.href;
-    navigator.clipboard.writeText(url);
-    alert("Studio link replicated. Copied to clipboard.");
-  }
-
+  
   restoreDefaults() {
     if (confirm("Reset document to initial blueprint? (Irreversible)")) {
       // Implementation for reset
