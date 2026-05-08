@@ -1,26 +1,95 @@
 import { Component, Input, Output, EventEmitter, signal } from '@angular/core';
-import { ResumeService, ResumeElement } from '../../services/resume';
+import { ResumeService, ResumeElement, ResumeData } from '../../services/resume';
 import * as QRCode from "qrcode";
+import { CommonModule } from '@angular/common';   // ✅ import CommonModule
 
 @Component({
   selector: 'app-sidebar',
+  standalone: true,   // ✅ mark as standalone
+  imports: [CommonModule],   // ✅ add CommonModule so *ngIf, *ngFor work
   templateUrl: './sidebar.component.html',
-  styleUrls: ['./sidebar.component.css']
+  styleUrls: ['./studio.component.css']
 })
+
 export class SidebarComponent {
-  @Input() resume: any;
-  @Output() resumeChange = new EventEmitter<any>();
+  @Input() resume!: ResumeData;
+  @Output() resumeChange = new EventEmitter<ResumeData>();
 
   activeSectionId = signal<string | null>(null);
   activeElementId = signal<string | null>(null);
   isMapping = signal(false);
   qrCodeUrl = signal("");
 
+  activeStep: 'metadata' | 'experience' | 'referees' | 'layers' | 'coach' | 'skills' = 'metadata';
+
   constructor(public resumeService: ResumeService) {}
 
-  updateResume() {
-    this.resumeChange.emit(this.resume);
-  }
+
+    countryCodes = [
+  { value: '+93', label: 'AF' },   // Afghanistan
+  { value: '+355', label: 'AL' },  // Albania
+  { value: '+213', label: 'DZ' },  // Algeria
+  { value: '+376', label: 'AD' },  // Andorra
+  { value: '+244', label: 'AO' },  // Angola
+  { value: '+1-268', label: 'AG' }, // Antigua and Barbuda
+  { value: '+54', label: 'AR' },   // Argentina
+  { value: '+374', label: 'AM' },  // Armenia
+  { value: '+61', label: 'AU' },   // Australia
+  { value: '+43', label: 'AT' },   // Austria
+  { value: '+994', label: 'AZ' },  // Azerbaijan
+  { value: '+1-242', label: 'BS' }, // Bahamas
+  { value: '+973', label: 'BH' },  // Bahrain
+  { value: '+880', label: 'BD' },  // Bangladesh
+  { value: '+1-246', label: 'BB' }, // Barbados
+  { value: '+375', label: 'BY' },  // Belarus
+  { value: '+32', label: 'BE' },   // Belgium
+  { value: '+501', label: 'BZ' },  // Belize
+  { value: '+229', label: 'BJ' },  // Benin
+  { value: '+975', label: 'BT' },  // Bhutan
+  { value: '+591', label: 'BO' },  // Bolivia
+  { value: '+387', label: 'BA' },  // Bosnia and Herzegovina
+  { value: '+267', label: 'BW' },  // Botswana
+  { value: '+55', label: 'BR' },   // Brazil
+  { value: '+673', label: 'BN' },  // Brunei
+  { value: '+359', label: 'BG' },  // Bulgaria
+  { value: '+226', label: 'BF' },  // Burkina Faso
+  { value: '+257', label: 'BI' },  // Burundi
+  { value: '+238', label: 'CV' },  // Cabo Verde
+  { value: '+855', label: 'KH' },  // Cambodia
+  { value: '+237', label: 'CM' },  // Cameroon
+  { value: '+1', label: 'CA' },    // Canada
+  { value: '+86', label: 'CN' },   // China
+  { value: '+254', label: 'KE' },  // Kenya
+  { value: '+91', label: 'IN' },   // India
+  { value: '+81', label: 'JP' },   // Japan
+  { value: '+44', label: 'GB' },   // United Kingdom
+  { value: '+1', label: 'US' },    // United States
+  // … continue for all countries in your list
+];
+
+
+addEducation() {
+  const newEdu = {
+    id: Date.now().toString(),
+    school: '',
+    degree: '',
+    startDate: '',
+    endDate: '',
+    description: ''
+  };
+  this.resume.education.push(newEdu);
+  this.updateResume();
+}
+
+removeEducation(id: string) {
+  this.resume.education = this.resume.education.filter(e => e.id !== id);
+  this.updateResume();
+}
+
+
+updateResume() {
+  this.resumeChange.emit({ ...this.resume });
+}
 
   // Metadata polish
  

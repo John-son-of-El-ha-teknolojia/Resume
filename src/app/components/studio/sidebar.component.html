@@ -1,686 +1,736 @@
- <div class="flex-1 flex overflow-hidden" [class.flex-row-reverse]="sidebarPosition() === 'right'">
+<aside 
+  class="w-[560px] h-screen bg-gradient-to-br from-indigo-50 to-white rounded-2xl shadow-lg overflow-y-auto p-6"
+>
+
+
+<section *ngIf="activeStep === 'metadata'" class="p-10 space-y-10 bg-gradient-to-br from-indigo-50 to-white rounded-2xl shadow-lg">
+  <!-- Identity -->
+  <div class="space-y-8">
+    <h3 class="text-lg font-semibold text-indigo-600 flex items-center gap-2">
+      <mat-icon class="text-indigo-400">person</mat-icon>
+      Identity
+    </h3>
+    <div class="grid grid-cols-1 gap-6">
+      <div class="space-y-2">
+        <label for="fullName" class="text-sm font-medium text-gray-700">Full Name</label>
+        <input id="fullName" [(ngModel)]="resume.name" (ngModelChange)="updateResume()" 
+               class="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 text-base">
+      </div>
+      <div class="space-y-2">
+        <label for="email" class="text-sm font-medium text-gray-700">Professional Email</label>
+        <input id="email" [(ngModel)]="resume.email" (ngModelChange)="updateResume()" 
+               class="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 text-base">
+      </div>
+      <div class="space-y-2">
+        <label for="summary" class="text-sm font-medium text-gray-700">Professional Abstract</label>
+        <textarea id="summary" [(ngModel)]="resume.summary" (ngModelChange)="updateResume()" rows="4" 
+                  class="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 text-base"></textarea>
+        <button (click)="polishSummary()" 
+                class="mt-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition">
+          ✨ AI Polish
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phone -->
+  <div class="grid grid-cols-3 gap-6">
+    <div class="space-y-2">
+      <label for="countryCode" class="text-sm font-medium text-gray-700">Code</label>
+      <select id="countryCode" [(ngModel)]="resume.phoneCountryCode" (ngModelChange)="updateResume()" 
+              class="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 text-base">
+        <option *ngFor="let code of countryCodes" [value]="code.value">
+          {{ code.label }}
+        </option>
+      </select>
+    </div>
+    <div class="col-span-2 space-y-2">
+      <label for="phone" class="text-sm font-medium text-gray-700">Phone Number</label>
+      <input id="phone" [(ngModel)]="resume.phone" (ngModelChange)="updateResume()" 
+             class="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 text-base">
+    </div>
+  </div>
+
+  <!-- Metadata Styling -->
+  <div class="space-y-8 pt-8 border-t border-gray-200">
+    <h3 class="text-lg font-semibold text-indigo-600 flex items-center gap-2">
+      <mat-icon class="text-indigo-400">tune</mat-icon>
+      Metadata Block Styling
+    </h3>
+    <div class="grid grid-cols-2 gap-6">
+      <div>
+        <label class="text-sm font-medium text-gray-700">Border Style</label>
+        <select [(ngModel)]="resume.metadataStyle.border" (ngModelChange)="updateResume()" 
+                class="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 text-base">
+          <option value="none">None</option>
+          <option value="solid">Solid</option>
+          <option value="dashed">Dashed</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-sm font-medium text-gray-700">Padding (px)</label>
+        <input type="number" [(ngModel)]="resume.metadataStyle.padding" (ngModelChange)="updateResume()" 
+               class="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 text-base">
+      </div>
+      <div>
+        <label class="text-sm font-medium text-gray-700">X Offset</label>
+        <input type="number" [(ngModel)]="resume.metadataStyle.x" (ngModelChange)="updateResume()" 
+               class="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 text-base">
+      </div>
+      <div>
+        <label class="text-sm font-medium text-gray-700">Y Offset</label>
+        <input type="number" [(ngModel)]="resume.metadataStyle.y" (ngModelChange)="updateResume()" 
+               class="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 text-base">
+      </div>
+      <div>
+        <label class="text-sm font-medium text-gray-700">Block Width</label>
+        <input type="number" [(ngModel)]="resume.metadataStyle.width" (ngModelChange)="updateResume()" 
+               class="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 text-base">
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <div class="flex justify-between pt-8">
+    <button disabled class="px-4 py-2 bg-gray-200 rounded-lg text-gray-500">‹ Previous</button>
+    <button (click)="activeStep = 'experience'" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">Next ›</button>
+  </div>
+</section>
+
+
+<!--Experience-->
+
+<section *ngIf="activeStep === 'experience'" 
+         class="p-10 space-y-10 bg-gradient-to-br from-indigo-50 to-white rounded-2xl shadow-lg overflow-y-auto max-h-[80vh]">
+  
+  <!-- Career History -->
+  <div class="space-y-8">
+    <h3 class="text-lg font-semibold text-indigo-600 flex items-center gap-2">
+      <mat-icon class="text-indigo-400">work</mat-icon>
+      Career History
+    </h3>
+    <button (click)="addExperience()" 
+              class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition flex items-center gap-2">
+        <mat-icon class="text-white">add</mat-icon>
+        Add Experience
+      </button>
+    <div class="space-y-6">
+      <div *ngFor="let exp of resume.experience; let i = index" 
+           class="p-6 bg-white border border-gray-200 rounded-xl shadow-sm space-y-6">
         
-        <!-- SIDEBAR: (Information Panels) -->
-        <aside [class.border-r]="sidebarPosition() === 'left'" [class.border-l]="sidebarPosition() === 'right'" 
-               class="w-[380px] bg-white border-zinc-200 flex flex-col shrink-0">
-          <div class="flex-1 overflow-y-auto no-scrollbar">
-            <mat-tab-group class="studio-tabs">
-              <mat-tab>
-                <ng-template mat-tab-label>
-                  <div class="flex items-center gap-2 py-4">
-                    <mat-icon class="text-sm">person</mat-icon>
-                    <span class="text-[10px] uppercase font-black tracking-widest">Metadata</span>
-                  </div>
-                </ng-template>
-                <div class="p-8 space-y-8">
-                  <div class="space-y-6">
-                      <div class="space-y-4 pt-8 border-t border-zinc-100">
-                        <div class="flex justify-between items-center">
-                          <h3 class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Identity</h3>
-                        </div>
-                        <div class="grid grid-cols-1 gap-5">
-                          <div class="space-y-2 group">
-                            <label for="fullName" class="text-[10px] font-black uppercase tracking-widest text-zinc-300 group-focus-within:text-zinc-900 transition-colors">Field: Full Name</label>
-                            <input id="fullName" name="fullName" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 text-sm font-bold text-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900/5 focus:border-zinc-900 transition-all" 
-                                   [(ngModel)]="resume.name" (ngModelChange)="updateResume()">
-                          </div>
-                          <div class="space-y-2 group">
-                            <label for="email" class="text-[10px] font-black uppercase tracking-widest text-zinc-300 group-focus-within:text-zinc-900 transition-colors">Field: Professional Email</label>
-                            <input id="email" name="email" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 text-sm font-bold text-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900/5 focus:border-zinc-900 transition-all" 
-                                   [(ngModel)]="resume.email" (ngModelChange) ="updateResume()">
-                          </div>
-                          <div class="space-y-2 group">
-                            <div class="flex justify-between items-center mb-2">
-                              <label for="summary" class="text-[10px] font-black uppercase tracking-widest text-zinc-300 group-focus-within:text-zinc-900 transition-colors">Professional Abstract</label>
-                              <button (click)="polishSummary()" class="text-[8px] font-black uppercase tracking-widest px-3 py-1 bg-zinc-900 text-white rounded-full hover:scale-105 active:scale-95 transition-all flex items-center gap-1">
-                                <mat-icon class="text-[10px] h-3 w-3">auto_awesome</mat-icon> AI Polish
-                              </button>
-                            </div>
-                            <textarea id="summary" name="summary" rows="4" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 text-sm font-medium text-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900/5 focus:border-zinc-900 transition-all resize-none" 
-                                   [(ngModel)]="resume.summary" (ngModelChange)="updateResume()" placeholder="Describe your career objective and key value proposition..."></textarea>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="grid grid-cols-3 gap-4">
-                        <div class="space-y-2 group">
-                          <label for="countryCode" class="text-[10px] font-black uppercase tracking-widest text-zinc-300 group-focus-within:text-zinc-900 transition-colors">Code</label>
-                          <select id="countryCode" name="countryCode" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 text-xs font-bold text-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900/5 transition-all appearance-none"
-                                  [(ngModel)]="resume.phoneCountryCode" (ngModelChange)="updateResume()">
-                            <option value="+1">+1 (US)</option>
-                            <option value="+44">+44 (UK)</option>
-                            <option value="+254">+254 (KE)</option>
-                            <option value="+91">+91 (IN)</option>
-                          </select>
-                        </div>
-                        <div class="col-span-2 space-y-2 group">
-                          <label for="phone" class="text-[10px] font-black uppercase tracking-widest text-zinc-300 group-focus-within:text-zinc-900 transition-colors">Phone Number</label>
-                          <input id="phone" name="phone" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 text-sm font-bold text-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900/5 focus:border-zinc-900 transition-all" 
-                                 [(ngModel)]="resume.phone" (ngModelChange)="updateResume()">
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="space-y-6 pt-8 border-t border-zinc-100">
-                    <h3 class="text-[10px] font-black uppercase tracking-widest text-zinc-400 pl-1">Metadata Block Styling</h3>
-                    <div class="grid grid-cols-2 gap-4">
-                      <div class="space-y-1">
-                        <label class="text-[8px] font-black uppercase text-zinc-300">Border Style</label>
-                        <select [(ngModel)]="resume.metadataStyle!.border" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-[10px] font-black uppercase">
-                          <option value="none">None</option>
-                          <option value="solid">Solid</option>
-                          <option value="dashed">Dashed</option>
-                        </select>
-                      </div>
-                      <div class="space-y-1">
-                        <label class="text-[8px] font-black uppercase text-zinc-300">Padding (px)</label>
-                        <input type="number" [(ngModel)]="resume.metadataStyle!.padding" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-xs font-bold">
-                      </div>
-                      <div class="space-y-1">
-                        <label class="text-[8px] font-black uppercase text-zinc-300">X Offset</label>
-                        <input type="number" [(ngModel)]="resume.metadataStyle!.x" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-xs font-bold">
-                      </div>
-                      <div class="space-y-1">
-                        <label for="metaWidth" class="text-[8px] font-black uppercase text-zinc-300">Block Width</label>
-                        <input id="metaWidth" name="metaWidth" type="number" [(ngModel)]="resume.metadataStyle!.width" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-xs font-bold">
-                      </div>
-                      <div class="space-y-1">
-                        <label for="metaY" class="text-[8px] font-black uppercase text-zinc-300">Y Offset</label>
-                        <input id="metaY" name="metaY" type="number" [(ngModel)]="resume.metadataStyle!.y" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-xs font-bold">
-                      </div>
-                    </div>
-                  </div>
-                </mat-tab>
-
-              <mat-tab>
-                <ng-template mat-tab-label>
-                  <div class="flex items-center gap-2 py-4">
-                    <mat-icon class="text-sm">work</mat-icon>
-                    <span class="text-[10px] uppercase font-black tracking-widest">Experience</span>
-                  </div>
-                </ng-template>
-                <div class="p-8 space-y-10">
-                   <!-- Professional Experience -->
-                   <div class="space-y-6">
-                     <div class="flex items-center justify-between pl-1">
-                       <h3 class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Career History</h3>
-                       <button mat-icon-button (click)="addExperience()" class="hover:bg-zinc-100 scale-75"><mat-icon>add</mat-icon></button>
-                     </div>
-                     <div class="space-y-4">
-                       @for (exp of resume.experience; track exp.id; let i = $index) {
-                         <div class="p-4 bg-zinc-50 border border-zinc-100 rounded-[1.5rem] space-y-4 group">
-                           <div class="flex items-center justify-between">
-                             <div class="flex items-center gap-3">
-                               <mat-icon class="text-zinc-300 scale-75">work_outline</mat-icon>
-                               <input [(ngModel)]="exp.company" (ngModelChange)="updateResume()" placeholder="Company Name" class="bg-transparent border-none p-0 text-[10px] font-black uppercase tracking-widest text-zinc-800 focus:ring-0 placeholder:text-zinc-200">
-                             </div>
-                             <button mat-icon-button (click)="removeExperience(exp.id)" class="opacity-0 group-hover:opacity-100 scale-75 text-zinc-400 hover:text-red-500 transition-all"><mat-icon>delete</mat-icon></button>
-                           </div>
-                           <div class="space-y-1">
-                             <label class="text-[8px] font-black uppercase tracking-widest text-zinc-300">Job Title</label>
-                             <input [(ngModel)]="exp.title" (ngModelChange)="updateResume()" placeholder="e.g. Senior Software Engineer" class="w-full bg-white border border-zinc-100 rounded-lg p-2 text-[10px] font-bold text-zinc-800">
-                           </div>
-                           <div class="grid grid-cols-2 gap-3">
-                             <div class="space-y-1">
-                               <label class="text-[8px] font-black uppercase tracking-widest text-zinc-300">Start Date</label>
-                               <input type="month" [(ngModel)]="exp.startDate" (ngModelChange)="updateResume()" class="w-full bg-white border border-zinc-100 rounded-lg p-2 text-[10px] font-bold">
-                             </div>
-                             <div class="space-y-1">
-                               <label class="text-[8px] font-black uppercase tracking-widest text-zinc-300">End Date</label>
-                               <input type="month" [(ngModel)]="exp.endDate" (ngModelChange)="updateResume()" [disabled]="exp.current" class="w-full bg-white border border-zinc-100 rounded-lg p-2 text-[10px] font-bold">
-                             </div>
-                           </div>
-                           <div class="flex items-center gap-2">
-                             <input type="checkbox" [(ngModel)]="exp.current" (ngModelChange)="updateResume()" class="rounded border-zinc-300">
-                             <label class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">I currently work here</label>
-                           </div>
-                           <div class="space-y-2">
-                             <div class="flex justify-between items-center px-1">
-                               <label class="text-[8px] font-black uppercase tracking-widest text-zinc-300">Impact Description</label>
-                               <button (click)="suggestExperienceDescription(i)" class="text-[8px] font-black uppercase tracking-widest px-3 py-1 bg-zinc-900 text-white rounded-full hover:scale-105 active:scale-95 transition-all flex items-center gap-1">
-                                 <mat-icon class="text-[10px] h-3 w-3">auto_awesome</mat-icon> AI Suggest
-                               </button>
-                             </div>
-                             <textarea [(ngModel)]="exp.content" (ngModelChange)="updateResume()" rows="4" class="w-full bg-white border border-zinc-100 rounded-xl p-3 text-[10px] font-medium leading-relaxed resize-none focus:outline-none focus:ring-1 focus:ring-zinc-900 transition-all" placeholder="Outline your key achievements..."></textarea>
-                           </div>
-                           <div class="p-3 bg-zinc-100/50 rounded-xl text-center">
-                             <span class="text-[8px] font-black text-zinc-400 uppercase tracking-widest">Duration: {{ calculateDuration(exp) }}</span>
-                           </div>
-                         </div>
-                       }
-                     </div>
-                   </div>
-
-                   <!-- Referees -->
-                   <div class="space-y-6 pt-6 border-t border-zinc-100">
-                     <div class="flex items-center justify-between pl-1">
-                       <h3 class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Referees</h3>
-                       <button mat-icon-button (click)="addReferee()" class="hover:bg-zinc-100 scale-75"><mat-icon>add</mat-icon></button>
-                     </div>
-                     <div class="space-y-4">
-                       @for (ref of resume.referees; track ref.id) {
-                         <div class="p-6 bg-white border border-zinc-100 shadow-sm rounded-[1.5rem] space-y-4 group">
-                           <div class="flex items-center justify-between">
-                             <input [(ngModel)]="ref.name" placeholder="Referee Name" class="bg-transparent border-none p-0 text-xs font-black uppercase tracking-widest focus:ring-0 placeholder:text-zinc-200">
-                             <button mat-icon-button (click)="removeReferee(ref.id)" class="opacity-0 group-hover:opacity-100 scale-75 text-zinc-400 hover:text-red-500 transition-all"><mat-icon>delete</mat-icon></button>
-                           </div>
-                           <div class="grid grid-cols-1 gap-3">
-                             <input [(ngModel)]="ref.email" placeholder="Email Address" class="w-full bg-zinc-50 border border-zinc-50 rounded-lg p-2 text-[10px] font-bold">
-                             <input [(ngModel)]="ref.phone" placeholder="Phone Number" class="w-full bg-zinc-50 border border-zinc-50 rounded-lg p-2 text-[10px] font-bold">
-                             <input [(ngModel)]="ref.address" placeholder="Professional Address" class="w-full bg-zinc-50 border border-zinc-50 rounded-lg p-2 text-[10px] font-bold">
-                           </div>
-                         </div>
-                       }
-                     </div>
-                   </div>
-                </div>
-              </mat-tab>
-
-              <mat-tab>
-                <ng-template mat-tab-label>
-                  <div class="flex items-center gap-2 py-4">
-                    <mat-icon class="text-sm">layers</mat-icon>
-                    <span class="text-[10px] uppercase font-black tracking-widest">Layers</span>
-                  </div>
-                </ng-template>
-                <div class="p-8 space-y-6">
-                   <div class="flex items-center justify-between">
-                     <h3 class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Layer Stack</h3>
-                     <div class="flex gap-1">
-                        <button mat-icon-button (click)="addElement('box')" matTooltip="Add Box"><mat-icon class="text-sm">crop_square</mat-icon></button>
-                        <button mat-icon-button (click)="addElement('text')" matTooltip="Add Text"><mat-icon class="text-sm">title</mat-icon></button>
-                        <button mat-icon-button (click)="addElement('line')" matTooltip="Add Line"><mat-icon class="text-sm">horizontal_rule</mat-icon></button>
-                                <button mat-icon-button (click)="onImageTrigger(imageInput)" matTooltip="Add Image"><mat-icon class="text-sm">image</mat-icon></button>
-                                <input #imageInput type="file" class="hidden" (change)="onImageUpload($event)" accept="image/*">
-                     </div>
-                   </div>
-                   
-                    <div class="space-y-2 mb-10">
-                      @for (el of resume.aesthetics.elements; track el.id) {
-                        <div class="p-3 bg-zinc-50 border border-zinc-100 rounded-xl group transition-all" 
-                             [class.ring-2]="activeElementId() === el.id" [class.ring-zinc-900]="activeElementId() === el.id">
-                           <div class="flex items-center justify-between cursor-pointer" (click)="activeElementId.set(el.id); activeSectionId.set(null)">
-                             <div class="flex items-center gap-3">
-                               <mat-icon class="text-zinc-400 scale-75">{{ getIconForType(el.type) }}</mat-icon>
-                               <span class="text-[10px] font-black uppercase tracking-widest text-zinc-600 group-hover:text-zinc-900" 
-                                     [class.line-through]="!el.isVisible">{{ el.type }} {{ resume.aesthetics.elements.length - $index }}</span>
-                             </div>
-                             <div class="flex items-center gap-1">
-                               <button mat-icon-button (click)="$event.stopPropagation(); el.isLocked = !el.isLocked; updateResume()" 
-                                       class="scale-75 transition-colors" [class.text-zinc-300]="!el.isLocked" [class.text-zinc-900]="el.isLocked">
-                                 <mat-icon class="text-sm">{{ el.isLocked ? 'lock' : 'lock_open' }}</mat-icon>
-                               </button>
-                               <button mat-icon-button (click)="$event.stopPropagation(); el.isVisible = !el.isVisible; updateResume()" 
-                                       class="scale-75 transition-colors" [class.text-zinc-300]="!el.isVisible" [class.text-zinc-900]="el.isVisible">
-                                 <mat-icon class="text-sm">{{ el.isVisible ? 'visibility' : 'visibility_off' }}</mat-icon>
-                               </button>
-                               <button mat-icon-button (click)="$event.stopPropagation(); removeElement(el.id)" class="opacity-0 group-hover:opacity-100 text-zinc-400 hover:text-red-500 scale-75 transition-all">
-                                 <mat-icon class="text-sm">delete_outline</mat-icon>
-                               </button>
-                             </div>
-                           </div>
-                        </div>
-                      }
-                      <!-- Dynamic Layers for Metadata/Experience -->
-                      <div class="p-3 bg-zinc-50 border border-zinc-100 rounded-xl group transition-all">
-                        <div class="flex items-center justify-between">
-                          <div class="flex items-center gap-3">
-                            <mat-icon class="text-zinc-400 scale-75">person</mat-icon>
-                            <span class="text-[10px] font-black uppercase tracking-widest text-zinc-600" [class.line-through]="!resume.metadataStyle?.isVisible">Metadata Layer</span>
-                          </div>
-                          <div class="flex items-center gap-1">
-                            <button mat-icon-button (click)="resume.metadataStyle!.isLocked = !resume.metadataStyle!.isLocked; updateResume()" 
-                                    class="scale-75 transition-colors" [class.text-zinc-300]="!resume.metadataStyle?.isLocked" [class.text-zinc-900]="resume.metadataStyle?.isLocked">
-                              <mat-icon class="text-sm">{{ resume.metadataStyle?.isLocked ? 'lock' : 'lock_open' }}</mat-icon>
-                            </button>
-                            <button mat-icon-button (click)="resume.metadataStyle!.isVisible = !resume.metadataStyle!.isVisible; updateResume()" 
-                                    class="scale-75 transition-colors" [class.text-zinc-300]="!resume.metadataStyle?.isVisible" [class.text-zinc-900]="resume.metadataStyle?.isVisible">
-                              <mat-icon class="text-sm">{{ resume.metadataStyle?.isVisible ? 'visibility' : 'visibility_off' }}</mat-icon>
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-
-                      <!-- Referees Layer -->
-            <div class="p-3 bg-zinc-50 border border-zinc-100 rounded-xl group transition-all">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                <mat-icon class="text-zinc-400 scale-75">groups</mat-icon>
-                <span class="text-[10px] font-black uppercase tracking-widest text-zinc-600"
-                        [class.line-through]="!resume.refereeStyle?.isVisible">Referees Layer</span>
-                </div>
-                <div class="flex items-center gap-1">
-                <button mat-icon-button (click)="resume.refereeStyle!.isLocked = !resume.refereeStyle!.isLocked; updateResume()">
-                    <mat-icon>{{ resume.refereeStyle?.isLocked ? 'lock' : 'lock_open' }}</mat-icon>
-                </button>
-                <button mat-icon-button (click)="resume.refereeStyle!.isVisible = !resume.refereeStyle!.isVisible; updateResume()">
-                    <mat-icon>{{ resume.refereeStyle?.isVisible ? 'visibility' : 'visibility_off' }}</mat-icon>
-                </button>
-                </div>
-            </div>
-            </div>
-
-            <!-- Skills Layer -->
-            <div class="p-3 bg-zinc-50 border border-zinc-100 rounded-xl group transition-all">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                <mat-icon class="text-zinc-400 scale-75">star</mat-icon>
-                <span class="text-[10px] font-black uppercase tracking-widest text-zinc-600"
-                        [class.line-through]="!resume.skillsStyle?.isVisible">Skills Layer</span>
-                </div>
-                <div class="flex items-center gap-1">
-                <button mat-icon-button (click)="resume.skillsStyle!.isLocked = !resume.skillsStyle!.isLocked; updateResume()">
-                    <mat-icon>{{ resume.skillsStyle?.isLocked ? 'lock' : 'lock_open' }}</mat-icon>
-                </button>
-                <button mat-icon-button (click)="resume.skillsStyle!.isVisible = !resume.skillsStyle!.isVisible; updateResume()">
-                    <mat-icon>{{ resume.skillsStyle?.isVisible ? 'visibility' : 'visibility_off' }}</mat-icon>
-                </button>
-                </div>
-            </div>
-            </div>
-
-            <!-- QR Code Layer -->
-            <div class="p-3 bg-zinc-50 border border-zinc-100 rounded-xl group transition-all">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                <mat-icon class="text-zinc-400 scale-75">qr_code</mat-icon>
-                <span class="text-[10px] font-black uppercase tracking-widest text-zinc-600"
-                        [class.line-through]="!resume.qrStyle?.isVisible">QR Code Layer</span>
-                </div>
-                <div class="flex items-center gap-1">
-                <button mat-icon-button (click)="resume.qrStyle!.isLocked = !resume.qrStyle!.isLocked; updateResume()">
-                    <mat-icon>{{ resume.qrStyle?.isLocked ? 'lock' : 'lock_open' }}</mat-icon>
-                </button>
-                <button mat-icon-button (click)="resume.qrStyle!.isVisible = !resume.qrStyle!.isVisible; updateResume()">
-                    <mat-icon>{{ resume.qrStyle?.isVisible ? 'visibility' : 'visibility_off' }}</mat-icon>
-                </button>
-                </div>
-            </div>
-            </div>
-
-
-                      <div class="p-3 bg-zinc-50 border border-zinc-100 rounded-xl group transition-all">
-                        <div class="flex items-center justify-between">
-                          <div class="flex items-center gap-3">
-                            <mat-icon class="text-zinc-400 scale-75">work</mat-icon>
-                            <span class="text-[10px] font-black uppercase tracking-widest text-zinc-600" [class.line-through]="!resume.experienceStyle?.isVisible">Experience Layer</span>
-                          </div>
-                          <div class="flex items-center gap-1">
-                            <button mat-icon-button (click)="resume.experienceStyle!.isLocked = !resume.experienceStyle!.isLocked; updateResume()" 
-                                    class="scale-75 transition-colors" [class.text-zinc-300]="!resume.experienceStyle?.isLocked" [class.text-zinc-900]="resume.experienceStyle?.isLocked">
-                              <mat-icon class="text-sm">{{ resume.experienceStyle?.isLocked ? 'lock' : 'lock_open' }}</mat-icon>
-                            </button>
-                            <button mat-icon-button (click)="resume.experienceStyle!.isVisible = !resume.experienceStyle!.isVisible; updateResume()" 
-                                    class="scale-75 transition-colors" [class.text-zinc-300]="!resume.experienceStyle?.isVisible" [class.text-zinc-900]="resume.experienceStyle?.isVisible">
-                              <mat-icon class="text-sm">{{ resume.experienceStyle?.isVisible ? 'visibility' : 'visibility_off' }}</mat-icon>
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                   </div>
-
-                   <!-- Layer Element Properties Section -->
-                   @if (getActiveElement(); as activeEl) {
-                     <div class="space-y-6 pt-6 border-t border-zinc-100 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        <h3 class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Layer Elements Properties</h3>
-                        
-                        <div class="grid grid-cols-2 gap-4">
-                           @if (activeEl.type === 'box' || activeEl.type === 'text' || activeEl.type === 'image') {
-                             <div class="space-y-1">
-                               <label class="text-[8px] font-black uppercase text-zinc-300">Width</label>
-                               <input type="number" [(ngModel)]="activeEl.width" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-xs font-bold">
-                             </div>
-                             <div class="space-y-1">
-                               <label class="text-[8px] font-black uppercase text-zinc-300">Height</label>
-                               <input type="number" [(ngModel)]="activeEl.height" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-xs font-bold">
-                             </div>
-                           }
-
-                           @if (activeEl.type === 'box') {
-                             <div class="space-y-1">
-                               <label class="text-[8px] font-black uppercase text-zinc-300">Border Type</label>
-                               <select [(ngModel)]="activeEl.style!['borderStyle']" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-[10px] font-black uppercase">
-                                 <option value="none">None</option>
-                                 <option value="solid">Solid</option>
-                                 <option value="dashed">Dashed</option>
-                                 <option value="dotted">Dotted</option>
-                               </select>
-                             </div>
-                             <div class="space-y-1">
-                               <label class="text-[8px] font-black uppercase text-zinc-300">Fill Color</label>
-                               <input type="color" [(ngModel)]="activeEl.style!['backgroundColor']" (ngModelChange)="updateResume()" class="w-full h-10 rounded-xl cursor-pointer">
-                             </div>
-                             <div class="space-y-1 col-span-2">
-                               <label class="text-[8px] font-black uppercase text-zinc-300">Box Content</label>
-                               <input type="text" [(ngModel)]="activeEl.content" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-xs font-bold">
-                             </div>
-                             <div class="space-y-1">
-                               <label class="text-[8px] font-black uppercase text-zinc-300">Corner Radius</label>
-                               <input type="number" [(ngModel)]="activeEl.style!['borderRadius']" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-xs font-bold">
-                             </div>
-                           }
-
-                           @if (activeEl.type === 'text') {
-                             <div class="space-y-1">
-                               <label class="text-[8px] font-black uppercase text-zinc-300">Font Weight</label>
-                               <select [(ngModel)]="activeEl.style!['fontWeight']" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-[10px] font-black uppercase">
-                                 <option value="400">Regular</option>
-                                 <option value="600">Semibold</option>
-                                 <option value="900">Black</option>
-                               </select>
-                             </div>
-                             <div class="space-y-1">
-                               <label class="text-[8px] font-black uppercase text-zinc-300">Size</label>
-                               <input type="number" [(ngModel)]="activeEl.style!['fontSize']" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-xs font-bold">
-                             </div>
-                             <div class="space-y-1">
-                               <label class="text-[8px] font-black uppercase text-zinc-300">Color</label>
-                               <input type="color" [(ngModel)]="activeEl.style!['color']" (ngModelChange)="updateResume()" class="w-full h-10 rounded-xl cursor-pointer">
-                             </div>
-                             <div class="space-y-1 col-span-2">
-                               <label class="text-[8px] font-black uppercase text-zinc-300">Text Content</label>
-                               <textarea [(ngModel)]="activeEl.content" (ngModelChange)="updateResume()" rows="3" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-xs font-bold"></textarea>
-                             </div>
-                           }
-
-                           @if (activeEl.type === 'line') {
-                             <div class="space-y-1">
-                               <label class="text-[8px] font-black uppercase text-zinc-300">Thickness</label>
-                               <input type="number" [(ngModel)]="activeEl.style!['thickness']" (ngModelChange)="activeEl.height = activeEl.style!['thickness'] || 2; updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-xs font-bold">
-                             </div>
-                             <div class="space-y-1">
-                               <label class="text-[8px] font-black uppercase text-zinc-300">Length</label>
-                               <input type="number" [(ngModel)]="activeEl.width" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-xs font-bold">
-                             </div>
-                             <div class="space-y-1">
-                               <label class="text-[8px] font-black uppercase text-zinc-300">Color</label>
-                               <input type="color" [(ngModel)]="activeEl.style!['backgroundColor']" (ngModelChange)="updateResume()" class="w-full h-10 rounded-xl cursor-pointer">
-                             </div>
-                             <div class="space-y-1">
-                               <label class="text-[8px] font-black uppercase text-zinc-300">Line Type</label>
-                               <select [(ngModel)]="activeEl.style!['borderStyle']" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-[10px] font-black uppercase">
-                                 <option value="solid">Straight</option>
-                                 <option value="dashed">Dashed</option>
-                                 <option value="dotted">Dotted</option>
-                               </select>
-                             </div>
-                           }
-
-                           @if (activeEl.type === 'image') {
-                             <div class="space-y-1">
-                               <label class="text-[8px] font-black uppercase text-zinc-300">Opacity</label>
-                               <input type="range" min="0" max="1" step="0.1" [(ngModel)]="activeEl.style!['opacity']" (ngModelChange)="updateResume()" class="w-full accent-zinc-900">
-                             </div>
-                             <div class="space-y-1">
-                               <label class="text-[8px] font-black uppercase text-zinc-300">Corner Radius</label>
-                               <input type="number" [(ngModel)]="activeEl.style!['borderRadius']" (ngModelChange)="updateResume()" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-xs font-bold">
-                             </div>
-                             <div class="col-span-2 flex gap-4">
-                               <button (click)="activeEl.mirror!.horizontal = !activeEl.mirror!.horizontal; updateResume()" 
-                                       class="flex-1 p-3 border rounded-xl text-[8px] font-black uppercase tracking-widest transition-all"
-                                       [class.bg-zinc-900]="activeEl.mirror?.horizontal" [class.text-white]="activeEl.mirror?.horizontal">
-                                 Mirror H
-                               </button>
-                               <button (click)="activeEl.mirror!.vertical = !activeEl.mirror!.vertical; updateResume()" 
-                                       class="flex-1 p-3 border rounded-xl text-[8px] font-black uppercase tracking-widest transition-all"
-                                       [class.bg-zinc-900]="activeEl.mirror?.vertical" [class.text-white]="activeEl.mirror?.vertical">
-                                 Mirror V
-                               </button>
-                             </div>
-                           }
-                        </div>
-                     </div>
-                   }
-                </div>
-              </mat-tab>
-
-              <mat-tab>
-                <ng-template mat-tab-label>
-                  <div class="flex items-center gap-2 py-4">
-                    <mat-icon class="text-sm">auto_awesome</mat-icon>
-                    <span class="text-[10px] uppercase font-black tracking-widest">Coach</span>
-                  </div>
-                </ng-template>
-                <div class="p-8 space-y-10">
-                   <div class="p-6 bg-zinc-900 rounded-3xl space-y-6 text-white overflow-hidden relative">
-                      <div class="absolute -top-10 -right-10 w-40 h-40 bg-zinc-800 rounded-full blur-3xl opacity-50"></div>
-                      <div class="relative">
-                        <div class="flex items-center gap-3 mb-6">
-                           <div class="w-10 h-10 bg-zinc-800 rounded-xl flex items-center justify-center text-emerald-400">
-                              <mat-icon>auto_awesome</mat-icon>
-                           </div>
-                           <div>
-                              <p class="text-[8px] font-black uppercase tracking-widest text-zinc-500">AI Intelligence</p>
-                              <p class="text-xs font-black uppercase tracking-widest">Review & Optimize</p>
-                           </div>
-                        </div>
-                        
-                        @if (isAnalyzing()) {
-                          <div class="space-y-4 py-8 text-center animate-in fade-in duration-500">
-                             <mat-spinner diameter="30" class="mx-auto"></mat-spinner>
-                             <p class="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">Analyzing your professional DNA...</p>
-                          </div>
-                        } @else if (coachReport) {
-                          <div class="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
-                             <!-- ATS Score -->
-                             <div class="space-y-2">
-                                <div class="flex justify-between items-end">
-                                   <span class="text-[9px] font-black uppercase tracking-widest text-zinc-400">ATS Correlation Score</span>
-                                   <span class="text-2xl font-black text-emerald-400">{{ coachReport.atsScore }}%</span>
-                                </div>
-                                <mat-progress-bar mode="determinate" [value]="coachReport.atsScore" class="h-1 rounded-full !bg-zinc-800">
-                                </mat-progress-bar>
-                             </div>
-
-                             <!-- Critical Suggestions -->
-                             <div class="space-y-4">
-                               <p class="text-[9px] font-black uppercase tracking-widest text-zinc-400">Optimization Targets</p>
-                               <div class="space-y-3">
-                                  @for (item of coachReport.suggestions; track item) {
-                                    <div class="flex gap-3 items-start p-3 bg-zinc-800 rounded-xl">
-                                       <mat-icon class="text-emerald-400 scale-75 pt-1">check_circle</mat-icon>
-                                       <p class="text-[10px] leading-relaxed text-zinc-300 font-medium">{{ item }}</p>
-                                    </div>
-                                  }
-                               </div>
-                             </div>
-
-                             <button mat-flat-button class="w-full !bg-white !text-zinc-900 !rounded-xl h-12 !text-[9px] !font-black !uppercase !tracking-widest" (click)="runCoachAnalysis()">
-                                Re-verify Blueprint
-                             </button>
-                          </div>
-                        } @else {
-                          <div class="space-y-8 py-4">
-                            <p class="text-xs text-zinc-400 leading-relaxed font-bold">
-                              Our AI agent will scan your resume against 500+ ATS algorithms and suggest high-impact verbs to reshape your bullet points.
-                            </p>
-                            <button mat-flat-button class="w-full !bg-white !text-zinc-900 !rounded-xl h-12 !text-[9px] !font-black !uppercase !tracking-widest" (click)="runCoachAnalysis()">
-                               Generate Report
-                            </button>
-                          </div>
-                        }
-                      </div>
-                   </div>
-
-                   <div class="space-y-4">
-                      <h3 class="text-[10px] font-black uppercase tracking-widest text-zinc-400 px-1">Mapping to Job Post</h3>
-                      <div class="p-5 bg-white border border-zinc-100 rounded-2xl space-y-4 shadow-sm">
-                         <textarea class="w-full h-32 bg-zinc-50 border border-zinc-50 rounded-xl p-4 text-[10px] font-bold text-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-900 focus:bg-white transition-all resize-none" 
-                                   [(ngModel)]="jobUrl" placeholder="Paste the job description or link here..."></textarea>
-                         <button mat-stroked-button class="w-full !border-zinc-200 !text-zinc-600 !rounded-xl h-10 !text-[8px] !font-black !uppercase !tracking-widest"
-                                 (click)="mapToJob()" [disabled]="isMapping()">
-                            @if (isMapping()) {
-                               AI Repainting...
-                            } @else {
-                               Strategize Resume Map
-                            }
-                         </button>
-                      </div>
-                   </div>
-                </div>
-              </mat-tab>
-              
-              <mat-tab>
-                <ng-template mat-tab-label>
-                  <div class="flex items-center gap-2 py-4">
-                    <mat-icon class="text-sm">bar_chart</mat-icon>
-                    <span class="text-[10px] uppercase font-black tracking-widest">Skills</span>
-                  </div>
-                </ng-template>
-                <div class="p-8 space-y-8">
-                   <div class="space-y-4">
-                      <div class="flex items-center justify-between pl-1">
-                        <h3 class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Technical Stack</h3>
-                        <button mat-icon-button (click)="addSkill()" class="hover:bg-zinc-100 scale-75"><mat-icon>add</mat-icon></button>
-                      </div>
-                      <div class="space-y-3">
-                         <div class="space-y-4">
-                            <label class="text-[8px] font-black uppercase tracking-widest text-zinc-300">Portfolio / Social URL</label>
-                            <div class="flex gap-2">
-                               <input [(ngModel)]="resume.skillUrl" (ngModelChange)="updateResume(); generateQRCode()" placeholder="https://linkedin.com/in/username" class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-[10px] font-bold">
-                               <div class="w-10 h-10 bg-zinc-100 rounded-xl flex items-center justify-center shrink-0">
-                                  <mat-icon class="scale-75 text-zinc-400">qr_code_2</mat-icon>
-                               </div>
-                            </div>
-                            <p class="text-[8px] font-medium text-zinc-400">This URL will be encoded into the QR code at the bottom of your resume.</p>
-                         </div>
-                         
-                         @for (skill of resume.skills; track skill.name) {
-                           <div class="p-4 bg-zinc-50 border border-zinc-100 rounded-2xl space-y-2 group">
-                              <div class="flex items-center justify-between">
-                                 <input [(ngModel)]="skill.name" (ngModelChange)="updateResume()" class="bg-transparent border-none p-0 text-[10px] font-black uppercase tracking-widest focus:ring-0">
-                                 <button mat-icon-button (click)="removeSkill(skill.name)" class="scale-50 text-zinc-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"><mat-icon>delete</mat-icon></button>
-                              </div>
-                              <div class="flex items-center gap-2">
-                                 <input type="range" [(ngModel)]="skill.level" (ngModelChange)="updateResume()" class="flex-1 accent-zinc-900 h-1">
-                                 <span class="text-[8px] font-black text-zinc-400">{{ skill.level }}%</span>
-                              </div>
-                           </div>
-                         }
-                      </div>
-                   </div>
-                </div>
-              </mat-tab>
-
-              <mat-tab>
-                <ng-template mat-tab-label>
-                  <div class="flex items-center gap-2 py-4">
-                    <mat-icon class="text-sm">brush</mat-icon>
-                    <span class="text-[10px] uppercase font-black tracking-widest">Aesthetics</span>
-                  </div>
-                </ng-template>
-                <div class="p-8 space-y-10">
-                  <div class="space-y-4">
-                     <h3 class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Layout Framework</h3>
-                     <div class="grid grid-cols-2 gap-3">
-                        @for (tmpl of frameworks; track tmpl.id) {
-                          <div class="p-4 rounded-xl border-2 cursor-pointer transition-all flex flex-col gap-2"
-                               [class.border-zinc-900]="template() === tmpl.id" 
-                               [class.bg-zinc-900]="template() === tmpl.id" 
-                               [class.text-white]="template() === tmpl.id"
-                               [class.border-zinc-50]="template() !== tmpl.id" 
-                               [class.bg-zinc-50/50]="template() !== tmpl.id"
-                               (click)="template.set(tmpl.id)">
-                            <div class="w-full aspect-[4/5] bg-zinc-200/20 rounded-md mb-2 overflow-hidden flex items-center justify-center opacity-40">
-                               <mat-icon class="scale-150">grid_view</mat-icon>
-                            </div>
-                            <span class="text-[9px] font-black uppercase tracking-widest">{{ tmpl.name }}</span>
-                          </div>
-                        }
-                     </div>
-                  </div>
-
-                  <div class="space-y-4 pt-8 border-t border-zinc-100">
-                     <h3 class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Style Moods</h3>
-                     <div class="grid grid-cols-3 gap-2">
-                        <button (click)="applyMood('executive')" class="p-4 bg-zinc-50 border border-zinc-100 rounded-xl hover:bg-zinc-900 hover:text-white transition-all text-center space-y-2">
-                           <mat-icon class="scale-75">business</mat-icon>
-                           <p class="text-[8px] font-black uppercase tracking-tighter">Executive</p>
-                        </button>
-                        <button (click)="applyMood('creative')" class="p-4 bg-zinc-50 border border-zinc-100 rounded-xl hover:bg-zinc-900 hover:text-white transition-all text-center space-y-2">
-                           <mat-icon class="scale-75">brush</mat-icon>
-                           <p class="text-[8px] font-black uppercase tracking-tighter">Creative</p>
-                        </button>
-                        <button (click)="applyMood('startup')" class="p-4 bg-zinc-50 border border-zinc-100 rounded-xl hover:bg-zinc-900 hover:text-white transition-all text-center space-y-2">
-                           <mat-icon class="scale-75">rocket_launch</mat-icon>
-                           <p class="text-[8px] font-black uppercase tracking-tighter">Startup</p>
-                        </button>
-                     </div>
-                  </div>
-
-                  <div class="space-y-4 pt-8 border-t border-zinc-100">
-                     <h3 class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Typography</h3>
-                     <div class="space-y-4">
-                        <div class="space-y-2">
-                          <label class="text-[8px] font-black uppercase text-zinc-300">Select Font Family</label>
-                          <select [(ngModel)]="resume.aesthetics.fontFamily" (ngModelChange)="updateResume()"
-                                  class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 text-xs font-bold text-zinc-800 focus:outline-none appearance-none cursor-pointer">
-                            @for (font of fonts; track font) {
-                              <option [value]="font" [style.font-family]="font">{{ font }}</option>
-                            }
-                          </select>
-                        </div>
-                        
-                        <div class="space-y-2">
-                          <label class="text-[8px] font-black uppercase text-zinc-300">Lettering Size</label>
-                          <div class="flex items-center gap-2">
-                            <button mat-stroked-button class="!border-zinc-200 !min-w-[40px] !w-10 !h-10 !rounded-lg" (click)="resume.aesthetics.fontSize = resume.aesthetics.fontSize - 1; updateResume()">-</button>
-                            <input type="number" [(ngModel)]="resume.aesthetics.fontSize" (ngModelChange)="updateResume()" class="flex-1 bg-zinc-50 border border-zinc-100 rounded-lg p-2 text-center text-xs font-bold">
-                            <button mat-stroked-button class="!border-zinc-200 !min-w-[40px] !w-10 !h-10 !rounded-lg" (click)="resume.aesthetics.fontSize = resume.aesthetics.fontSize + 1; updateResume()">+</button>
-                          </div>
-                        </div>
-                     </div>
-                  </div>
-
-                  <div class="space-y-6 pt-8 border-t border-zinc-100">
-                     <h3 class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Chromatics</h3>
-                     <div class="grid grid-cols-2 gap-4">
-                        <div class="space-y-2">
-                          <label for="typoColor" class="text-[8px] font-black uppercase text-zinc-300">Typography Color</label>
-                          <input id="typoColor" name="typoColor" type="color" [(ngModel)]="resume.aesthetics.primaryColor" (ngModelChange)="updateResume()" class="w-full h-10 rounded-xl cursor-pointer bg-zinc-50 border border-zinc-100 p-1">
-                        </div>
-                        <div class="space-y-2">
-                          <label for="canvasColor" class="text-[8px] font-black uppercase text-zinc-300">Canvas Color</label>
-                          <input id="canvasColor" name="canvasColor" type="color" [(ngModel)]="resume.aesthetics.backgroundColor" (ngModelChange)="updateResume()" class="w-full h-10 rounded-xl cursor-pointer bg-zinc-50 border border-zinc-100 p-1">
-                        </div>
-                     </div>
-                  </div>
-
-                  <div class="space-y-4 pt-8 border-t border-zinc-100">
-                     <h3 class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Global Scale</h3>
-                     <div class="bg-zinc-50 p-6 rounded-2xl">
-                       <input type="range" min="50" max="150" [(ngModel)]="scale" class="w-full accent-zinc-900 h-1 rounded-full cursor-pointer">
-                       <div class="flex justify-between mt-4">
-                         <span class="text-[8px] font-black uppercase tracking-widest text-zinc-400">50%</span>
-                         <span class="text-[8px] font-black uppercase tracking-widest text-zinc-900">{{ scale() }}%</span>
-                         <span class="text-[8px] font-black uppercase tracking-widest text-zinc-400">150%</span>
-                       </div>
-                     </div>
-                  </div>
-                </div>
-              </mat-tab>
-            </mat-tab-group>
+        <!-- Company -->
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <mat-icon class="text-gray-400">business</mat-icon>
+            <input [(ngModel)]="exp.company" (ngModelChange)="updateResume()" 
+                   placeholder="Company Name"
+                   class="w-full p-2 border border-gray-300 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400">
           </div>
-          
-          <div class="p-6 bg-zinc-50 border-t border-zinc-100">
-             <div class="flex items-center justify-between mb-4">
-               <span class="text-[8px] font-black uppercase tracking-widest text-zinc-400">Autosave Status</span>
-               @if (resumeService.isPaid()) {
-                 <span class="text-[8px] font-black uppercase tracking-widest text-emerald-500 flex items-center gap-1">
-                   <mat-icon class="text-[10px] w-3 h-3">cloud_done</mat-icon> Live Sync Active
-                 </span>
-               } @else {
-                 <span class="text-[8px] font-black uppercase tracking-[0.2em] text-amber-600 bg-amber-50 px-2 py-1 rounded">PRO FEATURE ONLY</span>
-               }
-             </div>
-             @if (!resumeService.isPaid()) {
-               <div class="mb-4 p-3 bg-zinc-900 rounded-xl text-white">
-                 <p class="text-[8px] font-black uppercase tracking-widest mb-2">Upgrade to Unlock Cloud Sync</p>
-                 <button class="w-full h-8 bg-emerald-400 text-zinc-900 rounded-lg text-[8px] font-black hover:bg-emerald-300 transition-colors">GO PRO NOW</button>
-               </div>
-             }
-             <button mat-flat-button class="w-full !bg-zinc-200 !text-zinc-600 !rounded-xl h-10 !text-[9px] !font-black !uppercase !tracking-widest" (click)="restoreDefaults()">
-                Reset Blueprint
-             </button>
+          <button mat-icon-button (click)="removeExperience(exp.id)" 
+                  class="text-gray-400 hover:text-red-500 transition">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+
+        <!-- Job Title -->
+        <div class="space-y-2">
+          <label class="text-sm font-medium text-gray-700">Job Title</label>
+          <input [(ngModel)]="exp.title" (ngModelChange)="updateResume()" 
+                 placeholder="e.g. Senior Software Engineer"
+                 class="w-full p-2 border border-gray-300 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400">
+        </div>
+
+        <!-- Dates -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <label class="text-sm font-medium text-gray-700">Start Date</label>
+            <input type="month" [(ngModel)]="exp.startDate" (ngModelChange)="updateResume()" 
+                   class="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400">
           </div>
-        </aside>
+          <div class="space-y-2">
+            <label class="text-sm font-medium text-gray-700">End Date</label>
+            <input type="month" [(ngModel)]="exp.endDate" (ngModelChange)="updateResume()" [disabled]="exp.current"
+                   class="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400">
+          </div>
+        </div>
+
+        <!-- Current Checkbox -->
+        <div class="flex items-center gap-2">
+          <input type="checkbox" [(ngModel)]="exp.current" (ngModelChange)="updateResume()" 
+                 class="rounded border-gray-300 focus:ring-indigo-400">
+          <label class="text-sm font-medium text-gray-700">I currently work here</label>
+        </div>
+
+        <!-- Impact Description -->
+        <div class="space-y-2">
+          <div class="flex justify-between items-center">
+            <label class="text-sm font-medium text-gray-700">Impact Description</label>
+            <button (click)="suggestExperienceDescription(i)" 
+                    class="px-3 py-1 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition flex items-center gap-1">
+              <mat-icon class="text-xs">auto_awesome</mat-icon> AI Suggest
+            </button>
+          </div>
+          <textarea [(ngModel)]="exp.content" (ngModelChange)="updateResume()" rows="4"
+                    class="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400"
+                    placeholder="Outline your key achievements..."></textarea>
+        </div>
+
+        <!-- Duration -->
+        <div class="text-center text-xs text-gray-500 font-semibold">
+          Duration: {{ calculateDuration(exp) }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <div class="flex justify-between pt-8">
+    <button (click)="activeStep = 'metadata'" 
+            class="px-4 py-2 bg-gray-200 text-gray-600 rounded-lg hover:bg-gray-300 transition">‹ Previous</button>
+    <button (click)="activeStep = 'referees'" 
+            class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">Next ›</button>
+  </div>
+</section>
+
+
+<!-- Referees   -->
+
+<section *ngIf="activeStep === 'referees'" 
+         class="p-10 space-y-10 bg-gradient-to-br from-indigo-50 to-white rounded-2xl shadow-lg overflow-y-auto h-screen">
+
+  <!-- Referees -->
+  <div class="space-y-8">
+    <div class="flex items-center justify-between">
+      <h3 class="text-lg font-semibold text-indigo-600 flex items-center gap-2">
+        <mat-icon class="text-indigo-400">groups</mat-icon>
+        Referees
+      </h3>
+      <!-- Add Referee Button -->
+      <button (click)="addReferee()" 
+              class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition flex items-center gap-2">
+        <mat-icon class="text-white">add</mat-icon>
+        Add Referee
+      </button>
+    </div>
+
+    <div class="space-y-6">
+      <div *ngFor="let ref of resume.referees" 
+           class="p-6 bg-white border border-gray-200 rounded-xl shadow-sm space-y-6">
+        
+        <!-- Referee Name -->
+        <div class="flex items-center justify-between">
+          <input [(ngModel)]="ref.name" (ngModelChange)="updateResume()" 
+                 placeholder="Referee Name"
+                 class="w-full p-2 border border-gray-300 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400">
+          <button mat-icon-button (click)="removeReferee(ref.id)" 
+                  class="text-gray-400 hover:text-red-500 transition">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+
+        <!-- Referee Details -->
+        <div class="grid grid-cols-1 gap-4">
+          <input [(ngModel)]="ref.email" (ngModelChange)="updateResume()" 
+                 placeholder="Email Address"
+                 class="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400">
+          <input [(ngModel)]="ref.phone" (ngModelChange)="updateResume()" 
+                 placeholder="Phone Number"
+                 class="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400">
+          <input [(ngModel)]="ref.address" (ngModelChange)="updateResume()" 
+                 placeholder="Professional Address"
+                 class="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <div class="flex justify-between pt-8">
+    <button (click)="activeStep = 'experience'" 
+            class="px-4 py-2 bg-gray-200 text-gray-600 rounded-lg hover:bg-gray-300 transition">‹ Previous</button>
+    <button (click)="activeStep = 'layers'" 
+            class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">Next ›</button>
+  </div>
+</section>
+
+
+
+<!--Layers section-->
+<section *ngIf="activeStep === 'layers'" 
+         class="p-10 space-y-10 bg-gradient-to-br from-indigo-50 to-white rounded-2xl shadow-lg h-screen flex flex-col">
+
+  <!-- Layer Stack Header -->
+  <div class="flex items-center justify-between">
+    <h3 class="text-lg font-semibold text-indigo-600 flex items-center gap-2">
+      <mat-icon class="text-indigo-400">layers</mat-icon>
+      Layer Stack
+    </h3>
+    <!-- Scrollable Add Element Buttons -->
+    <div class="overflow-x-auto whitespace-nowrap flex gap-2 pl-4">
+      <button (click)="addElement('box')" matTooltip="Add Box"
+              class="inline-flex items-center px-3 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition">
+        <mat-icon class="text-white text-sm">crop_square</mat-icon> Box
+      </button>
+      <button (click)="addElement('text')" matTooltip="Add Text"
+              class="inline-flex items-center px-3 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition">
+        <mat-icon class="text-white text-sm">title</mat-icon> Text
+      </button>
+      <button (click)="addElement('line')" matTooltip="Add Line"
+              class="inline-flex items-center px-3 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition">
+        <mat-icon class="text-white text-sm">horizontal_rule</mat-icon> Line
+      </button>
+      <button (click)="onImageTrigger(imageInput)" matTooltip="Add Image"
+              class="inline-flex items-center px-3 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition">
+        <mat-icon class="text-white text-sm">image</mat-icon> Image
+      </button>
+      <input #imageInput type="file" class="hidden" (change)="onImageUpload($event)" accept="image/*">
+    </div>
+  </div>
+
+  <!-- Content Area (fixed below header) -->
+  <div class="flex-1 overflow-y-auto space-y-6 mt-6">
+    <!-- Dynamic Elements -->
+    <div class="space-y-4">
+      <div *ngFor="let el of resume.aesthetics.elements" 
+           class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm flex items-center justify-between hover:shadow-md transition">
+        <div class="flex items-center gap-3 cursor-pointer" 
+             (click)="activeElementId.set(el.id); activeSectionId.set(null)">
+          <mat-icon class="text-indigo-400">{{ getIconForType(el.type) }}</mat-icon>
+          <span class="text-sm font-semibold text-gray-700 capitalize">{{ el.type }}</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button mat-icon-button (click)="$event.stopPropagation(); el.isLocked = !el.isLocked; updateResume()"
+                  class="text-gray-400 hover:text-indigo-600 transition">
+            <mat-icon>{{ el.isLocked ? 'lock' : 'lock_open' }}</mat-icon>
+          </button>
+          <button mat-icon-button (click)="$event.stopPropagation(); el.isVisible = !el.isVisible; updateResume()"
+                  class="text-gray-400 hover:text-indigo-600 transition">
+            <mat-icon>{{ el.isVisible ? 'visibility' : 'visibility_off' }}</mat-icon>
+          </button>
+          <button mat-icon-button (click)="$event.stopPropagation(); removeElement(el.id)"
+                  class="text-gray-400 hover:text-red-500 transition">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Predefined Layers -->
+    <div class="space-y-4">
+      <!-- Metadata Layer -->
+      <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <mat-icon class="text-gray-400">person</mat-icon>
+          <span class="text-sm font-semibold text-gray-700">Metadata Layer</span>
+        </div>
+        <div class="flex gap-2">
+          <button mat-icon-button (click)="resume.metadataStyle.isLocked = !resume.metadataStyle.isLocked; updateResume()">
+            <mat-icon>{{ resume.metadataStyle.isLocked ? 'lock' : 'lock_open' }}</mat-icon>
+          </button>
+          <button mat-icon-button (click)="resume.metadataStyle.isVisible = !resume.metadataStyle.isVisible; updateResume()">
+            <mat-icon>{{ resume.metadataStyle.isVisible ? 'visibility' : 'visibility_off' }}</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Referees Layer -->
+      <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <mat-icon class="text-gray-400">groups</mat-icon>
+          <span class="text-sm font-semibold text-gray-700">Referees Layer</span>
+        </div>
+        <div class="flex gap-2">
+          <button mat-icon-button (click)="resume.refereeStyle.isLocked = !resume.refereeStyle.isLocked; updateResume()">
+            <mat-icon>{{ resume.refereeStyle.isLocked ? 'lock' : 'lock_open' }}</mat-icon>
+          </button>
+          <button mat-icon-button (click)="resume.refereeStyle.isVisible = !resume.refereeStyle.isVisible; updateResume()">
+            <mat-icon>{{ resume.refereeStyle.isVisible ? 'visibility' : 'visibility_off' }}</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Skills Layer -->
+      <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <mat-icon class="text-gray-400">star</mat-icon>
+          <span class="text-sm font-semibold text-gray-700">Skills Layer</span>
+        </div>
+        <div class="flex gap-2">
+          <button mat-icon-button (click)="resume.skillsStyle.isLocked = !resume.skillsStyle.isLocked; updateResume()">
+            <mat-icon>{{ resume.skillsStyle.isLocked ? 'lock' : 'lock_open' }}</mat-icon>
+          </button>
+          <button mat-icon-button (click)="resume.skillsStyle.isVisible = !resume.skillsStyle.isVisible; updateResume()">
+            <mat-icon>{{ resume.skillsStyle.isVisible ? 'visibility' : 'visibility_off' }}</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- QR Code Layer -->
+      <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <mat-icon class="text-gray-400">qr_code</mat-icon>
+          <span class="text-sm font-semibold text-gray-700">QR Code Layer</span>
+        </div>
+        <div class="flex gap-2">
+          <button mat-icon-button (click)="resume.qrStyle.isLocked = !resume.qrStyle.isLocked; updateResume()">
+            <mat-icon>{{ resume.qrStyle.isLocked ? 'lock' : 'lock_open' }}</mat-icon>
+          </button>
+          <button mat-icon-button (click)="resume.qrStyle.isVisible = !resume.qrStyle.isVisible; updateResume()">
+            <mat-icon>{{ resume.qrStyle.isVisible ? 'visibility' : 'visibility_off' }}</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Experience Layer -->
+      <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <mat-icon class="text-gray-400">work</mat-icon>
+          <span class="text-sm font-semibold text-gray-700">Experience Layer</span>
+        </div>
+        <div class="flex gap-2">
+          <button mat-icon-button (click)="resume.experienceStyle.isLocked = !resume.experienceStyle.isLocked; updateResume()">
+            <mat-icon>{{ resume.experienceStyle.isLocked ? 'lock' : 'lock_open' }}</mat-icon>
+          </button>
+          <button mat-icon-button (click)="resume.experienceStyle.isVisible = !resume.experienceStyle.isVisible; updateResume()">
+            <mat-icon>{{ resume.experienceStyle.isVisible ? 'visibility' : 'visibility_off' }}</mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+    <!-- Navigation -->
+  <div class="flex justify-between pt-8">
+    <button (click)="activeStep = 'referees'" 
+            class="px-4 py-2 bg-gray-200 text-gray-600 rounded-lg hover:bg-gray-300 transition">‹ Previous</button>
+    <button (click)="activeStep = 'education'" 
+            class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">Next ›</button>
+  </div>
+</section>
+
+
+
+<!--education-->
+
+    <section *ngIf="activeStep === 'education'" 
+         class="p-10 space-y-10 bg-gradient-to-br from-indigo-50 to-white rounded-2xl shadow-lg overflow-y-auto h-screen">
+
+  <!-- Education -->
+    <div class="space-y-8">
+        <div class="flex items-center justify-between">
+    <h3 class="text-lg font-semibold text-indigo-600 flex items-center gap-2">
+        <mat-icon class="text-indigo-400">school</mat-icon>
+        Education
+    </h3>
+    <button (click)="addEducation()" 
+            class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition flex items-center gap-2">
+        <mat-icon class="text-white">add</mat-icon>
+        Add Education
+    </button>
+    </div>
+
+
+    <div class="space-y-6">
+  <div *ngFor="let edu of resume.education; let i = index" 
+       class="p-6 bg-white border border-gray-200 rounded-xl shadow-sm space-y-6">
+    
+    <!-- School -->
+    <div class="flex items-center justify-between">
+      <input [(ngModel)]="edu.school" (ngModelChange)="updateResume()" 
+             placeholder="School / University"
+             class="w-full p-2 border border-gray-300 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400">
+      <button mat-icon-button (click)="removeEducation(edu.id)" 
+              class="text-gray-400 hover:text-red-500 transition">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </div>
+
+    <!-- Degree -->
+    <div class="space-y-2">
+      <label class="text-sm font-medium text-gray-700">Degree / Qualification</label>
+      <input [(ngModel)]="edu.degree" (ngModelChange)="updateResume()" 
+             placeholder="e.g. Bachelor of Science"
+             class="w-full p-2 border border-gray-300 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400">
+    </div>
+
+    <!-- Dates -->
+    <div class="grid grid-cols-2 gap-4">
+      <div class="space-y-2">
+        <label class="text-sm font-medium text-gray-700">Start Date</label>
+        <input type="month" [(ngModel)]="edu.startDate" (ngModelChange)="updateResume()" 
+               class="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400">
+      </div>
+      <div class="space-y-2">
+        <label class="text-sm font-medium text-gray-700">End Date</label>
+        <input type="month" [(ngModel)]="edu.endDate" (ngModelChange)="updateResume()" 
+               class="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400">
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div class="space-y-2">
+      <label class="text-sm font-medium text-gray-700">Description</label>
+      <textarea [(ngModel)]="edu.description" (ngModelChange)="updateResume()" rows="3"
+                placeholder="Key achievements, honors, or coursework..."
+                class="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400"></textarea>
+    </div>
+  </div>
+</div>
+
+  </div>
+
+  <!-- Navigation -->
+  <div class="flex justify-between pt-8">
+    <button (click)="activeStep = 'layers'" 
+            class="px-4 py-2 bg-gray-200 text-gray-600 rounded-lg hover:bg-gray-300 transition">‹ Previous</button>
+    <button (click)="activeStep = 'coach'" 
+            class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">Next ›</button>
+  </div>
+</section>
+
+
+
+
+
+
+<!-- Coach Section -->
+
+<section *ngIf="activeStep === 'coach'" 
+         class="p-10 space-y-10 bg-gradient-to-br from-indigo-50 to-white rounded-2xl shadow-lg overflow-y-auto h-screen">
+
+  <!-- AI Intelligence -->
+  <div class="space-y-8">
+    <h3 class="text-lg font-semibold text-indigo-600 flex items-center gap-2">
+      <mat-icon class="text-indigo-400">auto_awesome</mat-icon>
+      AI Coach
+    </h3>
+
+    <!-- Analysis Card -->
+    <div class="p-6 bg-indigo-900 rounded-2xl space-y-6 text-white shadow-lg relative">
+      <div class="absolute -top-10 -right-10 w-40 h-40 bg-indigo-800 rounded-full blur-3xl opacity-50"></div>
+
+      <div class="relative space-y-6">
+        <!-- Loading State -->
+        <div *ngIf="isAnalyzing()" class="space-y-4 py-8 text-center animate-pulse">
+          <mat-spinner diameter="30" class="mx-auto"></mat-spinner>
+          <p class="text-sm font-semibold text-indigo-200 uppercase tracking-widest">
+            Analyzing your professional DNA...
+          </p>
+        </div>
+
+        <!-- Report State -->
+        <div *ngIf="coachReport" class="space-y-6">
+          <!-- ATS Score -->
+          <div class="space-y-2">
+            <div class="flex justify-between items-end">
+              <span class="text-sm font-semibold text-indigo-200 uppercase tracking-widest">ATS Correlation Score</span>
+              <span class="text-2xl font-bold text-emerald-400">{{ coachReport.atsScore }}%</span>
+            </div>
+            <mat-progress-bar mode="determinate" [value]="coachReport.atsScore" class="h-2 rounded-full !bg-indigo-800"></mat-progress-bar>
+          </div>
+
+          <!-- Suggestions -->
+          <div class="space-y-4">
+            <p class="text-sm font-semibold text-indigo-200 uppercase tracking-widest">Optimization Targets</p>
+            <div class="space-y-3">
+              <div *ngFor="let item of coachReport.suggestions" 
+                   class="flex gap-3 items-start p-3 bg-indigo-800 rounded-xl">
+                <mat-icon class="text-emerald-400 scale-75 pt-1">check_circle</mat-icon>
+                <p class="text-sm leading-relaxed text-indigo-100 font-medium">{{ item }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Re-run Button -->
+          <button (click)="runCoachAnalysis()" 
+                  class="w-full px-4 py-2 bg-white text-indigo-900 rounded-lg text-sm font-semibold uppercase tracking-widest hover:bg-gray-100 transition">
+            Re-verify Blueprint
+          </button>
+        </div>
+
+        <!-- Initial State -->
+        <div *ngIf="!isAnalyzing() && !coachReport" class="space-y-6">
+          <p class="text-sm text-indigo-200 leading-relaxed font-medium">
+            Our AI agent will scan your resume against 500+ ATS algorithms and suggest high-impact verbs to reshape your bullet points.
+          </p>
+          <button (click)="runCoachAnalysis()" 
+                  class="w-full px-4 py-2 bg-white text-indigo-900 rounded-lg text-sm font-semibold uppercase tracking-widest hover:bg-gray-100 transition">
+            Generate Report
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <div class="flex justify-between pt-8">
+    <button (click)="activeStep = 'layers'" 
+            class="px-4 py-2 bg-gray-200 text-gray-600 rounded-lg hover:bg-gray-300 transition">‹ Previous</button>
+    <button (click)="activeStep = 'skills'" 
+            class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">Next ›</button>
+  </div>
+</section>
+
+
+<!--Skill section   -->
+
+<section *ngIf="activeStep === 'skills'" 
+         class="p-10 space-y-10 bg-gradient-to-br from-indigo-50 to-white rounded-2xl shadow-lg overflow-y-auto h-screen">
+
+  <!-- Technical Stack -->
+  <div class="space-y-8">
+    <div class="flex items-center justify-between">
+      <h3 class="text-lg font-semibold text-indigo-600 flex items-center gap-2">
+        <mat-icon class="text-indigo-400">bar_chart</mat-icon>
+        Technical Stack
+      </h3>
+      <!-- Add Skill Button -->
+      <button (click)="addSkill()" 
+              class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition flex items-center gap-2">
+        <mat-icon class="text-white">add</mat-icon>
+        Add Skill
+      </button>
+    </div>
+
+    <div class="space-y-6">
+      <div *ngFor="let skill of resume.skills" 
+           class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm flex items-center justify-between">
+        <input [(ngModel)]="skill.name" (ngModelChange)="updateResume()" 
+               placeholder="Skill name (e.g. Angular, Python)"
+               class="w-full p-2 border border-gray-300 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400">
+        <button mat-icon-button (click)="removeSkill(skill.id)" 
+                class="text-gray-400 hover:text-red-500 transition">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Portfolio / Social URL -->
+  <div class="space-y-8 pt-8 border-t border-gray-200">
+    <h3 class="text-lg font-semibold text-indigo-600 flex items-center gap-2">
+      <mat-icon class="text-indigo-400">link</mat-icon>
+      Portfolio / Social URL
+    </h3>
+    <div class="flex gap-2">
+      <input [(ngModel)]="resume.skillUrl" (ngModelChange)="updateResume(); generateQRCode()" 
+             placeholder="https://linkedin.com/in/username"
+             class="w-full p-3 border border-gray-300 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400">
+      <div class="w-20 h-20 flex items-center justify-center bg-gray-100 border border-gray-300 rounded-lg">
+        <!-- QR Code Preview -->
+        <img *ngIf="resume.qrCode" [src]="resume.qrCode" alt="QR Code" class="w-16 h-16">
+      </div>
+    </div>
+  </div>
+
+  <!-- Hobbies -->
+  <div class="space-y-8 pt-8 border-t border-gray-200">
+    <div class="flex items-center justify-between">
+      <h3 class="text-lg font-semibold text-indigo-600 flex items-center gap-2">
+        <mat-icon class="text-indigo-400">sports_esports</mat-icon>
+        Hobbies
+      </h3>
+      <!-- Add Hobby Button -->
+      <button (click)="addHobby()" 
+              class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition flex items-center gap-2">
+        <mat-icon class="text-white">add</mat-icon>
+        Add Hobby
+      </button>
+    </div>
+
+    <div class="space-y-6">
+      <div *ngFor="let hobby of resume.hobbies" 
+           class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm flex items-center justify-between">
+        <input [(ngModel)]="hobby.name" (ngModelChange)="updateResume()" 
+               placeholder="Hobby (e.g. Photography, Chess)"
+               class="w-full p-2 border border-gray-300 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400">
+        <button mat-icon-button (click)="removeHobby(hobby.id)" 
+                class="text-gray-400 hover:text-red-500 transition">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <div class="flex justify-between pt-8">
+    <button (click)="activeStep = 'coach'" 
+            class="px-4 py-2 bg-gray-200 text-gray-600 rounded-lg hover:bg-gray-300 transition">‹ Previous</button>
+    <button (click)="activeStep = 'summary'" 
+            class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">Next ›</button>
+  </div>
+</section>
+
+
+<!--Summary section-->
+
+<section *ngIf="activeStep === 'summary'" 
+         class="p-10 space-y-10 bg-gradient-to-br from-indigo-50 to-white rounded-2xl shadow-lg overflow-y-auto h-screen">
+
+  <!-- Resume Summary -->
+  <div class="space-y-8">
+    <h3 class="text-lg font-semibold text-indigo-600 flex items-center gap-2">
+      <mat-icon class="text-indigo-400">description</mat-icon>
+      Resume Summary
+    </h3>
+
+    <div class="space-y-4">
+      <label class="text-sm font-medium text-gray-700">Professional Abstract</label>
+      <textarea [(ngModel)]="resume.summary" (ngModelChange)="updateResume()" rows="6"
+                placeholder="Final polish of your career objective and key value proposition..."
+                class="w-full p-4 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400"></textarea>
+      <button (click)="polishSummary()" 
+              class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition flex items-center gap-2">
+        <mat-icon class="text-xs">auto_awesome</mat-icon>
+        ✨ AI Polish
+      </button>
+    </div>
+  </div>
+
+  <!-- Export Options -->
+  <div class="space-y-8 pt-8 border-t border-gray-200">
+    <h3 class="text-lg font-semibold text-indigo-600 flex items-center gap-2">
+      <mat-icon class="text-indigo-400">file_download</mat-icon>
+      Export Options
+    </h3>
+    <div class="flex gap-4">
+      <button (click)="exportResume('pdf')" 
+              class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition flex items-center gap-2">
+        <mat-icon class="text-white">picture_as_pdf</mat-icon>
+        Export as PDF
+      </button>
+      <button (click)="exportResume('docx')" 
+              class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition flex items-center gap-2">
+        <mat-icon class="text-white">article</mat-icon>
+        Export as DOCX
+      </button>
+    </div>
+  </div>
+
+  <!-- Reset -->
+  <div class="space-y-8 pt-8 border-t border-gray-200">
+    <h3 class="text-lg font-semibold text-indigo-600 flex items-center gap-2">
+      <mat-icon class="text-indigo-400">refresh</mat-icon>
+      Reset Resume
+    </h3>
+    <button (click)="resetResume()" 
+            class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 transition flex items-center gap-2">
+      <mat-icon class="text-white">delete_forever</mat-icon>
+      Reset All Data
+    </button>
+  </div>
+
+  <!-- Navigation -->
+  <div class="flex justify-between pt-8">
+    <button (click)="activeStep = 'skills'" 
+            class="px-4 py-2 bg-gray-200 text-gray-600 rounded-lg hover:bg-gray-300 transition">‹ Previous</button>
+    <button disabled 
+            class="px-4 py-2 bg-gray-200 text-gray-500 rounded-lg">Finish</button>
+  </div>
+</section>
+
+
+
+
+</aside>

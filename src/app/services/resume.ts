@@ -72,6 +72,16 @@ export interface Skill {
   displayMode?: 'text' | 'vertical_bar' | 'horizontal_bar';
 }
 
+export interface Education {
+  id: string;
+  school: string;
+  degree: string;
+  startDate: string;
+  endDate: string;
+  description: string;
+}
+
+
 export interface ResumeData {
   name: string;
   email: string;
@@ -81,7 +91,7 @@ export interface ResumeData {
   summary: string;
   sections: ResumeSection[];
   experience: Experience[];
-  education: string[];
+  education: Education[];
   referees: Referee[];
   skills: Skill[];
   hobbies: string[];

@@ -1,15 +1,18 @@
 import { Component, Input, Output, EventEmitter, signal, ViewChild, ElementRef, HostListener } from '@angular/core';
-import { ResumeService, ResumeElement } from '../../services/resume';
+import { ResumeService, ResumeElement, ResumeData } from '../../services/resume';
 import { CdkDragEnd } from '@angular/cdk/drag-drop';
+import { CommonModule } from '@angular/common';   // ✅ import CommonModule
 
 @Component({
   selector: 'app-canvas',
+  standalone: true,   // ✅ mark as standalone
+  imports: [CommonModule],   // ✅ add CommonModule so *ngIf, *ngFor work
   templateUrl: './canvas.component.html',
-  styleUrls: ['./canvas.component.css']
+  styleUrls: ['./studio.component.css']
 })
 export class CanvasComponent {
-  @Input() resume: any;
-  @Output() resumeChange = new EventEmitter<any>();
+  @Input() resume!: ResumeData;
+  @Output() resumeChange = new EventEmitter<ResumeData>();
 
   @ViewChild('canvasContainer') canvasContainer!: ElementRef;
 

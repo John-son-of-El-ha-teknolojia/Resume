@@ -12,13 +12,14 @@
           </div>
 
           <!-- The Paper -->
-          <div #canvasContainer class="canvas-viewport w-full h-full overflow-auto p-20 flex justify-center no-scrollbar group select-text">
-            <div 
-              id="resume-canvas"
-              class="a4-paper bg-white shadow-2xl relative transition-all duration-300 origin-top shrink-0"
-              [style.transform]="'scale(' + (scale() / 100) + ')'"
-              [style.height.mm]="(resume.pageCount || 1) * 297"
-              [ngClass]="'template-' + template()">
+          <div #canvasContainer class="canvas-viewport w-full h-screen overflow-auto p-20 flex justify-center no-scrollbar group select-text">
+           <div 
+            id="resume-canvas"
+            class="a4-paper bg-white shadow-2xl relative transition-all duration-300 origin-top shrink-0"
+            style="width: 210mm; height: 297mm;"
+            [style.transform]="'scale(' + (scale() / 100) + ')'"
+            [ngClass]="'template-' + template()">
+
               
               <!-- Page Dividers -->
               @for (i of [].constructor((resume.pageCount || 1) - 1); track $index) {

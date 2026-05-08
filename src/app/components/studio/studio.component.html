@@ -1,33 +1,25 @@
-<div class="h-screen w-full flex flex-col bg-[#F3F4F6] font-sans select-none">
+<div class="h-screen w-full flex bg-[#F3F4F6] font-sans select-none">
+  
+  <!-- Sidebar -->
+  <app-sidebar
+    [resume]="resume"
+    [sidebarPosition]="sidebarPosition()"
+    (resumeChange)="updateResume($event)">
+  </app-sidebar>
 
-  <!-- Toolbar stays here -->
-  <header class="h-14 bg-white border-b border-zinc-200 flex items-center justify-between px-6 z-50 shrink-0">
-    <!-- existing toolbar content -->
-  </header>
-
-  <!-- Main layout -->
-  <div class="flex-1 flex overflow-hidden" [class.flex-row-reverse]="sidebarPosition() === 'right'">
-
-    <!-- Sidebar -->
-    <app-sidebar
-      [resume]="resume"
-      [sidebarPosition]="sidebarPosition()"
-      (resumeChange)="updateResume($event)">
-    </app-sidebar>
-
-    <!-- Properties Panel -->
+  <!-- Main area -->
+  <div class="flex-1 flex flex-col">
     <app-properties
+      class="shrink-0 border-b border-zinc-200"
       [resume]="resume"
       (resumeChange)="updateResume($event)">
     </app-properties>
 
-    <!-- Canvas -->
-    <app-canvas
-      [resume]="resume"
-      [activeSectionId]="activeSectionId"
-      [activeElementId]="activeElementId"
-      (resumeChange)="updateResume($event)">
-    </app-canvas>
-
+    <div class="flex-1 flex justify-center items-start p-10 overflow-auto">
+      <app-canvas 
+        [resume]="resume" 
+        (resumeChange)="updateResume($event)">
+      </app-canvas>
+    </div>
   </div>
 </div>

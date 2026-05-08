@@ -3,11 +3,6 @@ import { ResumeService } from '../../services/resume';
 import {
 //   Component,
   inject,
-  signal,
-  ElementRef,
-  ViewChild,
-  AfterViewInit,
-  HostListener,
 } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 import { Router } from "@angular/router";
@@ -15,8 +10,8 @@ import { PaymentDialogComponent } from "../payment/payment";
 
 @Component({
   selector: 'app-properties',
-  templateUrl: './properties.component.html',
-  styleUrls: ['./properties.component.css']
+  templateUrl: './propperties.component.html',
+  styleUrls: ['./studio.component.css']
 })
 export class PropertiesComponent {
 //   @Input() resume: any;

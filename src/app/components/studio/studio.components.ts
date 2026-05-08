@@ -26,6 +26,9 @@ import {
   ResumeElement,
 } from "../../services/resume";
 import { PaymentDialogComponent } from "../payment/payment";
+import { PropertiesComponent } from "./properties.component";
+import { SidebarComponent } from "./sidebar.component";
+import { CanvasComponent } from "./canvas.component";
 
 
 
@@ -69,6 +72,9 @@ const MOOD_PRESETS: Record<string, any> = {
     MatProgressBarModule,
     MatProgressSpinnerModule,
     DragDropModule,
+    CanvasComponent,
+  SidebarComponent,
+  PropertiesComponent
   ],
   templateUrl: "./studio.component.html",
   styleUrls: ["./studio.component.css"],
@@ -141,17 +147,13 @@ export class StudioComponent  {
   }
 
 
-
-  updateResume() {
-    if (this.resumeService.isPaid()) {
-      this.resumeService.updateResume(this.resume);
-      console.log("Autosave: Intelligence sync verified.");
-    }
-    this.resumeService.commit();
-    // this.generateQRCode();
-  }
-
- 
+updateResume(updated?: any) {
+  if (updated) {
+  this.resume = { ...this.resume, ...updated };
+}
+  this.resumeService.updateResume(this.resume);
+  this.resumeService.commit();
+}
 
   
 
