@@ -1,7 +1,6 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-  import { environment } from '../../environments/environments';
 
 export interface Referee {
   id: string;
@@ -9,6 +8,9 @@ export interface Referee {
   email: string;
   phone: string;
   address: string;
+  x?: number;
+  y?: number;
+  width?: number;
 }
 
 export interface Experience {
@@ -19,6 +21,9 @@ export interface Experience {
   endDate: string;
   current: boolean;
   content: string;
+  x?: number;
+  y?: number;
+  width?: number;
 }
 
 export interface ResumeSection {
@@ -36,6 +41,9 @@ export interface ResumeElement {
   y: number;
   width: number;
   height: number;
+  widthUnit?: string;
+  heightUnit?: string;
+  zIndex?: number;
   rotation?: number;
   isLocked?: boolean;
   isVisible?: boolean;
@@ -54,7 +62,7 @@ export interface ResumeElement {
     opacity?: number;
     lineType?: 'solid' | 'dashed' | 'dotted';
     thickness?: number;
-    [key: string]: any;
+    [key: string]: string | number | boolean | undefined;
   };
 }
 
@@ -66,12 +74,6 @@ export interface Aesthetics {
   elements: ResumeElement[];
 }
 
-export interface Skill {
-  name: string;
-  level: number; // 0-100
-  displayMode?: 'text' | 'vertical_bar' | 'horizontal_bar';
-}
-
 export interface Education {
   id: string;
   school: string;
@@ -79,8 +81,46 @@ export interface Education {
   startDate: string;
   endDate: string;
   description: string;
+  x?: number;
+  y?: number;
+  width?: number;
 }
 
+export interface Hobby {
+  id: string;
+  name: string;
+}
+
+export interface Skill {
+  id: string;
+  name: string;
+  level: number; // 0-100
+  displayMode?: 'text' | 'vertical_bar' | 'horizontal_bar';
+  x?: number;
+  y?: number;
+  width?: number;
+}
+
+export interface BlockStyle {
+  x: number;
+  y: number;
+  width: number;
+  height?: number;
+  rotation?: number;
+  isLocked?: boolean;
+  isVisible?: boolean;
+  border?: string;
+  padding?: number;
+  style?: {
+    color?: string;
+    backgroundColor?: string;
+    fontSize?: number;
+    fontFamily?: string;
+    fontWeight?: string;
+    textAlign?: string;
+    opacity?: number;
+  };
+}
 
 export interface ResumeData {
   name: string;
@@ -94,44 +134,20 @@ export interface ResumeData {
   education: Education[];
   referees: Referee[];
   skills: Skill[];
-  hobbies: string[];
+  hobbies: Hobby[];
   website?: string;
+  qrCode?: string;
   aesthetics: Aesthetics;
-  metadataStyle?: {
-    border?: string;
-    padding?: number;
-    width?: number;
-    x?: number;
-    y?: number;
-    isLocked?: boolean;
-    isVisible?: boolean;
-  };
-  experienceStyle?: {
-    x?: number;
-    y?: number;
-    isLocked?: boolean;
-    isVisible?: boolean;
-  };
-  refereeStyle?: {
-    x?: number;
-    y?: number;
-    isLocked?: boolean;
-    isVisible?: boolean;
-  };
-  skillsStyle?: {
-    x?: number;
-    y?: number;
-    isLocked?: boolean;
-    isVisible?: boolean;
-  };
-  qrStyle?: {
-    x?: number;
-    y?: number;
-    width?: number;
-    height?: number;
-    isLocked?: boolean;
-    isVisible?: boolean;
-  };
+  metadataStyle?: BlockStyle;
+  experienceStyle?: BlockStyle;
+  educationStyle?: BlockStyle;
+  skillsStyle?: BlockStyle;
+  refereeStyle?: BlockStyle;
+  qrStyle?: BlockStyle;
+  nameStyle?: BlockStyle;
+  emailStyle?: BlockStyle;
+  phoneStyle?: BlockStyle;
+  summaryStyle?: BlockStyle;
   skillUrl?: string;
   pageCount?: number;
 }
@@ -149,7 +165,7 @@ export interface CoverLetterData {
 })
 export class ResumeService {
   private http = inject(HttpClient);
-  private readonly API_BASE = environment.apiUrl;
+  private readonly API_BASE = 'http://localhost:8080';
 
   // Supported models to be handled by the backend
   public readonly SUPPORTED_MODELS = [
@@ -160,15 +176,6 @@ export class ResumeService {
 
   private selectedModelId = 'python-ai-pro';
 
-  templateHtml = signal<string | null>(null);
-
-  loadTemplate(path: string) {
-    this.http.get(path, { responseType: 'text' })
-      .subscribe(html => this.templateHtml.set(html));
-  }
-
-
-
   setModel(modelId: string) {
     this.selectedModelId = modelId;
   }
@@ -177,12 +184,51 @@ export class ResumeService {
     return this.selectedModelId;
   }
   
+  // Selection state
+  public selectedIds = signal<Set<string>>(new Set());
+
+  toggleSelection(id: string, multi = false) {
+    const current = new Set(this.selectedIds());
+    if (current.has(id)) {
+      current.delete(id);
+    } else {
+      if (!multi) current.clear();
+      current.add(id);
+    }
+    this.selectedIds.set(current);
+  }
+
+  clearSelection() {
+    this.selectedIds.set(new Set());
+  }
+
   // History management
   private history: string[] = [];
   private redoStack: string[] = [];
   private maxHistory = 50;
+  private initialState: string | null = null;
 
-  // State
+  constructor() {
+    // Initialize history with current state
+    const state = JSON.stringify(this.resumeState());
+    this.history.push(state);
+    this.initialState = state;
+  }
+
+  resetToInitial() {
+    if (this.initialState) {
+      this.resumeState.set(JSON.parse(this.initialState));
+      this.commit();
+    }
+  }
+
+  canUndo() {
+    return this.history.length > 1;
+  }
+
+  canRedo() {
+    return this.redoStack.length > 0;
+  }
   resumeState = signal<ResumeData>({
     name: '',
     email: '',
@@ -198,20 +244,91 @@ export class ResumeService {
     hobbies: [],
     website: '',
     metadataStyle: {
-      border: 'none',
-      padding: 0,
       x: 0,
       y: 0,
+      width: 800,
       isLocked: true,
       isVisible: true
     },
     experienceStyle: {
       x: 0,
-      y: 0,
+      y: 350,
+      width: 800,
       isLocked: true,
       isVisible: true
     },
-    
+    summaryStyle: {
+      x: 0,
+      y: 200,
+      width: 800,
+      isLocked: true,
+      isVisible: true
+    },
+    educationStyle: {
+      x: 0,
+      y: 600,
+      width: 800,
+      isLocked: true,
+      isVisible: true
+    },
+    skillsStyle: {
+      x: 0,
+      y: 800,
+      width: 800,
+      isLocked: true,
+      isVisible: true
+    },
+    refereeStyle: {
+      x: 0,
+      y: 950,
+      width: 800,
+      isLocked: true,
+      isVisible: true
+    },
+    qrStyle: {
+      x: 650,
+      y: 50,
+      width: 100,
+      height: 100,
+      isLocked: true,
+      isVisible: true
+    },
+    nameStyle: {
+      x: 300,
+      y: 50,
+      width: 200,
+      isVisible: true,
+      style: {
+        fontSize: 32,
+        fontWeight: '900',
+        color: '#000000',
+        textAlign: 'center'
+      }
+    },
+    emailStyle: {
+      x: 300,
+      y: 100,
+      width: 200,
+      isVisible: true,
+      style: {
+        fontSize: 10,
+        fontWeight: '900',
+        color: '#a1a1aa',
+        textAlign: 'center'
+      }
+    },
+    phoneStyle: {
+      x: 300,
+      y: 120,
+      width: 200,
+      isVisible: true,
+      style: {
+        fontSize: 10,
+        fontWeight: '900',
+        color: '#a1a1aa',
+        textAlign: 'center'
+      }
+    },
     skillUrl: '',
     pageCount: 1,
     aesthetics: {
@@ -275,30 +392,26 @@ export class ResumeService {
   currentTemplate = signal<'minimal' | 'modern' | 'classic'>('minimal');
 
   async login(email: string, password: string): Promise<boolean> {
-  try {
-    const response = await firstValueFrom(
-      this.http.post<{ success: boolean; email: string; isAdmin: boolean }>(
-        `${this.API_BASE}/api/auth/login`,
-        { email, password }
-      )
-    );
-
-    if (response.success) {
+    try {
+      const response = await firstValueFrom(
+        this.http.post<{ success: boolean; email: string; isAdmin: boolean }>('/api/auth/login', { email, password })
+      );
+      if (response.success) {
+        this.isLoggedIn.set(true);
+        this.isAdmin.set(response.isAdmin);
+        this.userEmail.set(response.email);
+        this.resumeState.update(prev => ({ ...prev, email: response.email }));
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Login error:', error);
+      // Fallback for mock/demo
       this.isLoggedIn.set(true);
-      this.isAdmin.set(response.isAdmin);
-      this.userEmail.set(response.email);
-      this.resumeState.update(prev => ({ ...prev, email: response.email }));
+      this.userEmail.set(email);
       return true;
     }
-
-    return false; // backend responded but success=false
-  } catch (error: any) {
-    console.error('Login error:', error);
-    this.isLoggedIn.set(false); // ensure not logged in
-    return false; // signal failure to caller
   }
-}
-
 
   async signup(data: Record<string, string | null>): Promise<boolean> {
     try {
@@ -320,8 +433,6 @@ export class ResumeService {
     }
   }
 
-  
-
   logout() {
     this.isLoggedIn.set(false);
     this.isAdmin.set(false);
@@ -330,12 +441,79 @@ export class ResumeService {
 
   async getAdminStats() {
     return firstValueFrom(
-      this.http.get<{ totalUsers: number; activeUsers: number; totalRevenue: number; tierCounts: Record<string, number> }>(`${this.API_BASE}/api/admin/stats`)
+      this.http.get<{ totalUsers: number; activeUsers: number; totalRevenue: number; tierCounts: Record<string, number> }>('/api/admin/stats')
     );
   }
 
   updateResume(data: Partial<ResumeData>) {
     this.resumeState.update(prev => ({ ...prev, ...data }));
+  }
+
+  updateSelectedElementsStyle(style: Partial<ResumeElement['style']>) {
+    const selected = this.selectedIds();
+    if (selected.size === 0) return;
+
+    this.resumeState.update(prev => {
+      const next = { ...prev };
+      
+      // Aesthetic elements
+      next.aesthetics.elements = next.aesthetics.elements.map(el => {
+        if (selected.has(el.id)) {
+          return {
+            ...el,
+            style: { ...el.style, ...style }
+          };
+        }
+        return el;
+      });
+
+      // Special handling for logical blocks with individual styles
+      const styleKeys = ['nameStyle', 'emailStyle', 'phoneStyle', 'summaryStyle', 'qrStyle', 'metadataStyle', 'experienceStyle', 'educationStyle', 'skillsStyle', 'refereeStyle'] as const;
+      styleKeys.forEach(key => {
+        if (selected.has(key)) {
+          const block = (next as any)[key];
+          if (block) {
+            block.style = { ...(block.style || {}), ...style };
+          }
+        }
+      });
+
+      return next;
+    });
+    this.commit();
+  }
+
+  updateSelectedElementsProperty(prop: Partial<ResumeElement>) {
+    const selected = this.selectedIds();
+    if (selected.size === 0) return;
+
+    this.resumeState.update(prev => {
+      const aestheticsElements = prev.aesthetics.elements.map(el => selected.has(el.id) ? { ...el, ...prop } : el);
+      const experience = prev.experience.map(el => selected.has(el.id) ? { ...el, ...prop } : el);
+      const education = prev.education.map(el => selected.has(el.id) ? { ...el, ...prop } : el);
+      const referees = prev.referees.map(el => selected.has(el.id) ? { ...el, ...prop } : el);
+      const skills = prev.skills.map(el => selected.has(el.id) ? { ...el, ...prop } : el);
+
+      const next = { 
+        ...prev, 
+        experience, 
+        education, 
+        referees, 
+        skills,
+        aesthetics: { ...prev.aesthetics, elements: aestheticsElements } 
+      };
+
+      // Logical blocks
+      const styleKeys = ['nameStyle', 'emailStyle', 'phoneStyle', 'summaryStyle', 'qrStyle', 'metadataStyle', 'experienceStyle', 'educationStyle', 'skillsStyle', 'refereeStyle'] as const;
+      styleKeys.forEach(key => {
+        if (selected.has(key)) {
+          (next as any)[key] = { ...((next as any)[key] || {}), ...prop };
+        }
+      });
+
+      return next;
+    });
+    this.commit();
   }
 
   addSection() {
@@ -429,20 +607,6 @@ export class ResumeService {
     }
   }
 
-  async sendOtp(email: string): Promise<void> {
-  await firstValueFrom(
-    this.http.post<{ message: string }>(`${this.API_BASE}/api/auth/send-otp`, { email })
-  );
-}
-
-async verifyOtp(email: string, code: string): Promise<{ success: boolean }> {
-  return firstValueFrom(
-    this.http.post<{ success: boolean }>(`${this.API_BASE}/api/auth/verify-otp`, { email, code })
-  );
-}
-
-
-
   async initiatePayment(phone: string, tier: string, amount: number) {
     const email = this.resumeState().email;
     try {
@@ -465,11 +629,168 @@ async verifyOtp(email: string, code: string): Promise<{ success: boolean }> {
     }
   }
 
-  downloadPdf() {
-    const email = this.resumeState().email;
-    window.open(`${this.API_BASE}/api/resume/pdf?email=${encodeURIComponent(email)}`, '_blank');
-    // Refresh eligibility after download
-    setTimeout(() => this.checkEligibility(), 2000);
+  alignMode = signal<'selection' | 'page'>('selection');
+
+  // Alignment and Distribution
+  alignElements(type: 'left' | 'right' | 'center' | 'top' | 'bottom' | 'middle') {
+    const selected = this.selectedIds();
+    if (selected.size < 1) return;
+
+    interface HasBounds {
+      x: number;
+      y: number;
+      width: number;
+      height?: number;
+      rotation?: number;
+    }
+
+    this.resumeState.update(prev => {
+      const next = { ...prev };
+      const mode = this.alignMode();
+      const paperWidth = 794;
+      const paperHeight = (next.pageCount || 1) * 1123;
+
+      const getElement = (id: string): HasBounds | null => {
+        let el = next.aesthetics.elements.find(e => e.id === id) as HasBounds | undefined;
+        if (!el) {
+          const listItems = [...next.skills, ...next.experience, ...next.education, ...next.referees] as HasBounds[];
+          el = listItems.find(item => (item as any).id === id);
+        }
+        if (!el) {
+          const staticIds = ['nameStyle', 'emailStyle', 'phoneStyle', 'summaryStyle', 'qrStyle', 'metadataStyle', 'experienceStyle', 'educationStyle', 'skillsStyle', 'refereeStyle'];
+          if (staticIds.includes(id)) {
+            el = (next as any)[id] as HasBounds;
+          }
+        }
+        return el || null;
+      };
+
+      const selectedEls = Array.from(selected).map(id => ({ id, el: getElement(id) })).filter((item): item is { id: string; el: HasBounds } => !!item.el);
+      if (selectedEls.length === 0) return prev;
+
+      let targetVal: number;
+
+      if (mode === 'page') {
+        switch (type) {
+          case 'left':
+            selectedEls.forEach(item => item.el.x = 0);
+            break;
+          case 'right':
+            selectedEls.forEach(item => item.el.x = paperWidth - item.el.width);
+            break;
+          case 'center':
+            selectedEls.forEach(item => item.el.x = (paperWidth - item.el.width) / 2);
+            break;
+          case 'top':
+            selectedEls.forEach(item => item.el.y = 0);
+            break;
+          case 'bottom':
+            selectedEls.forEach(item => item.el.y = paperHeight - (item.el.height || 40));
+            break;
+          case 'middle':
+            selectedEls.forEach(item => item.el.y = (paperHeight - (item.el.height || 40)) / 2);
+            break;
+        }
+      } else if (selectedEls.length > 1) {
+        // Selection relative
+        switch (type) {
+          case 'left':
+            targetVal = Math.min(...selectedEls.map(item => item.el.x));
+            selectedEls.forEach(item => item.el.x = targetVal);
+            break;
+          case 'right':
+            targetVal = Math.max(...selectedEls.map(item => item.el.x + item.el.width));
+            selectedEls.forEach(item => item.el.x = targetVal - item.el.width);
+            break;
+          case 'center': {
+            const minX = Math.min(...selectedEls.map(item => item.el.x));
+            const maxX = Math.max(...selectedEls.map(item => item.el.x + item.el.width));
+            targetVal = minX + (maxX - minX) / 2;
+            selectedEls.forEach(item => item.el.x = targetVal - item.el.width / 2);
+            break;
+          }
+          case 'top':
+            targetVal = Math.min(...selectedEls.map(item => item.el.y));
+            selectedEls.forEach(item => item.el.y = targetVal);
+            break;
+          case 'bottom':
+            targetVal = Math.max(...selectedEls.map(item => item.el.y + (item.el.height || 40)));
+            selectedEls.forEach(item => item.el.y = targetVal - (item.el.height || 40));
+            break;
+          case 'middle': {
+            const minY = Math.min(...selectedEls.map(item => item.el.y));
+            const maxY = Math.max(...selectedEls.map(item => item.el.y + (item.el.height || 40)));
+            targetVal = minY + (maxY - minY) / 2;
+            selectedEls.forEach(item => item.el.y = targetVal - (item.el.height || 40) / 2);
+            break;
+          }
+        }
+      }
+
+      return next;
+    });
+    this.commit();
+  }
+
+  distributeElements(direction: 'horizontal' | 'vertical') {
+    const selected = this.selectedIds();
+    if (selected.size < 3) return;
+
+    interface HasBounds {
+      x: number;
+      y: number;
+      width: number;
+      height?: number;
+    }
+
+    this.resumeState.update(prev => {
+      const next = { ...prev };
+      const getElement = (id: string): HasBounds | null => {
+        let el = next.aesthetics.elements.find(e => e.id === id) as HasBounds | undefined;
+        if (!el) {
+          const listItems = [...next.skills, ...next.experience, ...next.education, ...next.referees] as HasBounds[];
+          el = listItems.find(item => (item as any).id === id);
+        }
+        if (!el) {
+          const staticIds = ['nameStyle', 'emailStyle', 'phoneStyle', 'summaryStyle', 'qrStyle', 'metadataStyle', 'experienceStyle', 'educationStyle', 'skillsStyle', 'refereeStyle'];
+          if (staticIds.includes(id)) el = (next as any)[id] as HasBounds;
+        }
+        return el || null;
+      };
+
+      const selectedEls = Array.from(selected).map(id => ({ id, el: getElement(id) })).filter((item): item is { id: string; el: HasBounds } => !!item.el);
+      
+      if (direction === 'horizontal') {
+        selectedEls.sort((a, b) => a.el.x - b.el.x);
+        const minX = selectedEls[0].el.x;
+        const lastEl = selectedEls[selectedEls.length - 1].el;
+        const maxX = lastEl.x + lastEl.width;
+        const totalWidths = selectedEls.reduce((sum, item) => sum + item.el.width, 0);
+        const gap = (maxX - minX - totalWidths) / (selectedEls.length - 1);
+        
+        let currentX = minX;
+        selectedEls.forEach((item) => {
+          item.el.x = currentX;
+          currentX += item.el.width + gap;
+        });
+      } else {
+        selectedEls.sort((a, b) => a.el.y - b.el.y);
+        const minY = selectedEls[0].el.y;
+        const lastEl = selectedEls[selectedEls.length - 1].el;
+        const maxY = lastEl.y + (lastEl.height || 40);
+        const totalHeights = selectedEls.reduce((sum, item) => sum + (item.el.height || 40), 0);
+        const gap = (maxY - minY - totalHeights) / (selectedEls.length - 1);
+        
+        let currentY = minY;
+        selectedEls.forEach((item) => {
+          item.el.y = currentY;
+          currentY += (item.el.height || 40) + gap;
+        });
+      }
+      
+      return next;
+    });
+    this.commit();
   }
 
   async runCoachAnalysis(resumeData: unknown) {
@@ -503,7 +824,7 @@ async verifyOtp(email: string, code: string): Promise<{ success: boolean }> {
 
   async mapToJob(resumeData: unknown, jobUrl: string) {
     return firstValueFrom(
-      this.http.post<any>(`${this.API_BASE}/api/ai/map-job`, { 
+      this.http.post<ResumeData>(`${this.API_BASE}/api/ai/map-job`, { 
         resumeData, 
         jobUrl,
         model: this.selectedModelId
@@ -521,5 +842,9 @@ async verifyOtp(email: string, code: string): Promise<{ success: boolean }> {
         model: this.selectedModelId
       })
     );
+  }
+
+  downloadPdf() {
+    window.print();
   }
 }

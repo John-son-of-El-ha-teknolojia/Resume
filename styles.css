@@ -59,3 +59,205 @@
 ::-webkit-scrollbar-thumb {
   @apply bg-slate-200 rounded-full hover:bg-slate-300;
 }
+
+:host {
+  display: block;
+}
+
+.a4-paper {
+  width: 210mm;
+  height: 297mm;
+  min-width: 210mm;
+  min-height: 297mm;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.studio-tabs .mat-mdc-tab-header {
+  border-bottom: 1px solid #f4f4f5;
+}
+.studio-tabs .mat-mdc-tab .mdc-tab__text-label {
+  color: #71717a !important;
+}
+.studio-tabs .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label {
+  color: #09090b !important;
+}
+.studio-tabs .mat-mdc-tab-ink-bar {
+  height: 2px !important;
+  background-color: #09090b !important;
+}
+
+.studio-toggle-group {
+  border: 1px solid #f4f4f5 !important;
+  border-radius: 0.75rem !important;
+  overflow: hidden;
+  height: 40px !important;
+}
+.studio-toggle-group .mat-button-toggle {
+  background-color: #fafafa !important;
+  border-left: 1px solid #f4f4f5 !important;
+}
+.studio-toggle-group .mat-button-toggle-checked {
+  background-color: #09090b !important;
+  color: white !important;
+}
+.studio-toggle-group .mat-button-toggle .mat-button-toggle-label-content {
+  font-size: 8px !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.1em !important;
+}
+
+.a4-paper div[contentEditable] {
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  line-height: 1.4;
+}
+
+.a4-paper * {
+  max-width: 100%;
+  word-break: break-word;
+}
+
+.a4-paper [style*="font-size"] {
+  font-size: clamp(10px, 2vw, 14px);
+}
+
+.a4-paper section {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #f4f4f5;
+}
+
+[cdkDrag] {
+  display: inline-block;
+  vertical-align: top;
+}
+
+.selected {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.align-btn {
+  width: 28px !important;
+  height: 28px !important;
+  padding: 0 !important;
+}
+
+.align-btn mat-icon {
+  font-size: 16px;
+}
+
+@media print {
+  /* Ultra-aggressive print cleanup */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  body {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Hide everything by default */
+  body > * {
+    display: none !important;
+  }
+
+  /* Only show the root and the studio/canvas path */
+  app-root {
+    display: block !important;
+  }
+  
+  app-root > main {
+    display: block !important;
+  }
+  
+  app-studio {
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  app-studio > div {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  app-canvas {
+    display: block !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 210mm !important;
+    height: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: white !important;
+    overflow: visible !important;
+  }
+
+  app-canvas .canvas-viewport {
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: white !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  app-canvas .canvas-viewport > div {
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  #resume-canvas {
+    position: static !important;
+    margin: 0 !important;
+    transform: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    visibility: visible !important;
+    width: 210mm !important;
+  }
+
+  /* Specifically hide ALL UI components */
+  app-sidebar, 
+  nav, 
+  header, 
+  aside,
+  .print\:hidden,
+  .zoom-controls,
+  .layer-label,
+  button,
+  .absolute-top-controls,
+  [role="button"] {
+    display: none !important;
+  }
+
+  /* Hide selection artifacts */
+  .selected, 
+  [class*="ring-"],
+  [class*="outline-"] {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  @page {
+    size: A4;
+    margin: 0;
+  }
+}
