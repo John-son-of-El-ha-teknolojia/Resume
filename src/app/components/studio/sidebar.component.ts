@@ -364,7 +364,7 @@ export class SidebarComponent {
     // ✅ Check eligibility first
     const eligibility = await this.resumeService.checkEligibility();
 
-    if (!eligibility.isPremium) {
+    if ('isPremium' in eligibility && !eligibility.isPremium) {
       // Not premium → open subscription dialog
       this.dialog.open(PaymentDialogComponent, {
         width: '480px',

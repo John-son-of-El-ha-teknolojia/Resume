@@ -7,11 +7,15 @@ import {
 import { MatDialog } from "@angular/material/dialog";
 import { Router } from "@angular/router";
 import { PaymentDialogComponent } from "../payment/payment";
-
+import { CommonModule } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
 @Component({
   selector: 'app-properties',
   templateUrl: './propperties.component.html',
-  styleUrls: ['./studio.component.css']
+  styleUrls: ['./studio.component.css'],
+  imports:[CommonModule, MatIconModule, MatButtonModule, MatTooltipModule]
 })
 export class PropertiesComponent {
 //   @Input() resume: any;

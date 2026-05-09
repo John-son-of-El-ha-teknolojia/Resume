@@ -150,6 +150,8 @@ export class CanvasComponent implements AfterViewInit {
   onSummaryDragEnd(event: CdkDragEnd) {
     this.handleBlockDragEnd(event, 'summaryStyle');
   }
+
+  
   
 
   private handleBlockDragEnd(
@@ -331,6 +333,48 @@ export class CanvasComponent implements AfterViewInit {
     event.source.reset();
     this.updateResume();
   }
+
+  onExperienceHeaderBlur(event: FocusEvent) {
+  const target = event.target as HTMLElement;
+  this.resume.experienceStyle.style = {
+    ...(this.resume.experienceStyle.style || {}),
+    color: target.style.color,
+    fontSize: parseInt(target.style.fontSize, 10)
+  };
+  this.updateResume();
+}
+
+onEducationHeaderBlur(event: FocusEvent) {
+  const target = event.target as HTMLElement;
+  this.resume.educationStyle.style = {
+    ...(this.resume.educationStyle.style || {}),
+    color: target.style.color,
+    fontSize: parseInt(target.style.fontSize, 10)
+  };
+  this.updateResume();
+}
+
+onSkillsHeaderBlur(event: FocusEvent) {
+  const target = event.target as HTMLElement;
+  this.resume.skillsStyle.style = {
+    ...(this.resume.skillsStyle.style || {}),
+    color: target.style.color,
+    fontSize: parseInt(target.style.fontSize, 10)
+  };
+  this.updateResume();
+}
+
+onRefereeHeaderBlur(event: FocusEvent) {
+  const target = event.target as HTMLElement;
+  this.resume.refereeStyle.style = {
+    ...(this.resume.refereeStyle.style || {}),
+    color: target.style.color,
+    fontSize: parseInt(target.style.fontSize, 10)
+  };
+  this.updateResume();
+}
+
+
 
   moveForward(el: ResumeElement) {
     const idx = this.resume.aesthetics.elements.indexOf(el);

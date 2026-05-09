@@ -183,7 +183,7 @@
               contentEditable
               [style.color]="resume.experienceStyle?.style?.color || '#444'"
               [style.font-size.px]="resume.experienceStyle?.style?.fontSize || 12"
-              (blur)="resume.experienceStyle.style = { ...(resume.experienceStyle.style || {}), color: $any($event.target).style.color, fontSize: parseInt($any($event.target).style.fontSize) }; updateResume()">
+              (blur)="onExperienceHeaderBlur($event)">
             Experience <span class="flex-1 h-px bg-zinc-100"></span>
           </h3>
 
@@ -230,7 +230,7 @@
                   contentEditable
                   [style.color]="resume.educationStyle?.style?.color || '#444'"
                   [style.font-size.px]="resume.educationStyle?.style?.fontSize || 12"
-                  (blur)="resume.educationStyle.style = { ...(resume.educationStyle.style || {}), color: $any($event.target).style.color, fontSize: parseInt($any($event.target).style.fontSize) }; updateResume()">
+                  (blur)="onEducationHeaderBlur($event)">
                 Education <span class="flex-1 h-px bg-zinc-100"></span>
               </h3>
 
@@ -275,7 +275,7 @@
                 contentEditable
                 [style.color]="resume.skillsStyle?.style?.color || '#444'"
                 [style.font-size.px]="resume.skillsStyle?.style?.fontSize || 12"
-                (blur)="resume.skillsStyle.style = { ...(resume.skillsStyle.style || {}), color: $any($event.target).style.color, fontSize: parseInt($any($event.target).style.fontSize) }; updateResume()">
+                (blur)="onSkillsHeaderBlur($event)">
               Skills <span class="flex-1 h-px bg-zinc-100"></span>
             </h3>
 
@@ -311,7 +311,7 @@
                 contentEditable
                 [style.color]="resume.refereeStyle?.style?.color || '#444'"
                 [style.font-size.px]="resume.refereeStyle?.style?.fontSize || 12"
-                (blur)="resume.refereeStyle.style = { ...(resume.refereeStyle.style || {}), color: $any($event.target).style.color, fontSize: parseInt($any($event.target).style.fontSize) }; updateResume()">
+                (blur)="onRefereeHeaderBlur($event)">
               Referees <span class="flex-1 h-px bg-zinc-100"></span>
             </h3>
 

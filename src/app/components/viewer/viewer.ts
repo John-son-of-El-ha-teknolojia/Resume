@@ -107,12 +107,12 @@ import * as QRCode from 'qrcode';
            <!-- Standard Layout Content -->
            <div class="px-16 pt-8 pb-16 h-full flex flex-col relative overflow-hidden" [style.background-color]="resume().aesthetics.backgroundColor">
               <header class="flex flex-col justify-center items-center relative overflow-hidden mb-8" 
-                      *ngIf="resume().metadataStyle?.isVisible !== false"
+                      *ngIf="resume().metadataStyle.isVisible !== false"
                       [style.max-height]="((resume().pageCount || 1) * 297 * 0.05) + 'mm'"
-                      [style.transform]="'translate(' + (resume().metadataStyle?.x || 0) + 'px, ' + (resume().metadataStyle?.y || 0) + 'px)'"
-                      [style.border]="resume().metadataStyle?.border === 'none' ? 'none' : '1px ' + resume().metadataStyle?.border + ' #e4e4e7'"
-                      [style.padding.px]="resume().metadataStyle?.padding"
-                      [style.width.px]="resume().metadataStyle?.width">
+                      [style.transform]="'translate(' + (resume().metadataStyle.x || 0) + 'px, ' + (resume().metadataStyle.y || 0) + 'px)'"
+                      [style.border]="resume().metadataStyle.border === 'none' ? 'none' : '1px ' + resume().metadataStyle.border + ' #e4e4e7'"
+                      [style.padding.px]="resume().metadataStyle.padding"
+                      [style.width.px]="resume().metadataStyle  .width">
                  <h1 class="text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter text-zinc-900 uppercase leading-none mb-2" [style.color]="resume().aesthetics.primaryColor">{{ resume().name || 'IDENTITY_UNDEFINED' }}</h1>
                  <div class="flex flex-wrap justify-center gap-x-6 gap-y-1 text-zinc-400 text-[8px] font-black uppercase tracking-[0.2em] py-2 max-w-xl mx-auto border-t border-zinc-100 mt-2">
                     <span>{{ resume().phoneCountryCode }} {{ resume().phone }}</span>
@@ -126,8 +126,8 @@ import * as QRCode from 'qrcode';
               </section>
 
               <div class="flex-1 space-y-10 pt-4">
-                 @if (resume().experience.length > 0 && resume().experienceStyle?.isVisible !== false) {
-                    <section class="space-y-8" [style.transform]="'translate(' + (resume().experienceStyle?.x || 0) + 'px, ' + (resume().experienceStyle?.y || 0) + 'px)'">
+                 @if (resume().experience.length > 0 && resume().experienceStyle.isVisible !== false) {
+                    <section class="space-y-8" [style.transform]="'translate(' + (resume().experienceStyle.x || 0) + 'px, ' + (resume().experienceStyle.y || 0) + 'px)'">
                        <h3 class="text-xs font-black tracking-[0.3em] uppercase text-zinc-400 mb-6 flex items-center gap-6">
                          Experience
                          <span class="flex-1 h-px bg-zinc-100"></span>

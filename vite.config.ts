@@ -18,7 +18,9 @@ export default defineConfig({
       port: 3000,
     },
   },
-  plugins: [angular()],
+  plugins: [angular(
+    // aot: true
+  )],
   build: {
     rollupOptions: {
       output: {
