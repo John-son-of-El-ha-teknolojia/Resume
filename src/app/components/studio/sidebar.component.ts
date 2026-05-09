@@ -9,6 +9,8 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ResumeService, ResumeData, ResumeElement, Experience, Education, Referee, Skill, Hobby } from '../../services/resume';
 import * as QRCode from 'qrcode';
+import { MatDialog } from '@angular/material/dialog';
+import { PaymentDialogComponent } from '../payment/payment'; // adjust path
 
 @Component({
   selector: 'app-sidebar',
@@ -354,8 +356,24 @@ export class SidebarComponent {
     }
   }
 
+  private dialog = inject(MatDialog);
+
   async polishSummary() {
     if (!this.resume.summary) return;
+
+    // ✅ Check eligibility first
+    const eligibility = await this.resumeService.checkEligibility();
+
+    if (!eligibility.isPremium) {
+      // Not premium → open subscription dialog
+      this.dialog.open(PaymentDialogComponent, {
+        width: '480px',
+        disableClose: true
+      });
+      return;
+    }
+
+    // ✅ Continue if premium
     this.isAnalyzing.set(true);
     try {
       const res = await this.resumeService.polishSummary(this.resume.summary);

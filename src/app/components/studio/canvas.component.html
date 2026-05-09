@@ -83,7 +83,6 @@
                [cdkDragBoundary]="'#resume-canvas'"
                [style.left.px]="resume.nameStyle?.x"
                [style.top.px]="resume.nameStyle?.y"
-               [style.width.px]="resume.nameStyle?.width"
                (mousedown)="toggleSelection('nameStyle', $event)"
                [class.ring-2]="resumeService.selectedIds().has('nameStyle')" [class.ring-sky-400]="resumeService.selectedIds().has('nameStyle')"
                (cdkDragEnded)="onNameDragEnd($event)">
@@ -103,7 +102,6 @@
                [cdkDragBoundary]="'#resume-canvas'"
                [style.left.px]="resume.emailStyle?.x"
                [style.top.px]="resume.emailStyle?.y"
-               [style.width.px]="resume.emailStyle?.width"
                (mousedown)="toggleSelection('emailStyle', $event)"
                [class.ring-2]="resumeService.selectedIds().has('emailStyle')" [class.ring-sky-400]="resumeService.selectedIds().has('emailStyle')"
                (cdkDragEnded)="onEmailDragEnd($event)">
@@ -122,7 +120,6 @@
                [cdkDragBoundary]="'#resume-canvas'"
                [style.left.px]="resume.phoneStyle?.x"
                [style.top.px]="resume.phoneStyle?.y"
-               [style.width.px]="resume.phoneStyle?.width"
                (mousedown)="toggleSelection('phoneStyle', $event)"
                [class.ring-2]="resumeService.selectedIds().has('phoneStyle')" [class.ring-sky-400]="resumeService.selectedIds().has('phoneStyle')"
                (cdkDragEnded)="onPhoneDragEnd($event)">
@@ -143,7 +140,6 @@
                 [cdkDragDisabled]="resume.qrStyle?.isLocked"
                 [style.left.px]="resume.qrStyle?.x"
                 [style.top.px]="resume.qrStyle?.y"
-                [style.width.px]="resume.qrStyle?.width"
                 [style.height.px]="resume.qrStyle?.height"
                 (mousedown)="toggleSelection('qrStyle', $event)"
                 [class.ring-2]="resumeService.selectedIds().has('qrStyle')" [class.ring-sky-400]="resumeService.selectedIds().has('qrStyle')"
@@ -161,7 +157,6 @@
                 [cdkDragDisabled]="resume.summaryStyle?.isLocked"
                 [style.left.px]="resume.summaryStyle?.x"
                 [style.top.px]="resume.summaryStyle?.y"
-                [style.width.px]="resume.summaryStyle?.width"
                 (mousedown)="toggleSelection('summaryStyle', $event)"
                 [class.ring-2]="resumeService.selectedIds().has('summaryStyle')" [class.ring-sky-400]="resumeService.selectedIds().has('summaryStyle')"
                 (cdkDragEnded)="onSummaryDragEnd($event)">
@@ -181,13 +176,18 @@
                [cdkDragDisabled]="resume.experienceStyle?.isLocked"
                [style.left.px]="resume.experienceStyle?.x"
                [style.top.px]="resume.experienceStyle?.y"
-               [style.width.px]="resume.experienceStyle?.width"
                (mousedown)="toggleSelection('experienceStyle', $event)"
                [class.ring-2]="resumeService.selectedIds().has('experienceStyle')" [class.ring-sky-400]="resumeService.selectedIds().has('experienceStyle')"
                (cdkDragEnded)="onExperienceDragEnd($event)">
-            <h3 class="text-xs font-black uppercase text-zinc-400 flex items-center gap-4">
-              Experience <span class="flex-1 h-px bg-zinc-100"></span>
-            </h3>
+            <h3 class="font-black uppercase flex items-center gap-4 outline-none focus:ring-1 focus:ring-zinc-200 px-1"
+              contentEditable
+              [style.color]="resume.experienceStyle?.style?.color || '#444'"
+              [style.font-size.px]="resume.experienceStyle?.style?.fontSize || 12"
+              (blur)="resume.experienceStyle.style = { ...(resume.experienceStyle.style || {}), color: $any($event.target).style.color, fontSize: parseInt($any($event.target).style.fontSize) }; updateResume()">
+            Experience <span class="flex-1 h-px bg-zinc-100"></span>
+          </h3>
+
+
             <div class="absolute -top-6 left-0 text-[8px] font-black uppercase text-zinc-300 opacity-0 group-hover/layer:opacity-100 transition-opacity whitespace-nowrap layer-label">Experience Header</div>
           </div>
 
@@ -197,7 +197,6 @@
                  [cdkDragBoundary]="'#resume-canvas'"
                  [style.left.px]="exp.x || (resume.experienceStyle?.x || 0)"
                  [style.top.px]="exp.y || ((resume.experienceStyle?.y || 0) + 40 + (i * 120))"
-                 [style.width.px]="exp.width || (resume.experienceStyle?.width || 700)"
                  (mousedown)="toggleSelection(exp.id, $event)"
                  [class.ring-2]="resumeService.selectedIds().has(exp.id)" [class.ring-sky-400]="resumeService.selectedIds().has(exp.id)"
                  (cdkDragEnded)="onExperienceItemDragEnd($event, exp)">
@@ -224,13 +223,17 @@
                [cdkDragDisabled]="resume.educationStyle?.isLocked"
                [style.left.px]="resume.educationStyle?.x"
                [style.top.px]="resume.educationStyle?.y"
-               [style.width.px]="resume.educationStyle?.width"
                (mousedown)="toggleSelection('educationStyle', $event)"
                [class.ring-2]="resumeService.selectedIds().has('educationStyle')" [class.ring-sky-400]="resumeService.selectedIds().has('educationStyle')"
                (cdkDragEnded)="onEducationDragEnd($event)">
-            <h3 class="text-xs font-black uppercase text-zinc-400 flex items-center gap-4">
-              Education <span class="flex-1 h-px bg-zinc-100"></span>
-            </h3>
+              <h3 class="font-black uppercase flex items-center gap-4 outline-none focus:ring-1 focus:ring-zinc-200 px-1"
+                  contentEditable
+                  [style.color]="resume.educationStyle?.style?.color || '#444'"
+                  [style.font-size.px]="resume.educationStyle?.style?.fontSize || 12"
+                  (blur)="resume.educationStyle.style = { ...(resume.educationStyle.style || {}), color: $any($event.target).style.color, fontSize: parseInt($any($event.target).style.fontSize) }; updateResume()">
+                Education <span class="flex-1 h-px bg-zinc-100"></span>
+              </h3>
+
             <div class="absolute -top-6 left-0 text-[8px] font-black uppercase text-zinc-300 opacity-0 group-hover/layer:opacity-100 transition-opacity whitespace-nowrap layer-label">Education Header</div>
           </div>
 
@@ -240,7 +243,6 @@
                  [cdkDragBoundary]="'#resume-canvas'"
                  [style.left.px]="edu.x || (resume.educationStyle?.x || 0)"
                  [style.top.px]="edu.y || ((resume.educationStyle?.y || 0) + 40 + (i * 80))"
-                 [style.width.px]="edu.width || (resume.educationStyle?.width || 700)"
                  (mousedown)="toggleSelection(edu.id, $event)"
                  [class.ring-2]="resumeService.selectedIds().has(edu.id)" [class.ring-sky-400]="resumeService.selectedIds().has(edu.id)"
                  (cdkDragEnded)="onEducationItemDragEnd($event, edu)">
@@ -266,13 +268,17 @@
                 [cdkDragDisabled]="resume.skillsStyle?.isLocked"
                 [style.left.px]="resume.skillsStyle?.x"
                 [style.top.px]="resume.skillsStyle?.y"
-                [style.width.px]="resume.skillsStyle?.width"
                 (mousedown)="toggleSelection('skillsStyle', $event)"
                 [class.ring-2]="resumeService.selectedIds().has('skillsStyle')" [class.ring-sky-400]="resumeService.selectedIds().has('skillsStyle')"
                 (cdkDragEnded)="onSkillsDragEnd($event)">
-             <h3 class="text-xs font-black uppercase text-zinc-400 flex items-center gap-4">
-                Skills <span class="flex-1 h-px bg-zinc-100"></span>
-             </h3>
+             <h3 class="font-black uppercase flex items-center gap-4 outline-none focus:ring-1 focus:ring-zinc-200 px-1"
+                contentEditable
+                [style.color]="resume.skillsStyle?.style?.color || '#444'"
+                [style.font-size.px]="resume.skillsStyle?.style?.fontSize || 12"
+                (blur)="resume.skillsStyle.style = { ...(resume.skillsStyle.style || {}), color: $any($event.target).style.color, fontSize: parseInt($any($event.target).style.fontSize) }; updateResume()">
+              Skills <span class="flex-1 h-px bg-zinc-100"></span>
+            </h3>
+
              <div class="absolute -top-6 left-0 text-[8px] font-black uppercase text-zinc-300 opacity-0 group-hover/layer:opacity-100 transition-opacity whitespace-nowrap layer-label">Skills Header</div>
            </div>
 
@@ -298,13 +304,17 @@
                [cdkDragDisabled]="resume.refereeStyle?.isLocked"
                [style.left.px]="resume.refereeStyle?.x"
                [style.top.px]="resume.refereeStyle?.y"
-               [style.width.px]="resume.refereeStyle?.width"
                (mousedown)="toggleSelection('refereeStyle', $event)"
                [class.ring-2]="resumeService.selectedIds().has('refereeStyle')" [class.ring-sky-400]="resumeService.selectedIds().has('refereeStyle')"
                (cdkDragEnded)="onRefereeDragEnd($event)">
-            <h3 class="text-xs font-black uppercase text-zinc-400 flex items-center gap-4">
+            <h3 class="font-black uppercase flex items-center gap-4 outline-none focus:ring-1 focus:ring-zinc-200 px-1"
+                contentEditable
+                [style.color]="resume.refereeStyle?.style?.color || '#444'"
+                [style.font-size.px]="resume.refereeStyle?.style?.fontSize || 12"
+                (blur)="resume.refereeStyle.style = { ...(resume.refereeStyle.style || {}), color: $any($event.target).style.color, fontSize: parseInt($any($event.target).style.fontSize) }; updateResume()">
               Referees <span class="flex-1 h-px bg-zinc-100"></span>
             </h3>
+
             <div class="absolute -top-6 left-0 text-[8px] font-black uppercase text-zinc-300 opacity-0 group-hover/layer:opacity-100 transition-opacity whitespace-nowrap layer-label">Referees Header</div>
           </div>
 
@@ -314,7 +324,6 @@
                  [cdkDragBoundary]="'#resume-canvas'"
                  [style.left.px]="ref.x || ((resume.refereeStyle?.x || 0) + (i % 2 * 350))"
                  [style.top.px]="ref.y || ((resume.refereeStyle?.y || 0) + 40 + (Math.floor(i / 2) * 60))"
-                 [style.width.px]="ref.width || 340"
                  (mousedown)="toggleSelection(ref.id, $event)"
                  [class.ring-2]="resumeService.selectedIds().has(ref.id)" [class.ring-sky-400]="resumeService.selectedIds().has(ref.id)"
                  (cdkDragEnded)="onRefereeItemDragEnd($event, ref)">

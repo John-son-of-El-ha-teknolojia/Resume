@@ -11,6 +11,7 @@ export interface Referee {
   x?: number;
   y?: number;
   width?: number;
+  height?: number;
 }
 
 export interface Experience {
@@ -24,6 +25,7 @@ export interface Experience {
   x?: number;
   y?: number;
   width?: number;
+  height?: number;
 }
 
 export interface ResumeSection {
@@ -84,6 +86,7 @@ export interface Education {
   x?: number;
   y?: number;
   width?: number;
+  height?: number;
 }
 
 export interface Hobby {
@@ -99,6 +102,7 @@ export interface Skill {
   x?: number;
   y?: number;
   width?: number;
+  height?: number;
 }
 
 export interface BlockStyle {
@@ -391,27 +395,36 @@ export class ResumeService {
   
   currentTemplate = signal<'minimal' | 'modern' | 'classic'>('minimal');
 
-  async login(email: string, password: string): Promise<boolean> {
-    try {
-      const response = await firstValueFrom(
-        this.http.post<{ success: boolean; email: string; isAdmin: boolean }>('/api/auth/login', { email, password })
-      );
-      if (response.success) {
-        this.isLoggedIn.set(true);
-        this.isAdmin.set(response.isAdmin);
-        this.userEmail.set(response.email);
-        this.resumeState.update(prev => ({ ...prev, email: response.email }));
-        return true;
+    
+
+
+    async login(email: string, password: string): Promise<boolean> {
+      try {
+        const response = await firstValueFrom(
+          this.http.post<{ token: string; email: string; isAdmin: boolean }>(
+            `${this.API_BASE}/api/auth/login`,
+            { email, password }
+          )
+        );
+
+        if (response.token) {
+          // Save JWT for later requests
+          localStorage.setItem('jwt', response.token);
+
+          this.isLoggedIn.set(true);
+          this.isAdmin.set(response.isAdmin);
+          this.userEmail.set(response.email);
+
+          this.resumeState.update(prev => ({ ...prev, email: response.email }));
+          return true;
+        }
+
+        return false;
+      } catch (error) {
+        console.error('Login error:', error);
+        return false;
       }
-      return false;
-    } catch (error) {
-      console.error('Login error:', error);
-      // Fallback for mock/demo
-      this.isLoggedIn.set(true);
-      this.userEmail.set(email);
-      return true;
     }
-  }
 
   async signup(data: Record<string, string | null>): Promise<boolean> {
     try {
@@ -448,6 +461,36 @@ export class ResumeService {
   updateResume(data: Partial<ResumeData>) {
     this.resumeState.update(prev => ({ ...prev, ...data }));
   }
+
+  updateElementProperty(key: keyof ResumeElement, value: any) {
+  const selected = this.selectedIds();
+  if (selected.size === 0) return;
+
+  this.resumeState.update(prev => {
+    const next = { ...prev };
+
+    // Update aesthetics elements
+    next.aesthetics.elements = next.aesthetics.elements.map(el =>
+      selected.has(el.id) ? { ...el, [key]: value } : el
+    );
+
+    // Update logical blocks (like experienceStyle, skillsStyle, etc.)
+    const styleKeys = ['nameStyle','emailStyle','phoneStyle','summaryStyle','qrStyle','metadataStyle','experienceStyle','educationStyle','skillsStyle','refereeStyle'] as const;
+    styleKeys.forEach(blockKey => {
+      if (selected.has(blockKey)) {
+        (next as any)[blockKey] = { ...(next as any)[blockKey], [key]: value };
+      }
+    });
+
+    return next;
+  });
+
+  this.commit();
+  
+  this.resumeState.update(prev => ({ ...prev }));
+}
+
+
 
   updateSelectedElementsStyle(style: Partial<ResumeElement['style']>) {
     const selected = this.selectedIds();
@@ -576,11 +619,15 @@ export class ResumeService {
     if (!email) return { canDownload: true }; 
     
     try {
+      const token = localStorage.getItem('jwt');
       const res = await firstValueFrom(
         this.http.post<{ canDownload: boolean; isPremium: boolean; hasFreeDownloadLeft: boolean }>(
-          `${this.API_BASE}/api/resume/check-eligibility`, { email }
+          `${this.API_BASE}/api/resume/check-eligibility`,
+          { email },
+          { headers: { Authorization: `Bearer ${token}` } }
         )
       );
+
       this.isPremium.set(res.isPremium);
       this.hasFreeDownloadLeft.set(res.hasFreeDownloadLeft);
       this.isPaid.set(res.isPremium);
@@ -629,178 +676,193 @@ export class ResumeService {
     }
   }
 
-  alignMode = signal<'selection' | 'page'>('selection');
+ alignMode = signal<'selection' | 'page'>('selection');
 
-  // Alignment and Distribution
-  alignElements(type: 'left' | 'right' | 'center' | 'top' | 'bottom' | 'middle') {
-    const selected = this.selectedIds();
-    if (selected.size < 1) return;
+// Alignment
+alignElements(type: 'left' | 'right' | 'center' | 'top' | 'bottom' | 'middle') {
+  const selected = this.selectedIds();
+  if (selected.size < 1) return;
 
-    interface HasBounds {
-      x: number;
-      y: number;
-      width: number;
-      height?: number;
-      rotation?: number;
-    }
-
-    this.resumeState.update(prev => {
-      const next = { ...prev };
-      const mode = this.alignMode();
-      const paperWidth = 794;
-      const paperHeight = (next.pageCount || 1) * 1123;
-
-      const getElement = (id: string): HasBounds | null => {
-        let el = next.aesthetics.elements.find(e => e.id === id) as HasBounds | undefined;
-        if (!el) {
-          const listItems = [...next.skills, ...next.experience, ...next.education, ...next.referees] as HasBounds[];
-          el = listItems.find(item => (item as any).id === id);
-        }
-        if (!el) {
-          const staticIds = ['nameStyle', 'emailStyle', 'phoneStyle', 'summaryStyle', 'qrStyle', 'metadataStyle', 'experienceStyle', 'educationStyle', 'skillsStyle', 'refereeStyle'];
-          if (staticIds.includes(id)) {
-            el = (next as any)[id] as HasBounds;
-          }
-        }
-        return el || null;
-      };
-
-      const selectedEls = Array.from(selected).map(id => ({ id, el: getElement(id) })).filter((item): item is { id: string; el: HasBounds } => !!item.el);
-      if (selectedEls.length === 0) return prev;
-
-      let targetVal: number;
-
-      if (mode === 'page') {
-        switch (type) {
-          case 'left':
-            selectedEls.forEach(item => item.el.x = 0);
-            break;
-          case 'right':
-            selectedEls.forEach(item => item.el.x = paperWidth - item.el.width);
-            break;
-          case 'center':
-            selectedEls.forEach(item => item.el.x = (paperWidth - item.el.width) / 2);
-            break;
-          case 'top':
-            selectedEls.forEach(item => item.el.y = 0);
-            break;
-          case 'bottom':
-            selectedEls.forEach(item => item.el.y = paperHeight - (item.el.height || 40));
-            break;
-          case 'middle':
-            selectedEls.forEach(item => item.el.y = (paperHeight - (item.el.height || 40)) / 2);
-            break;
-        }
-      } else if (selectedEls.length > 1) {
-        // Selection relative
-        switch (type) {
-          case 'left':
-            targetVal = Math.min(...selectedEls.map(item => item.el.x));
-            selectedEls.forEach(item => item.el.x = targetVal);
-            break;
-          case 'right':
-            targetVal = Math.max(...selectedEls.map(item => item.el.x + item.el.width));
-            selectedEls.forEach(item => item.el.x = targetVal - item.el.width);
-            break;
-          case 'center': {
-            const minX = Math.min(...selectedEls.map(item => item.el.x));
-            const maxX = Math.max(...selectedEls.map(item => item.el.x + item.el.width));
-            targetVal = minX + (maxX - minX) / 2;
-            selectedEls.forEach(item => item.el.x = targetVal - item.el.width / 2);
-            break;
-          }
-          case 'top':
-            targetVal = Math.min(...selectedEls.map(item => item.el.y));
-            selectedEls.forEach(item => item.el.y = targetVal);
-            break;
-          case 'bottom':
-            targetVal = Math.max(...selectedEls.map(item => item.el.y + (item.el.height || 40)));
-            selectedEls.forEach(item => item.el.y = targetVal - (item.el.height || 40));
-            break;
-          case 'middle': {
-            const minY = Math.min(...selectedEls.map(item => item.el.y));
-            const maxY = Math.max(...selectedEls.map(item => item.el.y + (item.el.height || 40)));
-            targetVal = minY + (maxY - minY) / 2;
-            selectedEls.forEach(item => item.el.y = targetVal - (item.el.height || 40) / 2);
-            break;
-          }
-        }
-      }
-
-      return next;
-    });
-    this.commit();
+  interface HasBounds {
+    x: number;
+    y: number;
+    width: number;
+    height?: number;
   }
 
-  distributeElements(direction: 'horizontal' | 'vertical') {
-    const selected = this.selectedIds();
-    if (selected.size < 3) return;
+  this.resumeState.update(prev => {
+    const next = { ...prev };
+    const mode = this.alignMode();
+    const paperWidth = 794;
+    const paperHeight = (next.pageCount || 1) * 1123;
 
-    interface HasBounds {
-      x: number;
-      y: number;
-      width: number;
-      height?: number;
+    const getElement = (id: string): HasBounds | null => {
+    let el = next.aesthetics.elements.find(e => e.id === id) as HasBounds | undefined;
+    if (!el) {
+      const listItems = [...next.skills, ...next.experience, ...next.education, ...next.referees] as HasBounds[];
+      el = listItems.find(item => (item as any).id === id);
+    }
+    if (!el) {
+      const staticIds = ['nameStyle','emailStyle','phoneStyle','summaryStyle','qrStyle','metadataStyle','experienceStyle','educationStyle','skillsStyle','refereeStyle'];
+      if (staticIds.includes(id)) el = (next as any)[id] as HasBounds;
+    }
+    return el || null;
+  };
+
+
+    const selectedEls = Array.from(selected)
+      .map(id => ({ id, el: getElement(id) }))
+      .filter((item): item is { id: string; el: HasBounds } => !!item.el);
+
+    if (selectedEls.length === 0) return prev;
+
+    if (mode === 'page') {
+      switch (type) {
+        case 'left':
+          selectedEls.forEach(item => item.el.x = 0);
+          break;
+        case 'right':
+          selectedEls.forEach(item => item.el.x = paperWidth - item.el.width);
+          break;
+        case 'center':
+          selectedEls.forEach(item => item.el.x = (paperWidth - item.el.width) / 2);
+          break;
+        case 'top':
+          selectedEls.forEach(item => item.el.y = 0);
+          break;
+        case 'bottom':
+          selectedEls.forEach(item => item.el.y = paperHeight - (item.el.height || 40));
+          break;
+        case 'middle':
+          selectedEls.forEach(item => item.el.y = (paperHeight - (item.el.height || 40)) / 2);
+          break;
+      }
+    } else if (selectedEls.length > 1) {
+      switch (type) {
+        case 'left': {
+          const minLeft = Math.min(...selectedEls.map(item => item.el.x));
+          selectedEls.forEach(item => item.el.x = minLeft);
+          break;
+        }
+        case 'right': {
+          const maxRight = Math.max(...selectedEls.map(item => item.el.x + item.el.width));
+          selectedEls.forEach(item => item.el.x = maxRight - item.el.width);
+          break;
+        }
+        case 'center': {
+          const minX = Math.min(...selectedEls.map(item => item.el.x));
+          const maxX = Math.max(...selectedEls.map(item => item.el.x + item.el.width));
+          const centerX = minX + (maxX - minX) / 2;
+          selectedEls.forEach(item => item.el.x = centerX - item.el.width / 2);
+          break;
+        }
+        case 'top': {
+          const minTop = Math.min(...selectedEls.map(item => item.el.y));
+          selectedEls.forEach(item => item.el.y = minTop);
+          break;
+        }
+        case 'bottom': {
+          const maxBottom = Math.max(...selectedEls.map(item => item.el.y + (item.el.height || 40)));
+          selectedEls.forEach(item => item.el.y = maxBottom - (item.el.height || 40));
+          break;
+        }
+        case 'middle': {
+          const minY = Math.min(...selectedEls.map(item => item.el.y));
+          const maxY = Math.max(...selectedEls.map(item => item.el.y + (item.el.height || 40)));
+          const centerY = minY + (maxY - minY) / 2;
+          selectedEls.forEach(item => item.el.y = centerY - (item.el.height || 40) / 2);
+          break;
+        }
+      }
     }
 
-    this.resumeState.update(prev => {
-      const next = { ...prev };
-      const getElement = (id: string): HasBounds | null => {
-        let el = next.aesthetics.elements.find(e => e.id === id) as HasBounds | undefined;
-        if (!el) {
-          const listItems = [...next.skills, ...next.experience, ...next.education, ...next.referees] as HasBounds[];
-          el = listItems.find(item => (item as any).id === id);
-        }
-        if (!el) {
-          const staticIds = ['nameStyle', 'emailStyle', 'phoneStyle', 'summaryStyle', 'qrStyle', 'metadataStyle', 'experienceStyle', 'educationStyle', 'skillsStyle', 'refereeStyle'];
-          if (staticIds.includes(id)) el = (next as any)[id] as HasBounds;
-        }
-        return el || null;
-      };
+    return next;
+  });
+  this.commit();
+  this.resumeState.update(prev => ({ ...prev }));
 
-      const selectedEls = Array.from(selected).map(id => ({ id, el: getElement(id) })).filter((item): item is { id: string; el: HasBounds } => !!item.el);
-      
-      if (direction === 'horizontal') {
-        selectedEls.sort((a, b) => a.el.x - b.el.x);
-        const minX = selectedEls[0].el.x;
-        const lastEl = selectedEls[selectedEls.length - 1].el;
-        const maxX = lastEl.x + lastEl.width;
-        const totalWidths = selectedEls.reduce((sum, item) => sum + item.el.width, 0);
-        const gap = (maxX - minX - totalWidths) / (selectedEls.length - 1);
-        
-        let currentX = minX;
-        selectedEls.forEach((item) => {
-          item.el.x = currentX;
-          currentX += item.el.width + gap;
-        });
-      } else {
-        selectedEls.sort((a, b) => a.el.y - b.el.y);
-        const minY = selectedEls[0].el.y;
-        const lastEl = selectedEls[selectedEls.length - 1].el;
-        const maxY = lastEl.y + (lastEl.height || 40);
-        const totalHeights = selectedEls.reduce((sum, item) => sum + (item.el.height || 40), 0);
-        const gap = (maxY - minY - totalHeights) / (selectedEls.length - 1);
-        
-        let currentY = minY;
-        selectedEls.forEach((item) => {
-          item.el.y = currentY;
-          currentY += (item.el.height || 40) + gap;
-        });
-      }
-      
-      return next;
-    });
-    this.commit();
+}
+
+// Distribution
+distributeElements(direction: 'horizontal' | 'vertical') {
+  const selected = this.selectedIds();
+  if (selected.size < 3) return;
+
+  interface HasBounds {
+    x: number;
+    y: number;
+    width: number;
+    height?: number;
   }
+
+  this.resumeState.update(prev => {
+    const next = { ...prev };
+
+    const getElement = (id: string): HasBounds | null => {
+      let el = next.aesthetics.elements.find(e => e.id === id) as HasBounds | undefined;
+      if (!el) {
+        const listItems = [...next.skills, ...next.experience, ...next.education, ...next.referees] as HasBounds[];
+        el = listItems.find(item => (item as any).id === id);
+      }
+      if (!el) {
+        const staticIds = ['nameStyle','emailStyle','phoneStyle','summaryStyle','qrStyle','metadataStyle','experienceStyle','educationStyle','skillsStyle','refereeStyle'];
+        if (staticIds.includes(id)) el = (next as any)[id] as HasBounds;
+      }
+      if (!el) return null;
+
+      // el.width = el.width || 200;
+      // el.height = el.height || 40;
+      return el;
+    };
+
+    const selectedEls = Array.from(selected)
+      .map(id => ({ id, el: getElement(id) }))
+      .filter((item): item is { id: string; el: HasBounds } => !!item.el);
+
+    if (direction === 'horizontal') {
+      selectedEls.sort((a, b) => a.el.x - b.el.x);
+      const minX = selectedEls[0].el.x;
+      const maxX = selectedEls[selectedEls.length - 1].el.x + selectedEls[selectedEls.length - 1].el.width;
+      const totalWidths = selectedEls.reduce((sum, item) => sum + item.el.width, 0);
+      const gap = (maxX - minX - totalWidths) / (selectedEls.length - 1);
+
+      let currentX = minX;
+      selectedEls.forEach(item => {
+        item.el.x = currentX;
+        currentX += item.el.width + gap;
+      });
+    } else {
+      selectedEls.sort((a, b) => a.el.y - b.el.y);
+      const minY = selectedEls[0].el.y;
+      const maxY = selectedEls[selectedEls.length - 1].el.y + (selectedEls[selectedEls.length - 1].el.height || 40);
+      const totalHeights = selectedEls.reduce((sum, item) => sum + (item.el.height || 40), 0);
+      const gap = (maxY - minY - totalHeights) / (selectedEls.length - 1);
+
+      let currentY = minY;
+      selectedEls.forEach(item => {
+        item.el.y = currentY;
+        currentY += (item.el.height || 40) + gap;
+      });
+    }
+
+    return next;
+  });
+  this.commit();
+  this.resumeState.update(prev => ({ ...prev }));
+
+}
 
   async runCoachAnalysis(resumeData: unknown) {
-    return firstValueFrom(
-      this.http.post<{ atsScore: number; suggestions: string[] }>(`${this.API_BASE}/api/ai/coach`, { 
-        resumeData,
-        model: this.selectedModelId
-      })
-    );
-  }
+  const token = localStorage.getItem('jwt');
+  return firstValueFrom(
+    this.http.post<{ atsScore: number; suggestions: string[] }>(
+      `${this.API_BASE}/api/ai/coach`,
+      { resumeData, model: this.selectedModelId },
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
+  );
+}
+
 
   async polishSummary(summary: string) {
     return firstValueFrom(
@@ -844,7 +906,64 @@ export class ResumeService {
     );
   }
 
-  downloadPdf() {
-    window.print();
+  async downloadPdf() {
+  const canvas = document.getElementById('resume-canvas');
+  if (!canvas) {
+    alert('Canvas not found');
+    return;
   }
+
+  const html = `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="utf-8">
+    <title>Resume</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  </head>
+  <body>${canvas.outerHTML}</body>
+  </html>`;
+
+  const token = localStorage.getItem('jwt');
+  const resp = await firstValueFrom(
+    this.http.post<{ pdfUrl: string }>(
+      `${this.API_BASE}/api/resume/export-html`,
+      { html },
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
+  );
+
+  const link = document.createElement('a');
+  link.href = `${this.API_BASE}${resp.pdfUrl}`;
+  link.download = 'resume.pdf';
+  link.click();
+}
+
+
+
+// Actual PDF generator/downloader
+// private async triggerPdfDownload() {
+//   try {
+//     const resumeData = this.resumeState();
+//     const token = localStorage.getItem('jwt');
+//     const response = await firstValueFrom(
+//   this.http.post<{ pdfUrl: string }>(
+//       `${this.API_BASE}/api/resume/generate-pdf`,
+//       resumeData,
+//       { headers: { Authorization: `Bearer ${token}` } }
+//     )
+//   );
+
+//   // ✅ Use absolute HTTP URL, not file://
+//   const link = document.createElement('a');
+//   link.href = `${this.API_BASE}${response.pdfUrl}`;
+//   link.download = 'resume.pdf';
+//   link.click();
+
+//   } catch (error) {
+//     console.error('PDF download failed:', error);
+//   }
+// }
+
+
 }

@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, signal, ViewChild, ElementRef, HostListener, AfterViewInit, inject } from '@angular/core';
-import { ResumeService, ResumeElement, ResumeData } from '../../services/resume';
+import { ResumeService, ResumeElement, ResumeData, Experience, Education, Referee, Skill } from '../../services/resume';
 import { CdkDragEnd, DragDropModule } from '@angular/cdk/drag-drop';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -96,67 +96,96 @@ export class CanvasComponent implements AfterViewInit {
 
   // Drag & selection
   onDragEnd(event: CdkDragEnd, el: ResumeElement) {
-    const canvas = document.getElementById('resume-canvas');
-    const rect = canvas?.getBoundingClientRect();
-    const { x, y } = event.source.getFreeDragPosition();
-    const newX = el.x + x;
-    const newY = el.y + y;
+  const { x, y } = event.source.getFreeDragPosition();
 
-    if (!rect || !this.isInsideCanvas(newX, newY, el.width, el.height)) {
-      const orig = this.originalPositions[el.id];
-      if (orig) {
-        el.x = orig.x;
-        el.y = orig.y;
-      }
-    } else {
-      el.x = newX;
-      el.y = newY;
+  // Absolute positions
+  const newX = x;
+  const newY = y;
+
+  // Check if inside canvas
+  if (this.isInsideCanvas(newX, newY, el.width, el.height)) {
+    el.x = newX;
+    el.y = newY;
+  } else {
+    // Revert to original position if dragged outside
+    const orig = this.originalPositions[el.id];
+    if (orig) {
+      el.x = orig.x;
+      el.y = orig.y;
     }
+  }
+
+  const rect = (event.source.element.nativeElement as HTMLElement).getBoundingClientRect();
+  el.width = rect.width;
+  el.height = rect.height;
+
+  // Clear transform so bindings take over
+  event.source.reset();
+
+  // Commit update
+  this.updateResume();
+}
+
+
+  onExperienceDragEnd(event: CdkDragEnd) {
+    this.handleBlockDragEnd(event, 'experienceStyle');
+  }
+
+  onEducationDragEnd(event: CdkDragEnd) {
+    this.handleBlockDragEnd(event, 'educationStyle');
+  }
+
+  onSkillsDragEnd(event: CdkDragEnd) {
+    this.handleBlockDragEnd(event, 'skillsStyle');
+  }
+
+  onRefereeDragEnd(event: CdkDragEnd) {
+    this.handleBlockDragEnd(event, 'refereeStyle');
+  }
+
+  onQRDragEnd(event: CdkDragEnd) {
+    this.handleBlockDragEnd(event, 'qrStyle');
+  }
+
+  onSummaryDragEnd(event: CdkDragEnd) {
+    this.handleBlockDragEnd(event, 'summaryStyle');
+  }
+  
+
+  private handleBlockDragEnd(
+  event: CdkDragEnd,
+  styleKey: keyof ResumeData
+) {
+  const style = (this.resume as any)[styleKey];
+  if (style) {
+    const { x, y } = event.source.getFreeDragPosition();
+
+    const width = style.width || 100;   // fallback if not set
+    const height = style.height || 40;  // fallback if not set
+
+    if (this.isInsideCanvas(x, y, width, height)) {
+      style.x = x;
+      style.y = y;
+    } else {
+      const orig = this.originalPositions[styleKey as string];
+      if (orig) {
+        style.x = orig.x;
+        style.y = orig.y;
+      }
+    }
+
+    const rect = (event.source.element.nativeElement as HTMLElement).getBoundingClientRect();
+  style.width = rect.width;
+  style.height = rect.height;
+    
 
     event.source.reset();
     this.updateResume();
   }
+}
 
-  onExperienceDragEnd(event: CdkDragEnd) {
-    this.handleBlockDragEnd(event, 'experienceStyle', 400, 200);
-  }
 
-  onEducationDragEnd(event: CdkDragEnd) {
-    this.handleBlockDragEnd(event, 'educationStyle', 400, 200);
-  }
 
-  onSkillsDragEnd(event: CdkDragEnd) {
-    this.handleBlockDragEnd(event, 'skillsStyle', 400, 150);
-  }
-
-  onRefereeDragEnd(event: CdkDragEnd) {
-    this.handleBlockDragEnd(event, 'refereeStyle', 400, 150);
-  }
-
-  onQRDragEnd(event: CdkDragEnd) {
-    this.handleBlockDragEnd(event, 'qrStyle', 100, 100);
-  }
-
-  onSummaryDragEnd(event: CdkDragEnd) {
-    this.handleBlockDragEnd(event, 'summaryStyle', 800, 100);
-  }
-
-  private handleBlockDragEnd(event: CdkDragEnd, styleKey: keyof ResumeData, width: number, height: number) {
-    const style = (this.resume as any)[styleKey];
-    if (style) {
-      const { x, y } = event.source.getFreeDragPosition();
-      const newX = (style.x || 0) + x;
-      const newY = (style.y || 0) + y;
-
-      if (this.isInsideCanvas(newX, newY, width, height)) {
-        style.x = newX;
-        style.y = newY;
-      } else {
-        event.source.reset();
-      }
-      this.updateResume();
-    }
-  }
 
   toggleSelection(id: string, event: MouseEvent) {
     event.stopPropagation();
@@ -189,49 +218,116 @@ export class CanvasComponent implements AfterViewInit {
   }
 
   onMetadataDragEnd(event: CdkDragEnd) {
-    this.handleBlockDragEnd(event, 'metadataStyle', this.resume.metadataStyle?.width || 200, 40);
+    this.handleBlockDragEnd(event, 'metadataStyle');
   }
 
   onNameDragEnd(event: CdkDragEnd) {
-    this.handleBlockDragEnd(event, 'nameStyle', this.resume.nameStyle?.width || 400, 60);
+    this.handleBlockDragEnd(event, 'nameStyle');
   }
 
   onEmailDragEnd(event: CdkDragEnd) {
-    this.handleBlockDragEnd(event, 'emailStyle', this.resume.emailStyle?.width || 400, 30);
+    this.handleBlockDragEnd(event, 'emailStyle');
   }
 
   onPhoneDragEnd(event: CdkDragEnd) {
-    this.handleBlockDragEnd(event, 'phoneStyle', this.resume.phoneStyle?.width || 400, 30);
+    this.handleBlockDragEnd(event, 'phoneStyle');
   }
 
-  onExperienceItemDragEnd(event: CdkDragEnd, item: any) {
+  onExperienceItemDragEnd(event: CdkDragEnd, el: Experience) {
     const { x, y } = event.source.getFreeDragPosition();
-    item.x = (item.x || 0) + x;
-    item.y = (item.y || 0) + y;
+    const width = el.width || 200;
+    const height = el .height || 40;
+
+    if (this.isInsideCanvas(x, y, width, height)) {
+      el.x = x;
+      el.y = y;
+    } else {
+      const orig = this.originalPositions[el.id];
+      if (orig) {
+        el.x = orig.x;
+        el .y = orig.y;
+      }
+    }
+
+     const rect = (event.source.element.nativeElement as HTMLElement).getBoundingClientRect();
+     el.width = rect.width;
+     el.height = rect.height;
+
     event.source.reset();
     this.updateResume();
   }
 
-  onEducationItemDragEnd(event: CdkDragEnd, item: any) {
+
+
+  onEducationItemDragEnd(event: CdkDragEnd, el: Education) {
     const { x, y } = event.source.getFreeDragPosition();
-    item.x = (item.x || 0) + x;
-    item.y = (item.y || 0) + y;
+    const width = el.width || 200;
+    const height = el.height || 40;
+
+    if (this.isInsideCanvas(x, y, width, height)) {
+      el.x = x;
+      el.y = y;
+    } else {
+      const orig = this.originalPositions[el.id];
+      if (orig) {
+        el.x = orig.x;
+        el.y = orig.y;
+      }
+    }
+
+     const rect = (event.source.element.nativeElement as HTMLElement).getBoundingClientRect();
+     el.width = rect.width;
+     el.height = rect.height;
+
     event.source.reset();
     this.updateResume();
   }
 
-  onRefereeItemDragEnd(event: CdkDragEnd, item: any) {
+  onRefereeItemDragEnd(event: CdkDragEnd, el: Referee) {
     const { x, y } = event.source.getFreeDragPosition();
-    item.x = (item.x || 0) + x;
-    item.y = (item.y || 0) + y;
+    const width = el.width || 200;
+    const height = el.height || 40;
+
+    if (this.isInsideCanvas(x, y, width, height)) {
+      el.x = x;
+      el.y = y;
+    } else {
+      const orig = this.originalPositions[el.id];
+      if (orig) {
+        el.x = orig.x;
+        el.y = orig.y;
+      }
+    }
+
+    const rect = (event.source.element.nativeElement as HTMLElement).getBoundingClientRect();
+     el.width = rect.width;
+     el.height = rect.height;
+
     event.source.reset();
     this.updateResume();
   }
 
-  onSkillItemDragEnd(event: CdkDragEnd, item: any) {
+  onSkillItemDragEnd(event: CdkDragEnd, el: Skill) {
     const { x, y } = event.source.getFreeDragPosition();
-    item.x = (item.x || 0) + x;
-    item.y = (item.y || 0) + y;
+    const width = el.width || 200;
+    const height = el.height || 40;
+
+    if (this.isInsideCanvas(x, y, width, height)) {
+      el.x = x;
+      el.y = y;
+    } else {
+      const orig = this.originalPositions[el.id];
+      if (orig) {
+        el.x = orig.x;
+        el.y = orig.y;
+      }
+    }
+
+    const rect = (event.source.element.nativeElement as HTMLElement).getBoundingClientRect();
+     el.width = rect.width;
+     el.height = rect.height;
+
+
     event.source.reset();
     this.updateResume();
   }
