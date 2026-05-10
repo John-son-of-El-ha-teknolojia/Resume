@@ -26,7 +26,22 @@ import { UserDetailsDialogComponent } from '../userDetail/user-details-dialog.co
              <mat-icon class="text-blue-600 scale-[2.5]">fingerprint</mat-icon>
           </div>
           <h2 class="text-xl font-black text-slate-800 mb-1 uppercase tracking-tight">{{ resume().name || 'USER' }}</h2>
-          <p class="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-6">{{ resume().email || 'Email Not Verified' }}</p>
+          <p class="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-6">
+            {{ resume().email || 'Email Not Verified' }}
+          </p>
+
+          @if (resumeService.isEmailVerified) {
+            <span class="px-2 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest rounded-full border border-emerald-100">
+              Email Verified
+            </span>
+          } @else {
+            <span class="px-2 py-1 bg-red-50 text-red-600 text-[10px] font-black uppercase tracking-widest rounded-full border border-red-100">
+              Email Not Verified
+            </span>
+          }
+
+
+
            <button mat-stroked-button 
           class="w-full !border-slate-200 !text-slate-600 font-bold text-sm h-12 rounded-xl"
           (click)="viewDetails()">
@@ -128,7 +143,7 @@ import { UserDetailsDialogComponent } from '../userDetail/user-details-dialog.co
   `]
 })
 export class AccountComponent {
-  private resumeService = inject(ResumeService);
+  public resumeService = inject(ResumeService); // <-- public
   private dialog = inject(MatDialog);
   
   resume = this.resumeService.resumeState;
@@ -137,9 +152,12 @@ export class AccountComponent {
   hasFreeDownloadLeft = this.resumeService.hasFreeDownloadLeft;
    
   viewDetails(): void {
-    // implement logic, e.g. open dialog or navigate
-    console.log("View details clicked");
-  }
+  this.dialog.open(UserDetailsDialogComponent, {
+    width: '400px',
+    maxWidth: '95vw',
+    data: this.resume() // pass the whole resume object
+  });
+}
 
   upgrade() {
     this.dialog.open(PaymentDialogComponent, {

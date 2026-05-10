@@ -121,80 +121,98 @@ export class SidebarComponent {
   }
 
   getActiveElement(): any {
-    const selectedIds = this.resumeService.selectedIds();
-    if (selectedIds.size === 0) return null;
-    const id = Array.from(selectedIds)[0];
-    
-    // Check aesthetics elements
+  // Ensure resume exists
+  if (!this.resume) return null;
+
+  const selectedIds = this.resumeService.selectedIds();
+  if (selectedIds.size === 0) return null;
+
+  const id = Array.from(selectedIds)[0];
+
+  // ✅ Guard aesthetics
+  if (this.resume.aesthetics?.elements) {
     const aestheticEl = this.resume.aesthetics.elements.find((el: ResumeElement) => el.id === id);
     if (aestheticEl) return aestheticEl;
-
-    // Check Experiences/Education/Referees/Skills
-    const listItems: (Experience | Education | Referee | Skill)[] = [
-      ...this.resume.experience,
-      ...this.resume.education,
-      ...this.resume.referees,
-      ...this.resume.skills
-    ];
-    const listItem = listItems.find(item => item.id === id);
-    if (listItem) return listItem;
-
-    // Check specific style blocks
-    const styleBlocks = ['nameStyle', 'emailStyle', 'phoneStyle', 'summaryStyle', 'qrStyle', 'metadataStyle', 'experienceStyle', 'educationStyle', 'skillsStyle', 'refereeStyle'];
-    if (styleBlocks.includes(id)) {
-      const block = (this.resume as any)[id];
-      if (block) {
-        // Ensure style exists
-        if (!block.style) {
-          block.style = {
-            fontSize: 12,
-            color: '#000000',
-            textAlign: 'left'
-          };
-        }
-        // For template display purposes, we might need a type
-        return {
-          ...block,
-          id,
-          type: id === 'qrStyle' ? 'image' : 'text'
-        };
-      }
-    }
-
-    return null;
   }
+
+  // ✅ Guard lists
+  const listItems: (Experience | Education | Referee | Skill)[] = [
+    ...(this.resume.experience || []),
+    ...(this.resume.education || []),
+    ...(this.resume.referees || []),
+    ...(this.resume.skills || [])
+  ];
+ 
+
+  const listItem = listItems.find(item => item.id === id);
+  if (listItem) {
+    if (!(listItem as any).style) {
+      (listItem as any).style = { fontSize: 12, color: '#000000', textAlign: 'left' };
+    }
+    return listItem;
+  }
+
+
+
+
+  // ✅ Guard style blocks
+  const styleBlocks = [
+    'nameStyle','emailStyle','phoneStyle','summaryStyle','qrStyle',
+    'metadataStyle','experienceStyle','educationStyle','skillsStyle','refereeStyle'
+  ];
+
+  if (styleBlocks.includes(id)) {
+    const block = (this.resume as any)[id];
+    if (block) {
+      if (!block.style) {
+        block.style = { fontSize: 12, color: '#000000', textAlign: 'left' };
+      }
+      return { ...block, id, type: id === 'qrStyle' ? 'image' : 'text' };
+    }
+  }
+
+  return null;
+}
+
 
   addExperience() {
-    const newExp = {
-      id: Math.random().toString(36).substring(7),
-      company: "",
-      title: "",
-      startDate: "",
-      endDate: "",
-      current: false,
-      content: "",
-    };
-    this.resume.experience = [...(this.resume.experience || []), newExp];
-    this.updateResume();
-  }
+  const newExp: Experience = {
+    id: Math.random().toString(36).substring(7),
+    company: "",
+    title: "",
+    startDate: "",
+    endDate: "",
+    current: false,
+    content: "",
+    x: 50, y: 400, width: 700, height: 100,
+    style: { fontSize: 12, color: '#000000', textAlign: 'left' } // ✅ added
+  };
+  this.resume.experience = [...(this.resume.experience || []), newExp];
+  this.updateResume();
+}
+
 
   removeExperience(id: string) {
     this.resume.experience = this.resume.experience.filter((e: Experience) => e.id !== id);
     this.updateResume();
   }
 
-  addEducation() {
-    const newEdu = {
-      id: Math.random().toString(36).substring(7),
-      school: "",
-      degree: "",
-      startDate: "",
-      endDate: "",
-      description: ""
-    };
-    this.resume.education = [...(this.resume.education || []), newEdu];
-    this.updateResume();
-  }
+ addEducation() {
+  const newEdu: Education = {
+    id: Math.random().toString(36).substring(7),
+    school: "",
+    degree: "",
+    startDate: "",
+    endDate: "",
+    description: "",
+    x: 50, y: 650, width: 700, height: 80,
+    style: { fontSize: 12, color: '#000000', textAlign: 'left' }
+  };
+  this.resume.education = [...(this.resume.education || []), newEdu];
+  this.updateResume();
+}
+
+
 
   removeEducation(id: string) {
     this.resume.education = this.resume.education.filter((e: Education) => e.id !== id);
@@ -214,28 +232,36 @@ export class SidebarComponent {
     this.resume.hobbies = this.resume.hobbies.filter((h: Hobby) => h.id !== id);
     this.updateResume();
   }
+addReferee() {
+  const newRef: Referee = {
+    id: Math.random().toString(36).substring(7),
+    name: "", email: "", phone: "", address: "",
+    x: 50, y: 1000, width: 700, height: 60,
+    style: { fontSize: 12, color: '#000000', textAlign: 'left' }
+  };
+  this.resume.referees = [...(this.resume.referees || []), newRef];
+  this.updateResume();
+}
 
-  addReferee() {
-    const newRef = {
-      id: Math.random().toString(36).substring(7),
-      name: "", email: "", phone: "", address: "",
-    };
-    this.resume.referees = [...(this.resume.referees || []), newRef];
-    this.updateResume();
-  }
 
   removeReferee(id: string) {
     this.resume.referees = this.resume.referees.filter((r: Referee) => r.id !== id);
     this.updateResume();
   }
 
-  addSkill() {
-    this.resume.skills = [
-      ...(this.resume.skills || []),
-      { id: Math.random().toString(36).substring(7), name: "New Skill", level: 50 },
-    ];
-    this.updateResume();
-  }
+addSkill() {
+  const newSkill: Skill = {
+    id: Math.random().toString(36).substring(7),
+    name: "New Skill",
+    level: 50,
+    x: 50, y: 850, width: 200, height: 40,
+    style: { fontSize: 12, color: '#000000', textAlign: 'left' }
+  };
+  this.resume.skills = [...(this.resume.skills || []), newSkill];
+  this.updateResume();
+}
+
+
 
   removeSkill(id: string) {
     this.resume.skills = this.resume.skills.filter((s: Skill) => s.id !== id);
@@ -359,13 +385,14 @@ export class SidebarComponent {
   private dialog = inject(MatDialog);
 
   async polishSummary() {
-    if (!this.resume.summary) return;
+  if (!this.resume.summary) return;
 
-    // ✅ Check eligibility first
-    const eligibility = await this.resumeService.checkEligibility();
+  this.isAnalyzing.set(true);
+  try {
+    const res = await this.resumeService.polishSummary(this.resume.summary);
 
-    if ('isPremium' in eligibility && !eligibility.isPremium) {
-      // Not premium → open subscription dialog
+    if (res.requiresSubscription) {
+      // ✅ free tier → open subscription dialog
       this.dialog.open(PaymentDialogComponent, {
         width: '480px',
         disableClose: true
@@ -373,18 +400,16 @@ export class SidebarComponent {
       return;
     }
 
-    // ✅ Continue if premium
-    this.isAnalyzing.set(true);
-    try {
-      const res = await this.resumeService.polishSummary(this.resume.summary);
-      this.resume.summary = res.result;
-      this.updateResume();
-    } catch (err) {
-      console.error("Polish failed:", err);
-    } finally {
-      this.isAnalyzing.set(false);
-    }
+    // ✅ premium → update summary
+    this.resume.summary = res.result!;
+    this.updateResume();
+  } catch (err) {
+    console.error("Polish failed:", err);
+  } finally {
+    this.isAnalyzing.set(false);
   }
+}
+
 
   async suggestExperienceDescription(index: number) {
     const exp = this.resume.experience[index];

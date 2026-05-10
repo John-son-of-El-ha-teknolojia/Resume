@@ -12,6 +12,11 @@ export interface Referee {
   y?: number;
   width?: number;
   height?: number;
+  style?: {
+    fontSize?: number;
+    color?: string;
+    textAlign?: string;
+  };
 }
 
 export interface Experience {
@@ -26,6 +31,11 @@ export interface Experience {
   y?: number;
   width?: number;
   height?: number;
+  style?: {
+    fontSize?: number;
+    color?: string;
+    textAlign?: string;
+  };
 }
 
 export interface ResumeSection {
@@ -87,6 +97,11 @@ export interface Education {
   y?: number;
   width?: number;
   height?: number;
+  style?: {
+    fontSize?: number;
+    color?: string;
+    textAlign?: string;
+  };
 }
 
 export interface Hobby {
@@ -97,12 +112,17 @@ export interface Hobby {
 export interface Skill {
   id: string;
   name: string;
-  level: number; // 0-100
+  level: number;
   displayMode?: 'text' | 'vertical_bar' | 'horizontal_bar';
   x?: number;
   y?: number;
   width?: number;
   height?: number;
+  style?: {
+    fontSize?: number;
+    color?: string;
+    textAlign?: string;
+  };
 }
 
 export interface BlockStyle {
@@ -154,6 +174,12 @@ export interface ResumeData {
   summaryStyle?: BlockStyle;
   skillUrl?: string;
   pageCount?: number;
+   role?: string;
+  tier?: string;
+  freeDownloadsUsed?: number;
+  isAdmin?: boolean;
+  otpCode?: string;
+  otpExpiry?: number;
 }
 
 export interface CoverLetterData {
@@ -233,116 +259,188 @@ export class ResumeService {
   canRedo() {
     return this.redoStack.length > 0;
   }
+
+
   resumeState = signal<ResumeData>({
-    name: '',
-    email: '',
-    phone: '',
-    phoneCountryCode: '+1',
-    location: '',
-    summary: '',
-    sections: [],
-    experience: [],
-    education: [],
-    referees: [],
-    skills: [],
-    hobbies: [],
-    website: '',
-    metadataStyle: {
-      x: 0,
-      y: 0,
-      width: 800,
-      isLocked: true,
-      isVisible: true
-    },
-    experienceStyle: {
-      x: 0,
-      y: 350,
-      width: 800,
-      isLocked: true,
-      isVisible: true
-    },
-    summaryStyle: {
-      x: 0,
-      y: 200,
-      width: 800,
-      isLocked: true,
-      isVisible: true
-    },
-    educationStyle: {
-      x: 0,
-      y: 600,
-      width: 800,
-      isLocked: true,
-      isVisible: true
-    },
-    skillsStyle: {
-      x: 0,
-      y: 800,
-      width: 800,
-      isLocked: true,
-      isVisible: true
-    },
-    refereeStyle: {
-      x: 0,
-      y: 950,
-      width: 800,
-      isLocked: true,
-      isVisible: true
-    },
-    qrStyle: {
-      x: 650,
-      y: 50,
-      width: 100,
-      height: 100,
-      isLocked: true,
-      isVisible: true
-    },
-    nameStyle: {
-      x: 300,
-      y: 50,
-      width: 200,
-      isVisible: true,
-      style: {
-        fontSize: 32,
-        fontWeight: '900',
-        color: '#000000',
-        textAlign: 'center'
-      }
-    },
-    emailStyle: {
-      x: 300,
-      y: 100,
-      width: 200,
-      isVisible: true,
-      style: {
-        fontSize: 10,
-        fontWeight: '900',
-        color: '#a1a1aa',
-        textAlign: 'center'
-      }
-    },
-    phoneStyle: {
-      x: 300,
-      y: 120,
-      width: 200,
-      isVisible: true,
-      style: {
-        fontSize: 10,
-        fontWeight: '900',
-        color: '#a1a1aa',
-        textAlign: 'center'
-      }
-    },
-    skillUrl: '',
-    pageCount: 1,
-    aesthetics: {
-      fontFamily: 'Inter',
-      primaryColor: '#09090b',
-      backgroundColor: '#ffffff',
-      fontSize: 14,
-      elements: []
+  name: '',
+  email: '',
+  phone: '',
+  phoneCountryCode: '+1',
+  location: '',
+  summary: '',
+  sections: [],
+  experience: [{
+  id: 'exp1',
+  company: 'Company Name',
+  title: 'Job Title',
+  startDate: '',
+  endDate: '',
+  current: false,
+  content: 'Achievements...',
+  x: 50, y: 400, width: 700, height: 100,
+  style: { fontSize: 12, color: '#000000', textAlign: 'left' }
+}],
+education: [{
+  id: 'edu1',
+  school: 'Institution',
+  degree: 'Degree Title',
+  startDate: '',
+  endDate: '',
+  description: '',
+  x: 50, y: 650, width: 700, height: 80,
+  style: { fontSize: 12, color: '#000000', textAlign: 'left' }
+}],
+skills: [{
+  id: 'skill1',
+  name: 'Skill Name',
+  level: 50,
+  x: 50, y: 850, width: 200, height: 40,
+  style: { fontSize: 12, color: '#000000', textAlign: 'left' }
+}],
+referees: [{
+  id: 'ref1',
+  name: 'Referee Name',
+  email: 'Email',
+  phone: 'Phone',
+  address: 'Address',
+  x: 50, y: 1000, width: 700, height: 60,
+  style: { fontSize: 12, color: '#000000', textAlign: 'left' }
+}],
+
+  hobbies: [],
+  website: '',
+  skillUrl: '',
+  qrCode: '',
+  pageCount: 1,
+  role: '',
+  tier: 'free',
+  freeDownloadsUsed: 0,
+  isAdmin: false,
+  otpCode: '',
+
+  // Metadata block
+  metadataStyle: {
+    x: 0,
+    y: 0,
+    width: 800,
+    isLocked: true,
+    isVisible: true,
+    style: { fontSize: 12, color: '#000000', textAlign: 'left' }
+  },
+
+  // Summary block
+  summaryStyle: {
+    x: 0,
+    y: 200,
+    width: 800,
+    isLocked: true,
+    isVisible: true,
+    style: { fontSize: 12, color: '#000000', textAlign: 'left' }
+  },
+
+  // Experience block
+  experienceStyle: {
+    x: 0,
+    y: 350,
+    width: 800,
+    isLocked: true,
+    isVisible: true,
+    style: { fontSize: 12, color: '#000000', textAlign: 'left' }
+  },
+
+  // Education block
+  educationStyle: {
+    x: 0,
+    y: 600,
+    width: 800,
+    isLocked: true,
+    isVisible: true,
+    style: { fontSize: 12, color: '#000000', textAlign: 'left' }
+  },
+
+  // Skills block
+  skillsStyle: {
+    x: 0,
+    y: 800,
+    width: 800,
+    isLocked: true,
+    isVisible: true,
+    style: { fontSize: 12, color: '#000000', textAlign: 'left' }
+  },
+
+  // Referees block
+  refereeStyle: {
+    x: 0,
+    y: 950,
+    width: 800,
+    isLocked: true,
+    isVisible: true,
+    style: { fontSize: 12, color: '#000000', textAlign: 'left' }
+  },
+
+  // QR block
+  qrStyle: {
+    x: 650,
+    y: 50,
+    width: 100,
+    height: 100,
+    isLocked: true,
+    isVisible: true,
+    style: { opacity: 1 }
+  },
+
+  // Name block
+  nameStyle: {
+    x: 300,
+    y: 50,
+    width: 200,
+    isVisible: true,
+    style: {
+      fontSize: 32,
+      fontWeight: '900',
+      color: '#000000',
+      textAlign: 'center'
     }
-  });
+  },
+
+  // Email block
+  emailStyle: {
+    x: 300,
+    y: 100,
+    width: 200,
+    isVisible: true,
+    style: {
+      fontSize: 10,
+      fontWeight: '900',
+      color: '#a1a1aa',
+      textAlign: 'center'
+    }
+  },
+
+  // Phone block
+  phoneStyle: {
+    x: 300,
+    y: 120,
+    width: 200,
+    isVisible: true,
+    style: {
+      fontSize: 10,
+      fontWeight: '900',
+      color: '#a1a1aa',
+      textAlign: 'center'
+    }
+  },
+
+  // Aesthetics
+  aesthetics: {
+    fontFamily: 'Inter',
+    primaryColor: '#09090b',
+    backgroundColor: '#ffffff',
+    fontSize: 14,
+    elements: []
+  }
+});
+
 
   commit() {
     const currentState = JSON.stringify(this.resumeState());
@@ -395,7 +493,43 @@ export class ResumeService {
   
   currentTemplate = signal<'minimal' | 'modern' | 'classic'>('minimal');
 
-    
+    async sendOtp(data: { name: string; email: string; location: string; role: string }): Promise<boolean> {
+    try {
+      await firstValueFrom(
+        this.http.post(`${this.API_BASE}/api/auth/send-otp`, data)
+      );
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+
+  async verifyOtp(email: string, code: string): Promise<{ success: boolean }> {
+    const response = await firstValueFrom(
+      this.http.post<{ success: boolean }>(
+        `${this.API_BASE}/api/auth/verify-otp`,
+        { email, code }
+      )
+    );
+
+    if (response.success) {
+  await this.loadUser(email); // ✅ refresh full record
+}
+
+
+    return response;
+  }
+
+
+ get isEmailVerified(): boolean {
+  const user = this.resumeState();   // ✅ call the signal
+  return !!user.otpCode;             // ✅ true if non-empty, false if empty
+}
+
+
+
+
 
 
     async login(email: string, password: string): Promise<boolean> {
@@ -408,16 +542,13 @@ export class ResumeService {
         );
 
         if (response.token) {
-          // Save JWT for later requests
           localStorage.setItem('jwt', response.token);
-
           this.isLoggedIn.set(true);
-          this.isAdmin.set(response.isAdmin);
           this.userEmail.set(response.email);
-
-          this.resumeState.update(prev => ({ ...prev, email: response.email }));
+          await this.loadUser(response.email); // ✅ refresh full record
           return true;
         }
+
 
         return false;
       } catch (error) {
@@ -445,6 +576,24 @@ export class ResumeService {
       return false;
     }
   }
+
+  async loadUser(email: string) {
+  try {
+    const token = localStorage.getItem('jwt');
+    const user = await firstValueFrom(
+      this.http.get<ResumeData>(
+        `${this.API_BASE}/api/user?email=${email}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+    );
+    this.resumeState.set(user); // ✅ overwrite with backend record
+    return user;
+  } catch (error) {
+    console.error('Failed to load user:', error);
+    throw error;
+  }
+}
+
 
   logout() {
     this.isLoggedIn.set(false);
@@ -614,29 +763,32 @@ export class ResumeService {
     }
   }
 
-  async checkEligibility() {
-    const email = this.resumeState().email;
-    if (!email) return { canDownload: true }; 
-    
-    try {
-      const token = localStorage.getItem('jwt');
-      const res = await firstValueFrom(
-        this.http.post<{ canDownload: boolean; isPremium: boolean; hasFreeDownloadLeft: boolean }>(
-          `${this.API_BASE}/api/resume/check-eligibility`,
-          { email },
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-      );
-
-      this.isPremium.set(res.isPremium);
-      this.hasFreeDownloadLeft.set(res.hasFreeDownloadLeft);
-      this.isPaid.set(res.isPremium);
-      return res;
-    } catch (error) {
-      console.error('Eligibility check failed:', error);
-      return { canDownload: false };
-    }
+  async checkEligibility(): Promise<{ canDownload: boolean; isPremium: boolean; hasFreeDownloadLeft: boolean }> {
+  const email = this.resumeState().email;
+  if (!email) {
+    return { canDownload: true, isPremium: false, hasFreeDownloadLeft: false };
   }
+
+  try {
+    const token = localStorage.getItem('jwt');
+    const res = await firstValueFrom(
+      this.http.post<{ canDownload: boolean; isPremium: boolean; hasFreeDownloadLeft: boolean }>(
+        `${this.API_BASE}/api/resume/check-eligibility`,
+        { email },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+    );
+
+    this.isPremium.set(res.isPremium);
+    this.hasFreeDownloadLeft.set(res.hasFreeDownloadLeft);
+    this.isPaid.set(res.isPremium);
+    return res;
+  } catch (error) {
+    console.error('Eligibility check failed:', error);
+    return { canDownload: false, isPremium: false, hasFreeDownloadLeft: false };
+  }
+}
+
 
   async enhanceText(text: string): Promise<string> {
     if (!text.trim()) return text;
@@ -864,14 +1016,29 @@ distributeElements(direction: 'horizontal' | 'vertical') {
 }
 
 
-  async polishSummary(summary: string) {
-    return firstValueFrom(
-      this.http.post<{ result: string }>(`${this.API_BASE}/api/ai/polish-summary`, { 
-        summary,
-        model: this.selectedModelId
-      })
-    );
+  // existing backend call
+private async polishSummaryRequest(summary: string) {
+  return firstValueFrom(
+    this.http.post<{ result: string }>(`${this.API_BASE}/api/ai/polish-summary`, { 
+      summary,
+      model: this.selectedModelId
+    })
+  );
+}
+
+// new public method with eligibility check
+async polishSummary(summary: string): Promise<{ result?: string; requiresSubscription?: boolean }> {
+  const eligibility = await this.checkEligibility();
+
+  if (!eligibility.isPremium) {
+    // ✅ free tier → signal to open subscription dialog
+    return { requiresSubscription: true };
   }
+
+  // ✅ premium → run polish
+  return this.polishSummaryRequest(summary);
+}
+
 
   async suggestExperienceDescription(title: string, company: string, currentContent: string) {
     return firstValueFrom(
@@ -906,6 +1073,27 @@ distributeElements(direction: 'horizontal' | 'vertical') {
     );
   }
 
+  async loadTemplate(templateId: string): Promise<ResumeData> {
+  try {
+    const token = localStorage.getItem('jwt');
+    const response = await firstValueFrom(
+      this.http.get<ResumeData>(
+        `${this.API_BASE}/api/templates/${templateId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+    );
+
+    // Replace current resume state with the selected template
+    this.resumeState.set(response);
+    this.commit();
+    return response;
+  } catch (error) {
+    console.error('Failed to load template:', error);
+    throw error;
+  }
+}
+
+
   async downloadPdf() {
   const canvas = document.getElementById('resume-canvas');
   if (!canvas) {
@@ -936,7 +1124,10 @@ distributeElements(direction: 'horizontal' | 'vertical') {
   const link = document.createElement('a');
   link.href = `${this.API_BASE}${resp.pdfUrl}`;
   link.download = 'resume.pdf';
+  link.target = '_blank';   // ✅ open in new tab
+  link.rel = 'noopener';    // ✅ security best practice
   link.click();
+
 }
 
 

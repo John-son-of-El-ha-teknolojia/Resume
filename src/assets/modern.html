@@ -47,22 +47,22 @@
 
   <!-- Metadata -->
   <section id="metadata">
-    <h1>{{ resume.name || 'John Smith' }}</h1>
-    <p>{{ resume.email || 'john.smith@email.com' }} | {{ resume.phoneCountryCode || '+1' }} {{ resume.phone || '555-123-4567' }} | {{ resume.location || 'New York, USA' }}</p>
-    <p>{{ resume.summary || 'Experienced software engineer specializing in modern web applications and AI-driven solutions.' }}</p>
+    <h1>{{ mockTemplate.name }}</h1>
+    <p>{{ mockTemplate.email }} | {{ mockTemplate.phoneCountryCode }} {{ mockTemplate.phone }} | {{ mockTemplate.location }}</p>
+    <p>{{ mockTemplate.summary }}</p>
   </section>
 
   <!-- Experience -->
   <section id="experience">
     <h2>Professional Experience</h2>
-    {% for exp in resume.experience %}
+    {% for exp in mockTemplate.experience %}
     <div class="exp-item">
       <div class="exp-header">
-        <span class="exp-title">{{ exp.title || 'Senior Software Engineer' }}</span>
-        <span class="exp-dates">{{ exp.startDate || 'Jan 2020' }} - {% if exp.current %}Present{% else %}{{ exp.endDate || 'Dec 2023' }}{% endif %}</span>
+        <span class="exp-title">{{ exp.title  }}</span>
+        <span class="exp-dates">{{ exp.startDate }} - {% if exp.current %}Present{% else %}{{ exp.endDate || 'Dec 2023' }}{% endif %}</span>
       </div>
-      <div class="exp-company">{{ exp.company || 'TechCorp Inc.' }}</div>
-      <div class="exp-desc">{{ exp.content || 'Led a team of developers building scalable cloud applications, improving performance by 30%.' }}</div>
+      <div class="exp-company">{{ exp.company}}</div>
+      <div class="exp-desc">{{ exp.content }}</div>
     </div>
     {% endfor %}
   </section>
@@ -71,12 +71,12 @@
   <section id="referees">
     <h2>Referees</h2>
     <div class="ref-grid">
-      {% for ref in resume.referees %}
+      {% for ref in mockTemplate.referees %}
       <div class="ref-card">
-        <div class="ref-name">{{ ref.name || 'Jane Doe' }}</div>
-        <div class="ref-contact">Email: {{ ref.email || 'jane.doe@company.com' }}</div>
-        <div class="ref-contact">Phone: {{ ref.phone || '+1 555-987-6543' }}</div>
-        <div class="ref-contact">{{ ref.address || 'Company HQ, San Francisco, CA' }}</div>
+        <div class="ref-name">{{ ref.name }}</div>
+        <div class="ref-contact">Email: {{ ref.email }}</div>
+        <div class="ref-contact">Phone: {{ ref.phone }}</div>
+        <div class="ref-contact">{{ ref.address  }}</div>
       </div>
       {% endfor %}
     </div>

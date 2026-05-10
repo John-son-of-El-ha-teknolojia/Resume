@@ -41,7 +41,43 @@ import { MatTooltipModule } from '@angular/material/tooltip';
   `]
 })
 export class CanvasComponent implements AfterViewInit {
-  @Input() resume!: ResumeData;
+ @Input() resume: ResumeData = {
+  name: '',
+  email: '',
+  phone: '',
+  phoneCountryCode: '+1',
+  location: '',
+  summary: '',
+  sections: [],
+  experience: [],
+  education: [],
+  referees: [],
+  skills: [],
+  hobbies: [],
+  aesthetics: {
+    fontFamily: 'Inter',
+    primaryColor: '#000',
+    backgroundColor: '#fff',
+    fontSize: 14,
+    elements: []
+  },
+  metadataStyle: { x:0, y:0, width:800 },
+  experienceStyle: { x:0, y:350, width:800, style: {} },
+  educationStyle: { x:0, y:600, width:800, style: {} },
+  skillsStyle: { x:0, y:800, width:800, style: {} },
+  refereeStyle: { x:0, y:950, width:800, style: {} },
+  qrStyle: { x:650, y:50, width:100, height:100 },
+  nameStyle: { x:300, y:50, width:200, style: {} },
+  emailStyle: { x:300, y:100, width:200, style: {} },
+  phoneStyle: { x:300, y:120, width:200, style: {} },
+  summaryStyle: { x:0, y:200, width:800, style: {} },
+  tier: 'free',
+  freeDownloadsUsed: 0,
+  isAdmin: false,
+  otpCode: ''
+};
+
+
   @Output() resumeChange = new EventEmitter<ResumeData>();
 
   @ViewChild('canvasContainer') canvasContainer!: ElementRef;
@@ -334,45 +370,44 @@ export class CanvasComponent implements AfterViewInit {
     this.updateResume();
   }
 
-  onExperienceHeaderBlur(event: FocusEvent) {
-  const target = event.target as HTMLElement;
-  this.resume.experienceStyle.style = {
-    ...(this.resume.experienceStyle.style || {}),
-    color: target.style.color,
-    fontSize: parseInt(target.style.fontSize, 10)
-  };
+  private ensureBlockStyle(block: keyof ResumeData) {
+  const target = (this.resume as any)[block];
+  if (target && !target.style) {
+    target.style = { fontSize: 12, color: '#000000', textAlign: 'left' };
+  }
+  return target;
+}
+
+
+
+  onExperienceHeaderBlur(event: any) {
+  const block = this.ensureBlockStyle('experienceStyle');
+  if (!block) return;
+  block.style.color = (event.target as any).style?.color || '#000000';
   this.updateResume();
 }
 
-onEducationHeaderBlur(event: FocusEvent) {
-  const target = event.target as HTMLElement;
-  this.resume.educationStyle.style = {
-    ...(this.resume.educationStyle.style || {}),
-    color: target.style.color,
-    fontSize: parseInt(target.style.fontSize, 10)
-  };
+onEducationHeaderBlur(event: any) {
+  const block = this.ensureBlockStyle('educationStyle');
+  if (!block) return;
+  block.style.color = (event.target as any).style?.color || '#000000';
   this.updateResume();
 }
 
-onSkillsHeaderBlur(event: FocusEvent) {
-  const target = event.target as HTMLElement;
-  this.resume.skillsStyle.style = {
-    ...(this.resume.skillsStyle.style || {}),
-    color: target.style.color,
-    fontSize: parseInt(target.style.fontSize, 10)
-  };
+onSkillsHeaderBlur(event: any) {
+  const block = this.ensureBlockStyle('skillsStyle');
+  if (!block) return;
+  block.style.color = (event.target as any).style?.color || '#000000';
   this.updateResume();
 }
 
-onRefereeHeaderBlur(event: FocusEvent) {
-  const target = event.target as HTMLElement;
-  this.resume.refereeStyle.style = {
-    ...(this.resume.refereeStyle.style || {}),
-    color: target.style.color,
-    fontSize: parseInt(target.style.fontSize, 10)
-  };
+onRefereeHeaderBlur(event: any) {
+  const block = this.ensureBlockStyle('refereeStyle');
+  if (!block) return;
+  block.style.color = (event.target as any).style?.color || '#000000';
   this.updateResume();
 }
+
 
 
 

@@ -21,8 +21,9 @@
         [class]="'template-' + template()">
         
         <!-- Content -->
-      <div class="absolute inset-0 pointer-events-none overflow-hidden" [style.font-family]="resume.aesthetics.fontFamily">
-        @for (el of resume.aesthetics.elements; track el.id) {
+      <div class="absolute inset-0 pointer-events-none overflow-hidden"
+     [style.font-family]="resume?.aesthetics?.fontFamily">
+        @for (el of resume?.aesthetics?.elements; track el.id) {
           @if (el.isVisible !== false) {
             <div class="absolute pointer-events-auto cursor-move group select-none transition-shadow"
                  cdkDrag 
@@ -74,7 +75,7 @@
       </div>
 
       <!-- Main Template Rendering - Refactored to Draggable & Editable Blocks -->
-      <div class="h-full relative pointer-events-none" [style.font-family]="resume.aesthetics.fontFamily">
+      <div class="h-full relative pointer-events-none" [style.font-family]="resume?.aesthetics?.fontFamily">
         
         <!-- Identity/Metadata Blocks -->
         @if (resume.nameStyle?.isVisible !== false) {
@@ -337,7 +338,7 @@
         }
 
         <!-- Dynamic Elements Layer -->
-        @for (el of resume.aesthetics.elements; track el.id) {
+        @for (el of resume?.aesthetics?.elements; track el.id) {
           @if (el.isVisible !== false) {
              <div class="absolute pointer-events-auto cursor-move select-none group/layer"
                   cdkDrag

@@ -59,6 +59,23 @@ import { ResumeService } from '../../services/resume';
                   </div>
                 </div>
 
+                <div class="group">
+                  <label for="password" class="block text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-2 pl-1">
+                    Password
+                  </label>
+                  <input id="password" type="password" formControlName="password" placeholder="Enter password"
+                        class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 text-zinc-800 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-600/10 focus:border-indigo-600 transition-all placeholder:text-zinc-300">
+                </div>
+
+                <div class="group">
+                  <label for="confirmPassword" class="block text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-2 pl-1">
+                    Confirm Password
+                  </label>
+                  <input id="confirmPassword" type="password" formControlName="confirmPassword" placeholder="Confirm password"
+                        class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 text-zinc-800 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-600/10 focus:border-indigo-600 transition-all placeholder:text-zinc-300">
+                </div>
+
+
                 <button mat-flat-button [disabled]="signupForm.invalid" 
                         class="!bg-indigo-600 !text-white w-full h-14 rounded-xl text-sm font-black uppercase tracking-widest shadow-xl shadow-indigo-100 mt-4">
                   Continue
@@ -144,20 +161,38 @@ export class SignupComponent {
     name: new FormControl('', [Validators.required]),
     email: new FormControl('', [Validators.required, Validators.email]),
     location: new FormControl('', [Validators.required]),
-    role: new FormControl('', [Validators.required])
+    role: new FormControl('', [Validators.required]),
+    password: new FormControl('', [Validators.required, Validators.minLength(6)]),
+    confirmPassword: new FormControl('', [Validators.required])
   });
 
-async goToVerification() {
-  if (this.signupForm.valid) {
-    const email = this.signupForm.get('email')?.value ?? '';
-    if (!email) {
-      this.error.set('Email is required');
-      return;
+
+  async goToVerification() {
+    if (this.signupForm.valid) {
+      const password = this.signupForm.get('password')?.value;
+      const confirmPassword = this.signupForm.get('confirmPassword')?.value;
+
+      if (password !== confirmPassword) {
+        this.error.set('Passwords do not match');
+        return;
+      }
+
+      const data = this.signupForm.value as {
+        name: string;
+        email: string;
+        location: string;
+        role: string;
+        password: string;
+      };
+
+      const success = await this.resumeService.sendOtp(data);
+      if (success) {
+        this.step.set('verify');
+      } else {
+        this.error.set('Failed to send OTP');
+      }
     }
-    await this.resumeService.sendOtp(email); // now always a string
-    this.step.set('verify');
   }
-}
 
 
   onDigitInput(event: Event, index: number) {
@@ -193,19 +228,18 @@ async goToVerification() {
 
   const response = await this.resumeService.verifyOtp(email, code);
   if (response.success) {
-    const data = this.signupForm.value as Record<string, string | null>;
-    const success = await this.resumeService.signup(data);
-    if (success) {
-      this.router.navigate(['/dashboard']);
-    } else {
-      this.error.set('Signup failed. Please try again.');
-    }
+    this.router.navigate(['/dashboard']);
   } else {
     this.error.set('Invalid or expired OTP.');
   }
+
 
   this.loading.set(false);
 }
 
 
+
 }
+
+
+

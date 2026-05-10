@@ -1,8 +1,10 @@
-import { Component, inject } from '@angular/core';
+import { Component, Inject, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { ResumeService } from '../../services/resume';
+import { MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { ResumeData } from '../../services/resume';
 
 @Component({
   selector: 'app-user-details-dialog',
@@ -13,21 +15,16 @@ import { ResumeService } from '../../services/resume';
       User Details
     </h2>
     <mat-dialog-content class="space-y-4">
-      <p><strong>Name:</strong> {{ resume().name }}</p>
-      <p><strong>Email:</strong> {{ resume().email }}</p>
-      <p><strong>Subscription:</strong> 
-        @if (isPremium()) {
-          Premium
-        } @else {
-          Free Tier
-        }
+      <p><strong>Name:</strong> {{ data.name }}</p>
+      <p><strong>Email:</strong> {{ data.email }}</p>
+      <p><strong>Email Status:</strong>
+        <span [ngClass]="data.otpCode ? 'text-emerald-600 font-bold' : 'text-red-600 font-bold'">
+          {{ data.otpCode ? 'Verified' : 'Not Verified' }}
+        </span>
       </p>
-      <p><strong>Downloads Remaining:</strong> 
-        @if (hasFreeDownloadLeft()) {
-          1 Free Export
-        } @else {
-          0 Free Exports
-        }
+      <p><strong>Subscription:</strong> {{ data.tier || 'Free Tier' }}</p>
+      <p><strong>Downloads Remaining:</strong>
+        {{ data.freeDownloadsUsed === 0 ? '1 Free Export' : '0 Free Exports' }}
       </p>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
@@ -36,8 +33,5 @@ import { ResumeService } from '../../services/resume';
   `
 })
 export class UserDetailsDialogComponent {
-  private resumeService = inject(ResumeService);
-  resume = this.resumeService.resumeState;
-  isPremium = this.resumeService.isPremium;
-  hasFreeDownloadLeft = this.resumeService.hasFreeDownloadLeft;
+  constructor(@Inject(MAT_DIALOG_DATA) public data: ResumeData) {}
 }

@@ -49,10 +49,9 @@
 
     <!-- Canvas Area -->
     <div class="flex-1 flex justify-center items-start p-10 overflow-auto no-scrollbar">
-      <app-canvas 
-        [resume]="resume" 
-        (resumeChange)="updateResume($event)">
+      <app-canvas *ngIf="resume" [resume]="resume" (resumeChange)="updateResume($event)">
       </app-canvas>
+
     </div>
   </div>
 </div>
