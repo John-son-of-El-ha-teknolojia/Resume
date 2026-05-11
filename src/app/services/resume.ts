@@ -243,6 +243,8 @@ export class ResumeService {
     const state = JSON.stringify(this.resumeState());
     this.history.push(state);
     this.initialState = state;
+    const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    this.isLoggedIn.set(loggedIn);
   }
 
   resetToInitial() {
@@ -484,6 +486,12 @@ referees: [{
     { id: '1y', name: 'Annual Studio', price: 7.59, duration: '1 year' }
   ];
 
+
+  // loggedIn = localStorage.getItem('isLoggedIn') === 'true';
+// this.isLoggedIn.set(loggedIn);
+
+
+
   isPaid = signal<boolean>(false);
   hasFreeDownloadLeft = signal<boolean>(true);
   isPremium = signal<boolean>(false);
@@ -528,34 +536,39 @@ referees: [{
 }
 
 
+getCurrentUserEmail(): string {
+  return this.userEmail() || localStorage.getItem('userEmail') || this.resumeState().email || '';
+}
 
 
+  // Example: update state after login
+  setUserProfile(profile: any) {
+    this.resumeState.set(profile);
+  }
+  
 
 
     async login(email: string, password: string): Promise<boolean> {
-      try {
-        const response = await firstValueFrom(
-          this.http.post<{ token: string; email: string; isAdmin: boolean }>(
-            `${this.API_BASE}/api/auth/login`,
-            { email, password }
-          )
-        );
+      const response = await firstValueFrom(
+        this.http.post<{ token: string; email: string; isAdmin: boolean }>(
+          `${this.API_BASE}/api/auth/login`,
+          { email, password }
+        )
+      );
 
-        if (response.token) {
-          localStorage.setItem('jwt', response.token);
-          this.isLoggedIn.set(true);
-          this.userEmail.set(response.email);
-          await this.loadUser(response.email); // ✅ refresh full record
-          return true;
-        }
-
-
-        return false;
-      } catch (error) {
-        console.error('Login error:', error);
-        return false;
+      if (response.token) {
+        localStorage.setItem('jwt', response.token);
+        localStorage.setItem('userEmail', response.email); // ✅ persist email
+        this.isLoggedIn.set(true);
+        localStorage.setItem('isLoggedIn', 'true')
+        this.userEmail.set(response.email);
+        this.resumeState.update(prev => ({ ...prev, email: response.email }));
+        await this.loadUser(response.email);
+        return true;
       }
+      return false;
     }
+
 
   async signup(data: Record<string, string | null>): Promise<boolean> {
     try {
@@ -812,8 +825,15 @@ referees: [{
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, tierId, amount })
       });
-      return response.json();
+      const result = await response.json();
+
+      if (result.authorization_url) {
+        // ✅ append tierId to callback URL
+        window.location.href = result.authorization_url;
+      }
+      return result;
     }
+
 
 
   async verifyPayment(reference: string): Promise<any> {
@@ -821,11 +841,11 @@ referees: [{
     return response.json();
   }
 
-  async updateUserSubscription(reference: string): Promise<any> {
+  async updateUserSubscription(email: string, tierId: string): Promise<any> {
   const response = await fetch(`http://localhost:8080/api/payment/upgrade`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ reference })
+    body: JSON.stringify({ email, tierId })
   });
   return response.json();
 }

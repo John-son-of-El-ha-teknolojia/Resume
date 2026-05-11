@@ -152,12 +152,14 @@ export class AccountComponent {
   hasFreeDownloadLeft = this.resumeService.hasFreeDownloadLeft;
    
   viewDetails(): void {
+  const currentUser = this.resumeService.resumeState(); // ✅ get fresh state
   this.dialog.open(UserDetailsDialogComponent, {
     width: '400px',
     maxWidth: '95vw',
-    data: this.resume() // pass the whole resume object
+    data: currentUser
   });
 }
+
 
   upgrade() {
     this.dialog.open(PaymentDialogComponent, {

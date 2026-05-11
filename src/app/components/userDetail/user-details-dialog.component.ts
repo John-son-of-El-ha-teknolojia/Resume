@@ -22,10 +22,13 @@ import { ResumeData } from '../../services/resume';
           {{ data.otpCode ? 'Verified' : 'Not Verified' }}
         </span>
       </p>
-      <p><strong>Subscription:</strong> {{ data.tier || 'Free Tier' }}</p>
       <p><strong>Downloads Remaining:</strong>
-        {{ data.freeDownloadsUsed === 0 ? '1 Free Export' : '0 Free Exports' }}
+        <span *ngIf="data.tier !== 'free'">Unlimited Exports</span>
+        <span *ngIf="data.tier === 'free'">
+          {{ data.freeDownloadsUsed === 0 ? '1 Free Export' : '0 Free Exports' }}
+        </span>
       </p>
+
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button mat-button mat-dialog-close>Close</button>

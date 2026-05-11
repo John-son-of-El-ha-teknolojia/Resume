@@ -1,10 +1,13 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ResumeService } from '../../services/resume';
+import { CommonModule } from '@angular/common'; 
+
 
 @Component({
   selector: 'app-payment-callback',
   standalone: true,
+   imports: [CommonModule],
   template: `
     <div class="p-8 text-center">
       <h2 class="text-2xl font-black mb-4">Payment Verification</h2>
@@ -44,8 +47,21 @@ export class PaymentCallbackComponent implements OnInit {
         if (res.success) {
           this.success.set(true);
 
+          const tier = this.route.snapshot.queryParamMap.get('tierId')??''; // pass tier from initiate
+          const email = this.resumeService.getCurrentUserEmail();
+
+          if (!email) {
+            this.error.set('No user email found. Please log in again.');
+            return;
+          }
           // Update user subscription in backend
-          this.resumeService.updateUserSubscription(res.reference)
+          this.resumeService.updateUserSubscription(email, tier)
+          .then(() => this.resumeService.loadUser(email)) // refresh profile
+          .then(user => {
+            // update signals so AccountComponent reflects immediately
+            this.resumeService.isPremium.set(user.tier !== 'free');
+            this.resumeService.hasFreeDownloadLeft.set(user.tier === 'free');
+          })
             .catch(() => console.error("Failed to update subscription"));
 
         } else {
@@ -61,6 +77,11 @@ export class PaymentCallbackComponent implements OnInit {
   }
 
   goToAccount() {
+  if (this.resumeService.isLoggedIn()) {
     this.router.navigate(['/account']);
+  } else {
+    this.router.navigate(['/login']);
   }
+}
+
 }

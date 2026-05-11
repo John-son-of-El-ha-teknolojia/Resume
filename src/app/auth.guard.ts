@@ -6,33 +6,38 @@ export const authGuard = () => {
   const resumeService = inject(ResumeService);
   const router = inject(Router);
 
-  if (resumeService.isLoggedIn()) {
+  // Check both signal and localStorage
+  const loggedIn = resumeService.isLoggedIn() || localStorage.getItem('isLoggedIn') === 'true';
+
+  if (loggedIn) {
     return true;
   }
 
-  // Return a UrlTree instead of navigate()
   return router.parseUrl('/login');
 };
-
 
 export const adminGuard = () => {
   const resumeService = inject(ResumeService);
   const router = inject(Router);
 
-  if (resumeService.isLoggedIn() && resumeService.isAdmin()) {
+  const loggedIn = resumeService.isLoggedIn() || localStorage.getItem('isLoggedIn') === 'true';
+  const isAdmin = resumeService.isAdmin() || localStorage.getItem('isAdmin') === 'true';
+
+  if (loggedIn && isAdmin) {
     return true;
   }
 
   return router.parseUrl('/writer');
 };
 
-
-// Optional: Premium guard for paid features
 export const premiumGuard = () => {
   const resumeService = inject(ResumeService);
   const router = inject(Router);
 
-  if (resumeService.isLoggedIn() && resumeService.isPremium()) {
+  const loggedIn = resumeService.isLoggedIn() || localStorage.getItem('isLoggedIn') === 'true';
+  const isPremium = resumeService.isPremium() || localStorage.getItem('tier') !== 'free';
+
+  if (loggedIn && isPremium) {
     return true;
   }
 
