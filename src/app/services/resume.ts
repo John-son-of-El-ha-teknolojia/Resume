@@ -806,27 +806,31 @@ referees: [{
     }
   }
 
-  async initiatePayment(phone: string, tier: string, amount: number) {
-    const email = this.resumeState().email;
-    try {
-      const response = await firstValueFrom(
-        this.http.post<{ success: boolean; transactionId: string }>(`${this.API_BASE}/api/payment/initiate`, { 
-          amount, 
-          phone, 
-          email,
-          tier 
-        })
-      );
-      if (response.success) {
-        this.isPaid.set(true);
-        this.isPremium.set(true);
-      }
-      return response;
-    } catch (error) {
-      console.error('Payment error:', error);
-      throw error;
+    async initiatePayment(email: string, tierId: string, amount: number): Promise<any> {
+      const response = await fetch(`http://localhost:8080/api/payment/initiate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, tierId, amount })
+      });
+      return response.json();
     }
+
+
+  async verifyPayment(reference: string): Promise<any> {
+    const response = await fetch(`http://localhost:8080/api/payment/verify?reference=${reference}`);
+    return response.json();
   }
+
+  async updateUserSubscription(reference: string): Promise<any> {
+  const response = await fetch(`http://localhost:8080/api/payment/upgrade`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reference })
+  });
+  return response.json();
+}
+
+
 
  alignMode = signal<'selection' | 'page'>('selection');
 
@@ -1004,7 +1008,47 @@ distributeElements(direction: 'horizontal' | 'vertical') {
 
 }
 
-  async runCoachAnalysis(resumeData: unknown) {
+ 
+
+getDefaultResume(): ResumeData {
+  return {
+    name: '',
+    email: '',
+    phone: '',
+    phoneCountryCode: '+1',
+    location: '',
+    summary: '',
+    sections: [],
+    experience: [],
+    education: [],
+    referees: [],
+    skills: [],
+    hobbies: [],
+    aesthetics: {
+      fontFamily: 'Inter',
+      primaryColor: '#000',
+      backgroundColor: '#fff',
+      fontSize: 14,
+      elements: []
+    },
+    metadataStyle: { x:0, y:0, width:800 },
+    experienceStyle: { x:0, y:350, width:800, style: {} },
+    educationStyle: { x:0, y:600, width:800, style: {} },
+    skillsStyle: { x:0, y:800, width:800, style: {} },
+    refereeStyle: { x:0, y:950, width:800, style: {} },
+    qrStyle: { x:650, y:50, width:100, height:100 },
+    nameStyle: { x:300, y:50, width:200, style: {} },
+    emailStyle: { x:300, y:100, width:200, style: {} },
+    phoneStyle: { x:300, y:120, width:200, style: {} },
+    summaryStyle: { x:0, y:200, width:800, style: {} },
+    tier: 'free',
+    freeDownloadsUsed: 0,
+    isAdmin: false,
+    otpCode: ''
+  };
+}
+
+ async runCoachAnalysis(resumeData: unknown) {
   const token = localStorage.getItem('jwt');
   return firstValueFrom(
     this.http.post<{ atsScore: number; suggestions: string[] }>(
@@ -1107,6 +1151,10 @@ async polishSummary(summary: string): Promise<{ result?: string; requiresSubscri
   <head>
     <meta charset="utf-8">
     <title>Resume</title>
+    <style>
+      body { font-family: ${this.resumeState().aesthetics.fontFamily}, sans-serif; }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&family=Open+Sans&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   </head>
   <body>${canvas.outerHTML}</body>

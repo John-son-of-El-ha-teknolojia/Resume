@@ -345,6 +345,42 @@ export class CanvasComponent implements AfterViewInit {
     this.updateResume();
   }
 
+startResize(event: MouseEvent, el: ResumeElement) {
+  event.preventDefault();
+
+  // Only allow resize if CTRL is held
+  if (!this.isCtrlResizing) return;
+
+  const startX = event.clientX;
+  const startY = event.clientY;
+  const startWidth = el.width;
+  const startHeight = el.height;
+
+  const onMouseMove = (moveEvent: MouseEvent) => {
+    const dx = moveEvent.clientX - startX;
+    const dy = moveEvent.clientY - startY;
+
+    // Stretch horizontally or vertically depending on which edge is grabbed
+    if (event.target instanceof HTMLElement && event.target.classList.contains('resize-right')) {
+      el.width = startWidth + dx;
+    } else if (event.target instanceof HTMLElement && event.target.classList.contains('resize-bottom')) {
+      el.height = startHeight + dy;
+    }
+
+    this.updateResume();
+  };
+
+  const onMouseUp = () => {
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+  };
+
+  document.addEventListener('mousemove', onMouseMove);
+  document.addEventListener('mouseup', onMouseUp);
+}
+
+
+
   onSkillItemDragEnd(event: CdkDragEnd, el: Skill) {
     const { x, y } = event.source.getFreeDragPosition();
     const width = el.width || 200;
@@ -456,4 +492,123 @@ onRefereeHeaderBlur(event: any) {
       default: return 'help_outline';
     }
   }
+private isCtrlResizing = false;
+  // @HostListener('window:keydown', ['$event'])
+@HostListener('window:keydown', ['$event'])
+onKeyDown(event: KeyboardEvent) {
+
+  if (event.ctrlKey) {
+    this.isCtrlResizing = true;
+  }
+
+  // ALT + Up/Down → move canvas vertically
+  if (event.altKey) {
+    const container = this.canvasContainer?.nativeElement;
+    if (!container) return;
+
+    const step = 3;
+    switch (event.key) {
+      case 'ArrowUp':
+        container.scrollTop -= step;
+        event.preventDefault();
+        break;
+      case 'ArrowDown':
+        container.scrollTop += step;
+        event.preventDefault();
+        break;
+    }
+    return;
+  }
+
+  // CTRL + Arrow → scroll canvas
+  if (event.ctrlKey) {
+    const container = this.canvasContainer?.nativeElement;
+    if (!container) return;
+
+    const scrollStep = 7;
+    switch (event.key) {
+      case 'ArrowUp':    container.scrollTop -= scrollStep; break;
+      case 'ArrowDown':  container.scrollTop += scrollStep; break;
+      case 'ArrowLeft':  container.scrollLeft -= scrollStep; break;
+      case 'ArrowRight': container.scrollLeft += scrollStep; break;
+    }
+    event.preventDefault();
+    return;
+  }
+
+  // Normal Arrow keys → only move elements if canvas is NOT selected
+  if (!this.canvasSelected) {
+    const target = this.getActiveTarget();
+    if (!target) return;
+
+    const step = event.shiftKey ? 5 : 1;
+    switch (event.key) {
+      case 'ArrowUp':    target.y -= step; break;
+      case 'ArrowDown':  target.y += step; break;
+      case 'ArrowLeft':  target.x -= step; break;
+      case 'ArrowRight': target.x += step; break;
+    }
+
+    if (this.isInsideCanvas(target.x, target.y, target.width || 100, target.height || 40)) {
+      this.updateResume();
+    }
+  }
+}
+
+
+
+private canvasSelected = false;
+
+@HostListener('mousedown', ['$event'])
+onMouseDown(event: MouseEvent) {
+  const target = event.target as HTMLElement;
+  // If clicked outside the paper (resume-canvas), mark canvas as selected
+  if (!target.closest('#resume-canvas')) {
+    this.canvasSelected = true;
+    this.resumeService.clearSelection();
+  } else {
+    this.canvasSelected = false;
+  }
+}
+
+
+@HostListener('window:keyup', ['$event'])
+onKeyUp(event: KeyboardEvent) {
+  if (!event.ctrlKey) {
+    this.isCtrlResizing = false;
+  }
+}
+
+  private getActiveTarget(): any {
+  const id = this.activeElementId();
+  if (!id) return null;
+
+  // First check free elements
+  const el = this.resume.aesthetics.elements.find((e: ResumeElement) => e.id === id);
+  if (el) return el;
+
+  // Then check block styles by key name
+  const blockKeys: (keyof ResumeData)[] = [
+    'metadataStyle', 'experienceStyle', 'educationStyle',
+    'skillsStyle', 'refereeStyle', 'qrStyle',
+    'nameStyle', 'emailStyle', 'phoneStyle', 'summaryStyle'
+  ];
+  for (const key of blockKeys) {
+    if (id === key) return (this.resume as any)[key];
+  }
+
+  const collections = ['experience','education','skills','referees'] as const;
+  for (const col of collections) {
+    const item = (this.resume as any)[col].find((c: any) => c.id === id);
+    if (item) return item;
+  }
+
+
+
+  return null;
+}
+
+
+
+
 }

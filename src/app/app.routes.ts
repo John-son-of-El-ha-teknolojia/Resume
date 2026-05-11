@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard, adminGuard } from './auth.guard';
 import { AccountComponent } from './components/account/account';
+import { PaymentCallbackComponent } from './components/payment/payment-callback.component';
 export const routes: Routes = [
   { 
     path: 'login', 
@@ -25,6 +26,12 @@ export const routes: Routes = [
     loadComponent: () => import('./components/studio/studio.components').then(m => m.StudioComponent),
     canActivate: [authGuard]
   },
+  {
+    path: 'payment',
+    loadComponent: () => import('./components/payment/payment').then(m => m.PaymentDialogComponent),
+    canActivate: [authGuard]    
+    },
+    { path: 'payment/callback', component: PaymentCallbackComponent },
   { 
     path: 'viewer', 
     loadComponent: () => import('./components/viewer/viewer').then(m => m.ViewerComponent),

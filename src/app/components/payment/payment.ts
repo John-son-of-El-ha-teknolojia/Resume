@@ -63,10 +63,11 @@ import { ResumeService } from '../../services/resume';
                <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Secure Checkout</span>
              </div>
              
+            
              <div class="space-y-1 text-left">
-               <label for="mpesa-phone" class="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-1">Phone Number</label>
-               <input id="mpesa-phone" class="w-full text-base font-semibold border border-slate-200 rounded-xl p-4 bg-white focus:outline-none focus:border-blue-300 transition-all" 
-                      [(ngModel)]="phoneNumber" placeholder="07xxxxxxxx" type="tel">
+               <label for="email address" class="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-1">Email Address</label>
+               <input id="email address" class="w-full text-base font-semibold border border-slate-200 rounded-xl p-4 bg-white focus:outline-none focus:border-blue-300 transition-all" 
+                      [(ngModel)]="email" placeholder="you@example.com" type="email">
              </div>
            </div>
 
@@ -80,7 +81,7 @@ import { ResumeService } from '../../services/resume';
 
       <mat-dialog-actions class="flex flex-col gap-4 !p-0 border-none">
         <button mat-flat-button class="!bg-blue-600 !text-white w-full h-14 rounded-xl text-sm font-black uppercase tracking-widest shadow-xl shadow-blue-100" 
-                [disabled]="processing() || !phoneNumber" (click)="pay()">
+                [disabled]="processing() || !email" (click)="pay()">
           @if (processing()) {
             <ng-container>
               <mat-icon class="animate-spin mr-2">sync</mat-icon> Authenticating...
@@ -101,6 +102,7 @@ import { ResumeService } from '../../services/resume';
     ::ng-deep .mat-mdc-dialog-surface { border-radius: 1.5rem !important; box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25) !important; }
   `]
 })
+
 export class PaymentDialogComponent {
   private dialogRef = inject(MatDialogRef<PaymentDialogComponent>);
   private resumeService = inject(ResumeService);
@@ -112,7 +114,7 @@ export class PaymentDialogComponent {
   ];
 
   selectedTier = signal(this.tiers[1]);
-  phoneNumber = '';
+  email = '';
   processing = signal(false);
   error = signal<string | null>(null);
 
@@ -123,17 +125,17 @@ export class PaymentDialogComponent {
   async pay() {
     this.processing.set(true);
     this.error.set(null);
-    
+
     try {
       const tier = this.selectedTier();
-      const response = await this.resumeService.initiatePayment(this.phoneNumber, tier.id, tier.priceKES);
-      if (response.success) {
-        this.dialogRef.close(true);
-        this.resumeService.downloadPdf();
+      const response = await this.resumeService.initiatePayment(this.email, tier.id, tier.priceKES);
+
+      if (response.authorization_url) {
+        window.location.href = response.authorization_url;
       } else {
-        this.error.set('Payment failed. Please try again.');
+        this.error.set('Payment initialization failed.');
       }
-    } catch {
+    } catch (err) {
       this.error.set('An error occurred during payment.');
     } finally {
       this.processing.set(false);

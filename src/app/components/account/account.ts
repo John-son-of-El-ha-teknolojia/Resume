@@ -91,18 +91,18 @@ import { UserDetailsDialogComponent } from '../userDetail/user-details-dialog.co
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div class="p-4 border border-slate-100 rounded-xl bg-slate-50/30 text-center">
                   <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Rapid</p>
-                  <div class="text-lg font-black text-slate-800">127 KES</div>
-                  <p class="text-[8px] font-bold text-zinc-400 uppercase">3 Days</p>
+                  <div class="text-lg font-black text-slate-800">260 KES</div>
+                  <p class="text-[8px] font-bold text-zinc-400 uppercase">14 Days</p>
                 </div>
                 <div class="p-4 border-2 border-blue-100 rounded-xl bg-blue-50/10 text-center relative">
                   <div class="absolute -top-2 left-1/2 -translate-x-1/2 bg-blue-600 text-[8px] text-white px-2 py-0.5 rounded-full font-black uppercase">Popular</div>
                   <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Professional</p>
-                  <div class="text-lg font-black text-slate-800">498 KES</div>
+                  <div class="text-lg font-black text-slate-800">525 KES</div>
                   <p class="text-[8px] font-bold text-zinc-400 uppercase">1 Month</p>
                 </div>
                 <div class="p-4 border border-slate-100 rounded-xl bg-slate-50/30 text-center">
                   <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Executive</p>
-                  <div class="text-lg font-black text-slate-800">1.2k KES</div>
+                  <div class="text-lg font-black text-slate-800">1040 KES</div>
                   <p class="text-[8px] font-bold text-zinc-400 uppercase">Yearly</p>
                 </div>
               </div>

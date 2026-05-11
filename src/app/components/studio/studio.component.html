@@ -38,6 +38,13 @@
           Reset
         </button>
       </div>
+      <button 
+      (click)="goToDashboard()" 
+      class="flex items-center gap-2 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-blue-600 transition-colors"
+      matTooltip="Back to Dashboard">
+      <mat-icon class="scale-75">arrow_back</mat-icon>
+      Dashboard
+    </button>
 
       <div class="flex items-center gap-3">
         <button (click)="resumeService.downloadPdf()" class="flex items-center gap-2 px-4 py-2 bg-zinc-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-zinc-800 transition-all shadow-sm">

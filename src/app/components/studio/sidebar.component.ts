@@ -70,14 +70,257 @@ export class SidebarComponent {
   qrCodeUrl = signal("");
   scale = signal(75);
   template = signal("minimal");
+  
 
   countryCodes = [
-    { value: '+1', label: '+1 (US)' },
-    { value: '+44', label: '+44 (UK)' },
-    { value: '+254', label: '+254 (KE)' },
-    { value: '+91', label: '+91 (IN)' },
-    { value: '+234', label: '+234 (NG)' }
-  ];
+  { value: '+93', label: 'AFG' },
+  { value: '+355', label: 'ALB' },
+  { value: '+213', label: 'DZA' },
+  { value: '+1684', label: 'ASM' },
+  { value: '+376', label: 'AND' },
+  { value: '+244', label: 'AGO' },
+  { value: '+1264', label: 'AIA' },
+  { value: '+672', label: 'ATA' },
+  { value: '+1268', label: 'ATG' },
+  { value: '+54', label: 'ARG' },
+  { value: '+374', label: 'ARM' },
+  { value: '+297', label: 'ABW' },
+  { value: '+247', label: 'ASC' },
+  { value: '+61', label: 'AUS' },
+  { value: '+43', label: 'AUT' },
+  { value: '+994', label: 'AZE' },
+  { value: '+1242', label: 'BHS' },
+  { value: '+973', label: 'BHR' },
+  { value: '+880', label: 'BGD' },
+  { value: '+1246', label: 'BRB' },
+  { value: '+375', label: 'BLR' },
+  { value: '+32', label: 'BEL' },
+  { value: '+501', label: 'BLZ' },
+  { value: '+229', label: 'BEN' },
+  { value: '+1441', label: 'BMU' },
+  { value: '+975', label: 'BTN' },
+  { value: '+591', label: 'BOL' },
+  { value: '+387', label: 'BIH' },
+  { value: '+267', label: 'BWA' },
+  { value: '+55', label: 'BRA' },
+  { value: '+1284', label: 'VGB' },
+  { value: '+673', label: 'BRN' },
+  { value: '+359', label: 'BGR' },
+  { value: '+226', label: 'BFA' },
+  { value: '+95', label: 'MMR' },
+  { value: '+257', label: 'BDI' },
+  { value: '+855', label: 'KHM' },
+  { value: '+237', label: 'CMR' },
+  { value: '+1', label: 'CAN' },
+  { value: '+238', label: 'CPV' },
+  { value: '+1345', label: 'CYM' },
+  { value: '+236', label: 'CAF' },
+  { value: '+235', label: 'TCD' },
+  { value: '+56', label: 'CHL' },
+  { value: '+86', label: 'CHN' },
+  { value: '+61', label: 'CXR' },
+  { value: '+61', label: 'CCK' },
+  { value: '+57', label: 'COL' },
+  { value: '+269', label: 'COM' },
+  // { value: '+242', label: 'COG' },
+  { value: '+682', label: 'COK' },
+  { value: '+506', label: 'CRC' },
+  { value: '+385', label: 'HRV' },
+  { value: '+53', label: 'CUB' },
+  { value: '+357', label: 'CYP' },
+  { value: '+420', label: 'CZE' },
+  { value: '+243', label: 'COD' },
+  { value: '+45', label: 'DNK' },
+  { value: '+246', label: 'DGA' },
+  { value: '+253', label: 'DJI' },
+  { value: '+1767', label: 'DMA' },
+  { value: '+1809', label: 'DOM' },
+  { value: '+593', label: 'ECU' },
+  { value: '+20', label: 'EGY' },
+  { value: '+503', label: 'SLV' },
+  { value: '+240', label: 'GNQ' },
+  { value: '+291', label: 'ERI' },
+  { value: '+372', label: 'EST' },
+  { value: '+251', label: 'ETH' },
+  { value: '+500', label: 'FLK' },
+  { value: '+298', label: 'FRO' },
+  { value: '+679', label: 'FJI' },
+  { value: '+358', label: 'FIN' },
+  { value: '+33', label: 'FRA' },
+  { value: '+594', label: 'GUF' },
+  { value: '+689', label: 'PYF' },
+  { value: '+241', label: 'GAB' },
+  { value: '+220', label: 'GMB' },
+  { value: '+995', label: 'GEO' },
+  { value: '+49', label: 'DEU' },
+  { value: '+233', label: 'GHA' },
+  { value: '+350', label: 'GIB' },
+  { value: '+30', label: 'GRC' },
+  { value: '+299', label: 'GRL' },
+  { value: '+1473', label: 'GRD' },
+  { value: '+590', label: 'GLP' },
+  { value: '+1671', label: 'GUM' },
+  { value: '+502', label: 'GTM' },
+  { value: '+224', label: 'GIN' },
+  { value: '+245', label: 'GNB' },
+  { value: '+592', label: 'GUY' },
+  { value: '+509', label: 'HTI' },
+  { value: '+39', label: 'VAT' },
+  { value: '+504', label: 'HND' },
+  { value: '+852', label: 'HKG' },
+  { value: '+36', label: 'HUN' },
+  { value: '+354', label: 'ISL' },
+  { value: '+91', label: 'IND' },
+  { value: '+62', label: 'IDN' },
+  { value: '+98', label: 'IRN' },
+  { value: '+964', label: 'IRQ' },
+  { value: '+353', label: 'IRL' },
+  { value: '+44', label: 'IMN' },
+  { value: '+972', label: 'ISR' },
+  { value: '+39', label: 'ITA' },
+  { value: '+225', label: 'CIV' },
+  { value: '+1876', label: 'JAM' },
+  { value: '+81', label: 'JPN' },
+  { value: '+44', label: 'JEY' },
+  { value: '+962', label: 'JOR' },
+  { value: '+7', label: 'KAZ' },
+  { value: '+254', label: 'KEN' },
+  { value: '+686', label: 'KIR' },
+  { value: '+965', label: 'KWT' },
+  { value: '+996', label: 'KGZ' },
+  { value: '+856', label: 'LAO' },
+  { value: '+371', label: 'LVA' },
+  { value: '+961', label: 'LBN' },
+  { value: '+266', label: 'LSO' },
+  { value: '+231', label: 'LBR' },
+  { value: '+218', label: 'LBY' },
+  { value: '+423', label: 'LIE' },
+  { value: '+370', label: 'LTU' },
+  { value: '+352', label: 'LUX' },
+  { value: '+853', label: 'MAC' },
+  { value: '+389', label: 'MKD' },
+  { value: '+261', label: 'MDG' },
+  { value: '+265', label: 'MWI' },
+  { value: '+60', label: 'MYS' },
+  { value: '+960', label: 'MDV' },
+  { value: '+223', label: 'MLI' },
+  { value: '+356', label: 'MLT' },
+  { value: '+692', label: 'MHL' },
+  { value: '+596', label: 'MTQ' },
+  { value: '+222', label: 'MRT' },
+  { value: '+230', label: 'MUS' },
+  { value: '+262', label: 'MYT' },
+  { value: '+52', label: 'MEX' },
+  { value: '+691', label: 'FSM' },
+  { value: '+373', label: 'MDA' },
+  { value: '+377', label: 'MCO' },
+  { value: '+976', label: 'MNG' },
+  { value: '+382', label: 'MNE' },
+  { value: '+1664', label: 'MSR' },
+  { value: '+212', label: 'MAR' },
+  { value: '+258', label: 'MOZ' },
+  { value: '+264', label: 'NAM' },
+  { value: '+674', label: 'NRU' },
+  { value: '+977', label: 'NPL' },
+  { value: '+31', label: 'NLD' },
+  { value: '+599', label: 'ANT' },
+  { value: '+687', label: 'NCL' },
+  { value: '+64', label: 'NZL' },
+  { value: '+505', label: 'NIC' },
+  { value: '+227', label: 'NER' },
+  { value: '+234', label: 'NGA' },
+  { value: '+683', label: 'NIU' },
+  { value: '+672', label: 'NFK' },
+  { value: '+850', label: 'PRK' },
+  { value: '+1670', label: 'MNP' },
+  { value: '+47', label: 'NOR' },
+  { value: '+968', label: 'OMN' },
+  { value: '+92', label: 'PAK' },
+  { value: '+680', label: 'PLW' },
+  { value: '+970', label: 'PSE' },
+  { value: '+507', label: 'PAN' },
+  { value: '+675', label: 'PNG' },
+  { value: '+595', label: 'PRY' },
+  { value: '+51', label: 'PER' },
+  { value: '+63', label: 'PHL' },
+  { value: '+870', label: 'PCN' },
+  { value: '+48', label: 'POL' },
+  { value: '+351', label: 'PRT' },
+  { value: '+1787', label: 'PRI' },
+  { value: '+974', label: 'QAT' },
+  { value: '+242', label: 'COG' },
+  { value: '+262', label: 'REU' },
+  { value: '+40', label: 'ROU' },
+  { value: '+7', label: 'RUS' },
+  { value: '+250', label: 'RWA' },
+  { value: '+590', label: 'BLM' },
+  { value: '+290', label: 'SHN' },
+  { value: '+1869', label: 'KNA' },
+  { value: '+1758', label: 'LCA' },
+  { value: '+590', label: 'MAF' },
+  { value: '+508', label: 'SPM' },
+  { value: '+1784', label: 'VCT' },
+  { value: '+685', label: 'WSM' },
+  { value: '+378', label: 'SMR' },
+  { value: '+239', label: 'STP' },
+  { value: '+966', label: 'SAU' },
+  { value: '+221', label: 'SEN' },
+  { value: '+381', label: 'SRB' },
+  { value: '+248', label: 'SYC' },
+  { value: '+232', label: 'SLE' },
+  { value: '+65', label: 'SGP' },
+  { value: '+1721', label: 'SXM' },
+  { value: '+421', label: 'SVK' },
+  { value: '+386', label: 'SVN' },
+  { value: '+677', label: 'SLB' },
+  { value: '+252', label: 'SOM' },
+  { value: '+27', label: 'ZAF' },
+  { value: '+82', label: 'KOR' },
+  { value: '+211', label: 'SSD' },
+  { value: '+34', label: 'ESP' },
+  { value: '+94', label: 'LKA' },
+  { value: '+249', label: 'SDN' },
+  { value: '+597', label: 'SUR' },
+  { value: '+47', label: 'SJM' },
+  { value: '+268', label: 'SWZ' },
+  { value: '+46', label: 'SWE' },
+  { value: '+41', label: 'CHE' },
+  { value: '+963', label: 'SYR' },
+  { value: '+886', label: 'TWN' },
+  { value: '+992', label: 'TJK' },
+  { value: '+255', label: 'TZA' },
+  { value: '+66', label: 'THA' },
+  { value: '+670', label: 'TLS' },
+  { value: '+228', label: 'TGO' },
+  { value: '+690', label: 'TKL' },
+  { value: '+676', label: 'TON' },
+  { value: '+1868', label: 'TTO' },
+  { value: '+216', label: 'TUN' },
+  { value: '+90', label: 'TUR' },
+  { value: '+993', label: 'TKM' },
+  { value: '+1649', label: 'TCA' },
+  { value: '+688', label: 'TUV' },
+  { value: '+256', label: 'UGA' },
+  { value: '+380', label: 'UKR' },
+  { value: '+971', label: 'ARE' },
+  { value: '+44', label: 'GBR' },
+  { value: '+1', label: 'USA' },
+  { value: '+598', label: 'URY' },
+  { value: '+1340', label: 'VIR' },
+  { value: '+998', label: 'UZB' },
+  { value: '+678', label: 'VUT' },
+  { value: '+58', label: 'VEN' },
+  { value: '+84', label: 'VNM' },
+  { value: '+681', label: 'WLF' },
+  { value: '+212', label: 'ESH' },
+  { value: '+967', label: 'YEM' },
+  { value: '+260', label: 'ZMB' },
+  { value: '+263', label: 'ZWE' }
+];
+
+  constructor() {
+  this.countryCodes.sort((a, b) => a.label.localeCompare(b.label));
+}
 
   frameworks = [
     { id: "blank", name: "Ultra Blank" },
@@ -95,9 +338,19 @@ export class SidebarComponent {
   ];
 
   fonts = [
-    "Inter", "Space Grotesk", "Outfit", "Playfair Display", "JetBrains Mono",
-    "Fira Code", "Montserrat", "Roboto", "Syne", "Clash Display"
-  ];
+  "Inter", 
+  "Space Grotesk", 
+  "Outfit", 
+  "Playfair Display", 
+  "JetBrains Mono",
+  "Fira Code", 
+  "Montserrat", 
+  "Roboto", 
+  "Open Sans", 
+  "Times New Roman", 
+  "Calibri"
+];
+
 
   updateResume() {
     this.resumeChange.emit(this.resume);
@@ -113,7 +366,7 @@ export class SidebarComponent {
     this.resumeService.updateSelectedElementsStyle({ [key]: value });
     this.updateResume();
   }
-
+  
   getFirstSelectedId(): string | null {
     const selectedIds = this.resumeService.selectedIds();
     if (selectedIds.size === 0) return null;
@@ -172,6 +425,21 @@ export class SidebarComponent {
   }
 
   return null;
+}
+
+moveForward(el: ResumeElement) {
+  el.zIndex = (el.zIndex || 10) + 1;
+  this.updateResume();
+}
+
+moveBackward(el: ResumeElement) {
+  el.zIndex = Math.max(0, (el.zIndex || 10) - 1);
+  this.updateResume();
+}
+
+get selectedBox() {
+  const el = this.getActiveElement();
+  return el && el.type === 'box' ? el : null;
 }
 
 
@@ -240,6 +508,27 @@ addReferee() {
     style: { fontSize: 12, color: '#000000', textAlign: 'left' }
   };
   this.resume.referees = [...(this.resume.referees || []), newRef];
+  this.updateResume();
+}
+
+addBox() {
+  const newBox: ResumeElement = {
+    id: Math.random().toString(36).substring(7),
+    type: 'box',
+    content: '',
+    x: 100,
+    y: 100,
+    width: 200,
+    height: 100,
+    style: {
+      backgroundColor: '#f4f4f5',
+      borderColor: '#e4e4e7',
+      borderWidth: 1,
+      opacity: 1
+    }
+  };
+
+  this.resume.aesthetics.elements = [...(this.resume.aesthetics.elements || []), newBox];
   this.updateResume();
 }
 
@@ -388,21 +677,21 @@ addSkill() {
   if (!this.resume.summary) return;
 
   this.isAnalyzing.set(true);
+
   try {
     const res = await this.resumeService.polishSummary(this.resume.summary);
 
     if (res.requiresSubscription) {
-      // ✅ free tier → open subscription dialog
-      this.dialog.open(PaymentDialogComponent, {
-        width: '480px',
-        disableClose: true
-      });
+      // ✅ free tier → redirect to subscription page
+      window.location.href = '../payment'; // Adjust path as needed
       return;
     }
 
     // ✅ premium → update summary
-    this.resume.summary = res.result!;
-    this.updateResume();
+    if (res.result) {
+      this.resume.summary = res.result;
+      this.updateResume();
+    }
   } catch (err) {
     console.error("Polish failed:", err);
   } finally {
