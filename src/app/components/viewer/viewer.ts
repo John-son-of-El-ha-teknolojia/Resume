@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
@@ -17,6 +17,7 @@ import { CanvasComponent } from '../studio/canvas.component';
   imports: [
     CommonModule,
     MatButtonModule,
+    CanvasComponent,
     MatIconModule,
     MatCardModule,
     MatButtonToggleModule,
@@ -217,7 +218,7 @@ import { CanvasComponent } from '../studio/canvas.component';
 })
 export class ViewerComponent {
   private resumeService = inject(ResumeService);
-  private canvas = inject(CanvasComponent);
+  
   private dialog = inject(MatDialog);
   private router = inject(Router);
   
@@ -273,12 +274,15 @@ export class ViewerComponent {
     return mirror || "none";
   }
 
-  async exportPdf() {
-    const res = await this.resumeService.checkEligibility();
-    if (res.canDownload) {
-      this.canvas.downloadPdf();
-    } else {
-      this.dialog.open(PaymentDialogComponent, { width: '500px' });
-    }
+  @ViewChild(CanvasComponent) canvas!: CanvasComponent;
+
+async exportPdf() {
+  const res = await this.resumeService.checkEligibility();
+  if (res.canDownload) {
+    this.canvas.downloadPdf(); // ✅ safe
+  } else {
+    this.dialog.open(PaymentDialogComponent, { width: '500px' });
   }
+}
+
 }

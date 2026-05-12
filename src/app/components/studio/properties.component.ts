@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, PLATFORM_ID, Inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, PLATFORM_ID, Inject, ViewChild } from '@angular/core';
 import { ResumeService } from '../../services/resume';
 import {
 //   Component,
@@ -16,13 +16,13 @@ import { CanvasComponent } from './canvas.component';
   selector: 'app-properties',
   templateUrl: './propperties.component.html',
   styleUrls: ['./studio.component.css'],
-  imports:[CommonModule, MatIconModule, MatButtonModule, MatTooltipModule]
+  imports:[CommonModule, MatIconModule, MatButtonModule,CanvasComponent, MatTooltipModule]
 })
 export class PropertiesComponent {
 //   @Input() resume: any;
   @Output() resumeChange = new EventEmitter<any>();
   public resumeService = inject(ResumeService);
-  public canvas = inject(CanvasComponent);
+  // public canvas = inject(CanvasComponent);
   private dialog = inject(MatDialog);
   private router = inject(Router);
 
@@ -136,6 +136,8 @@ alignVertical(direction: 'top' | 'middle' | 'bottom') {
   }
 
   // Export/Share
+  @ViewChild(CanvasComponent) canvas!: CanvasComponent;
+
     async exportPdf() {
       const res = await this.resumeService.checkEligibility();
       if (res.canDownload) {

@@ -620,7 +620,7 @@ if (isPlatformBrowser(this.platformId)) {
 
 
 
-private canvasSelected = false;
+public canvasSelected = false;
 
 @HostListener('mousedown', ['$event'])
 onMouseDown(event: MouseEvent) {

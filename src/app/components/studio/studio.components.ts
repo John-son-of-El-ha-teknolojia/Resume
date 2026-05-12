@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ResumeService, ResumeData } from '../../services/resume';
 import { SidebarComponent } from './sidebar.component';
@@ -29,7 +29,7 @@ import { Router } from '@angular/router';
 })
 export class StudioComponent {
   public resumeService = inject(ResumeService);
-  public canvas = inject(CanvasComponent);
+  
   
   resume = this.resumeService.getDefaultResume();
   sidebarPosition = signal<'left' | 'right'>('left');
@@ -44,6 +44,11 @@ export class StudioComponent {
 
   goToDashboard() {
     this.router.navigate(['/dashboard']);
+  }
+  @ViewChild(CanvasComponent) canvas!: CanvasComponent;
+
+  exportPdf() {
+    this.canvas.downloadPdf();
   }
 
 }

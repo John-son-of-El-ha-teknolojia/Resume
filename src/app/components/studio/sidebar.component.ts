@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, signal, inject, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, inject, Inject, PLATFORM_ID, ViewChild } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -20,6 +20,7 @@ import { CanvasComponent } from './canvas.component';
     CommonModule,
     FormsModule,
     MatIconModule,
+    CanvasComponent,
     MatTabsModule,
     MatButtonModule,
     MatTooltipModule,
@@ -60,7 +61,7 @@ export class SidebarComponent {
   @Output() resumeChange = new EventEmitter<ResumeData>();
 
   public resumeService = inject(ResumeService);
-  public canvasComponent = inject(CanvasComponent);
+  // public canvasComponent = inject(CanvasComponent);
   
   activeStep: string = 'metadata';
   activeElementId = signal<string | null>(null);
@@ -629,8 +630,10 @@ addSkill() {
     }
   }
 
+@ViewChild(CanvasComponent) canvas!: CanvasComponent;
+
   exportResume() {
-    this.canvasComponent.downloadPdf();
+    this.canvas.downloadPdf();
   }
 
   nextStep() {
