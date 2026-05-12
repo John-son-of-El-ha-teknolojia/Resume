@@ -1,5 +1,5 @@
-import { Component, Input, Output, EventEmitter, signal, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Input, Output, EventEmitter, signal, inject, Inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -11,6 +11,7 @@ import { ResumeService, ResumeData, ResumeElement, Experience, Education, Refere
 import * as QRCode from 'qrcode';
 import { MatDialog } from '@angular/material/dialog';
 import { PaymentDialogComponent } from '../payment/payment'; // adjust path
+import { CanvasComponent } from './canvas.component';
 
 @Component({
   selector: 'app-sidebar',
@@ -59,6 +60,7 @@ export class SidebarComponent {
   @Output() resumeChange = new EventEmitter<ResumeData>();
 
   public resumeService = inject(ResumeService);
+  public canvasComponent = inject(CanvasComponent);
   
   activeStep: string = 'metadata';
   activeElementId = signal<string | null>(null);
@@ -318,7 +320,7 @@ export class SidebarComponent {
   { value: '+263', label: 'ZWE' }
 ];
 
-  constructor() {
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
   this.countryCodes.sort((a, b) => a.label.localeCompare(b.label));
 }
 
@@ -628,7 +630,7 @@ addSkill() {
   }
 
   exportResume() {
-    this.resumeService.downloadPdf();
+    this.canvasComponent.downloadPdf();
   }
 
   nextStep() {
@@ -671,33 +673,35 @@ addSkill() {
     }
   }
 
-  private dialog = inject(MatDialog);
+  // private dialog = inject(MatDialog);
 
   async polishSummary() {
-  if (!this.resume.summary) return;
+    if (!this.resume.summary) return;
 
-  this.isAnalyzing.set(true);
+    this.isAnalyzing.set(true);
 
-  try {
-    const res = await this.resumeService.polishSummary(this.resume.summary);
+    try {
+      const res = await this.resumeService.polishSummary(this.resume.summary);
 
-    if (res.requiresSubscription) {
-      // ✅ free tier → redirect to subscription page
-      window.location.href = '../payment'; // Adjust path as needed
-      return;
+      if (res.requiresSubscription) {
+        // ✅ free tier → redirect only in browser
+        if (isPlatformBrowser(this.platformId)) {
+          window.location.href = '../payment'; // Adjust path as needed
+        }
+        return;
+      }
+
+      // ✅ premium → update summary
+      if (res.result) {
+        this.resume.summary = res.result;
+        this.updateResume();
+      }
+    } catch (err) {
+      console.error("Polish failed:", err);
+    } finally {
+      this.isAnalyzing.set(false);
     }
-
-    // ✅ premium → update summary
-    if (res.result) {
-      this.resume.summary = res.result;
-      this.updateResume();
-    }
-  } catch (err) {
-    console.error("Polish failed:", err);
-  } finally {
-    this.isAnalyzing.set(false);
   }
-}
 
 
   async suggestExperienceDescription(index: number) {

@@ -10,6 +10,9 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
 import { ResumeService, ResumeSection } from '../../services/resume';
+import { Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-writer',
@@ -166,17 +169,26 @@ export class WriterComponent {
     this.resumeService.updateResume(this.resume);
   }
 
-  onFileSelected(event: Event) {
-    const target = event.target as HTMLInputElement;
-    const file = target.files?.[0];
-    if (file) {
-      if (!this.isPremium()) {
-        alert('Resume upload is a premium feature. Please upgrade your account.');
-        return;
+constructor(@Inject(PLATFORM_ID) private platformId: Object,
+            private snackBar: MatSnackBar) {}
+
+onFileSelected(event: Event) {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (file) {
+    if (!this.isPremium()) {
+      if (isPlatformBrowser(this.platformId)) {
+        this.snackBar.open(
+          'Resume upload is a premium feature. Please upgrade your account.',
+          'Close',
+          { duration: 4000 }
+        );
       }
-      this.extractResume(file.name);
+      return;
     }
+    this.extractResume(file.name);
   }
+}
 
   async extractResume(fileName: string) {
     this.isExtracting.set(true);

@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, signal, inject, effect } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, signal, inject, effect, Inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -56,7 +56,7 @@ export class PdfEditorComponent {
   generatedCoverLetter = signal('');
   originalFileName = signal<string | null>(null);
 
-  constructor() {
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
     // Auto-save effect
     effect(() => {
       const currentSections = this.sections();
@@ -203,7 +203,12 @@ export class PdfEditorComponent {
     this.sections.update(s => s.filter(sec => sec.id !== id));
   }
 
+ 
   async exportPdf() {
+    if (!isPlatformBrowser(this.platformId)) {
+      return; // Skip during SSR
+    }
+
     const doc = new jsPDF('p', 'mm', 'a4');
     const content = document.getElementById('pdf-render-canvas');
     if (!content) return;

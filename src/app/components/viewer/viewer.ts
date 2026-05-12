@@ -9,6 +9,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ResumeService } from '../../services/resume';
 import { PaymentDialogComponent } from '../payment/payment';
 import * as QRCode from 'qrcode';
+import { CanvasComponent } from '../studio/canvas.component';
 
 @Component({
   selector: 'app-viewer',
@@ -216,6 +217,7 @@ import * as QRCode from 'qrcode';
 })
 export class ViewerComponent {
   private resumeService = inject(ResumeService);
+  private canvas = inject(CanvasComponent);
   private dialog = inject(MatDialog);
   private router = inject(Router);
   
@@ -274,7 +276,7 @@ export class ViewerComponent {
   async exportPdf() {
     const res = await this.resumeService.checkEligibility();
     if (res.canDownload) {
-      this.resumeService.downloadPdf();
+      this.canvas.downloadPdf();
     } else {
       this.dialog.open(PaymentDialogComponent, { width: '500px' });
     }

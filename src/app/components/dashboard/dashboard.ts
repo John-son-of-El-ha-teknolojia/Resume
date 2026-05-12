@@ -5,7 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { ResumeService } from '../../services/resume';
 import { SafeUrlPipe } from '../../pipes/safeUrl.pipe'
-import path from 'path';
+// import path from 'path';
 
 @Component({
   selector: 'app-dashboard',
@@ -128,12 +128,10 @@ export class DashboardComponent {
   ];
 
   selectTemplate(id: string) {
-  const tmpl = this.frameworks.find(f => f.id === id);
-  if (tmpl?.path) {
-    this.resumeService.currentTemplate.set(tmpl.id as any);
-    this.resumeService.loadTemplate(tmpl.path);
-    this.router.navigate(['/writer']);
-  }
+  this.resumeService.currentTemplate.set(id as any);
+  this.resumeService.loadTemplate(id);   // ✅ use id, not path
+  this.router.navigate(['/writer']);
 }
+
 
 }

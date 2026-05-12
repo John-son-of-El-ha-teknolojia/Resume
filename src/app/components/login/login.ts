@@ -30,11 +30,26 @@ import { ResumeService } from '../../services/resume';
                    class="w-full bg-slate-50 border border-slate-100 rounded-xl p-4 text-slate-800 font-bold focus:outline-none focus:border-blue-400 transition-all">
           </div>
 
-          <div class="space-y-1">
-            <label for="password" class="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-1">Password</label>
-            <input id="password" name="password" [(ngModel)]="password" type="password" placeholder="••••••••"
-                   class="w-full bg-slate-50 border border-slate-100 rounded-xl p-4 text-slate-800 font-bold focus:outline-none focus:border-blue-400 transition-all">
+         <div class="space-y-1">
+          <label for="password" class="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-1">
+            Password
+          </label>
+          <div class="relative">
+            <input id="password" name="password"
+                  [(ngModel)]="password"
+                  [type]="showPassword() ? 'text' : 'password'"
+                  placeholder="••••••••"
+                  class="w-full bg-slate-50 border border-slate-100 rounded-xl p-4 pr-12 text-slate-800 font-bold focus:outline-none focus:border-blue-400 transition-all">
+            
+            <button type="button"
+                    mat-icon-button
+                    (click)="showPassword.set(!showPassword())"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+              <mat-icon>{{ showPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
           </div>
+        </div>
+
 
            <p *ngIf="loginError" class="text-red-500 text-xs font-bold text-center bg-red-50 p-3 rounded-lg border border-red-100">
             {{ loginError }}
@@ -69,6 +84,8 @@ export class LoginComponent {
   password = '';
   loginError: string | null = null;
   loading = false;
+  showPassword = signal(false);
+
 
   constructor(private resumeService: ResumeService, private router: Router) {}
 

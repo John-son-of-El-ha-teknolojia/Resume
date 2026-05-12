@@ -11,7 +11,7 @@
   <!-- The Paper -->
   <div #canvasContainer class="canvas-viewport w-full h-full overflow-auto p-12 scroll-smooth bg-zinc-100/50">
     <div class="flex items-start justify-center min-w-max min-h-max" [style.padding-bottom.px]="200">
-      <div 
+      <div #resumeCanvas
         id="resume-canvas"
         class="a4-paper bg-white shadow-[0_32px_64px_-12px_rgba(0,0,0,0.14)] relative origin-top shrink-0 mb-40 print:m-0 print:shadow-none print:scale-100"
         [style.transform]="'scale(' + (scale() / 100) + ')'"

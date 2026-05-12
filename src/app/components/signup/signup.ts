@@ -6,6 +6,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { ResumeService } from '../../services/resume';
+import { Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { ViewChildren, QueryList, ElementRef } from '@angular/core';
 
 @Component({
   selector: 'app-signup',
@@ -60,20 +63,37 @@ import { ResumeService } from '../../services/resume';
                 </div>
 
                 <div class="group">
-                  <label for="password" class="block text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-2 pl-1">
-                    Password
-                  </label>
-                  <input id="password" type="password" formControlName="password" placeholder="Enter password"
-                        class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 text-zinc-800 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-600/10 focus:border-indigo-600 transition-all placeholder:text-zinc-300">
-                </div>
+  <label for="password" class="block text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-2 pl-1">
+    Password
+  </label>
+  <div class="relative">
+    <input id="password" formControlName="password"
+           [type]="showPassword() ? 'text' : 'password'"
+           placeholder="Enter password"
+           class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 pr-12 text-zinc-800 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-600/10 focus:border-indigo-600 transition-all placeholder:text-zinc-300">
+    <button type="button" mat-icon-button (click)="showPassword.set(!showPassword())"
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-indigo-600">
+      <mat-icon>{{ showPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+    </button>
+  </div>
+</div>
 
-                <div class="group">
-                  <label for="confirmPassword" class="block text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-2 pl-1">
-                    Confirm Password
-                  </label>
-                  <input id="confirmPassword" type="password" formControlName="confirmPassword" placeholder="Confirm password"
-                        class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 text-zinc-800 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-600/10 focus:border-indigo-600 transition-all placeholder:text-zinc-300">
-                </div>
+<div class="group">
+  <label for="confirmPassword" class="block text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-2 pl-1">
+    Confirm Password
+  </label>
+  <div class="relative">
+    <input id="confirmPassword" formControlName="confirmPassword"
+           [type]="showPassword() ? 'text' : 'password'"
+           placeholder="Confirm password"
+           class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 pr-12 text-zinc-800 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-600/10 focus:border-indigo-600 transition-all placeholder:text-zinc-300">
+    <button type="button" mat-icon-button (click)="showPassword.set(!showPassword())"
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-indigo-600">
+      <mat-icon>{{ showPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+    </button>
+  </div>
+</div>
+
 
 
                 <button mat-flat-button [disabled]="signupForm.invalid" 
@@ -153,6 +173,7 @@ export class SignupComponent {
   private resumeService = inject(ResumeService);
 
   step = signal<'details' | 'verify'>('details');
+  showPassword = signal(false);
   loading = signal(false);
   error = signal<string | null>(null);
   digits: string[] = ['', '', '', '', '', ''];
@@ -194,25 +215,28 @@ export class SignupComponent {
     }
   }
 
+constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
+@ViewChildren('digitInput') digitInputs!: QueryList<ElementRef<HTMLInputElement>>;
 
-  onDigitInput(event: Event, index: number) {
-    const target = event.target as HTMLInputElement;
-    const val = target.value;
-    if (val && index < 5) {
-      const inputs = document.querySelectorAll('input[maxlength="1"]');
-      (inputs[index + 1] as HTMLInputElement).focus();
-    }
-    this.digits[index] = val;
+onDigitInput(event: Event, index: number) {
+  const target = event.target as HTMLInputElement;
+  const val = target.value;
+  if (val && index < 5 && isPlatformBrowser(this.platformId)) {
+    const nextInput = this.digitInputs.get(index + 1);
+    nextInput?.nativeElement.focus();
   }
+  this.digits[index] = val;
+}
 
-  onBackspace(event: Event, index: number) {
-    const target = event.target as HTMLInputElement;
-    if (!target.value && index > 0) {
-      const inputs = document.querySelectorAll('input[maxlength="1"]');
-      (inputs[index - 1] as HTMLInputElement).focus();
-    }
-    this.digits[index] = '';
+onBackspace(event: Event, index: number) {
+  const target = event.target as HTMLInputElement;
+  if (!target.value && index > 0 && isPlatformBrowser(this.platformId)) {
+    const prevInput = this.digitInputs.get(index - 1);
+    prevInput?.nativeElement.focus();
   }
+  this.digits[index] = '';
+}
+
 
   async verifyCode() {
   this.loading.set(true);

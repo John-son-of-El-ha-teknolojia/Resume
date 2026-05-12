@@ -1,8 +1,10 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { NavbarComponent } from './components/navbar/navbar';
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, isPlatformBrowser } from '@angular/common';
 import { map, filter, startWith } from 'rxjs';
+import { Inject, PLATFORM_ID } from '@angular/core';
+// import { isPlatformBrowser } from '@angular/common';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -30,14 +32,18 @@ export class App {
     map(url => !url.includes('/writer') && !url.includes('/viewer'))
   );
 
-  constructor() {
-    this.resetIdleTimer();
-    ['click', 'mousemove', 'keydown'].forEach(evt =>
-      document.addEventListener(evt, () => {
-        this.isActive = true;
-        this.resetIdleTimer();
-      })
-    );
+ constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
+
+  ngOnInit() {
+    if (isPlatformBrowser(this.platformId)) {
+      this.resetIdleTimer();
+      ['click', 'mousemove', 'keydown'].forEach(evt =>
+        document.addEventListener(evt, () => {
+          this.isActive = true;
+          this.resetIdleTimer();
+        })
+      );
+    }
   }
 
   private resetIdleTimer() {

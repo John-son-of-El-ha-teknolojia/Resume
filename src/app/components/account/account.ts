@@ -150,6 +150,13 @@ export class AccountComponent {
   isPaid = this.resumeService.isPaid;
   isPremium = this.resumeService.isPremium;
   hasFreeDownloadLeft = this.resumeService.hasFreeDownloadLeft;
+
+  ngOnInit(): void {
+    // ✅ refresh subscription state from backend
+    this.resumeService.checkEligibility().then(res => {
+      console.log('Eligibility refreshed:', res);
+    });
+  }
    
   viewDetails(): void {
   const currentUser = this.resumeService.resumeState(); // ✅ get fresh state

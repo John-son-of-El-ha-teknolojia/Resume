@@ -1,10 +1,12 @@
-import { Component, Input, Output, EventEmitter, signal, ViewChild, ElementRef, HostListener, AfterViewInit, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, ViewChild, ElementRef, HostListener, AfterViewInit, inject, Inject } from '@angular/core';
 import { ResumeService, ResumeElement, ResumeData, Experience, Education, Referee, Skill } from '../../services/resume';
 import { CdkDragEnd, DragDropModule } from '@angular/cdk/drag-drop';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { firstValueFrom } from 'rxjs';
+import { PLATFORM_ID } from '@angular/core';
 
 @Component({
   selector: 'app-canvas',
@@ -81,6 +83,55 @@ export class CanvasComponent implements AfterViewInit {
   @Output() resumeChange = new EventEmitter<ResumeData>();
 
   @ViewChild('canvasContainer') canvasContainer!: ElementRef;
+  @ViewChild('resumeCanvas', { static: false }) canvasRef!: ElementRef<HTMLDivElement>;
+
+    constructor(
+    // public resumeService: ResumeService,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {}
+
+  private readonly API_BASE = 'http://localhost:8080';
+async downloadPdf() {
+  if (!isPlatformBrowser(this.platformId)) {
+    return; // SSR: skip
+  }
+
+  const canvas = this.canvasRef.nativeElement;
+  if (!canvas) {
+    // Replace alert with Angular Material snackbar for SSR safety
+    console.error('Canvas not found');
+    return;
+  }
+
+  const html = `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="utf-8">
+    <title>Resume</title>
+    <style>
+      body { font-family: ${this.resumeService.resumeState().aesthetics.fontFamily}, sans-serif; }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&family=Open+Sans&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  </head>
+  <body>${canvas.outerHTML}</body>
+  </html>`;
+
+  const token = isPlatformBrowser(this.platformId) ? localStorage.getItem('jwt') : null;
+
+  const resp = await this.resumeService.exportHtml(html, token);
+
+  if (isPlatformBrowser(this.platformId)) {
+    const link = document.createElement('a');
+    link.href = `${this.API_BASE}${resp.pdfUrl}`;
+    link.download = 'resume.pdf';
+    link.click();
+}
+
+
+}
+
 
   protected Math = Math;
 
@@ -125,11 +176,15 @@ export class CanvasComponent implements AfterViewInit {
     this.scale.update((s) => Math.max(s - 10, 10));
   }
 
-  toggleFullscreen() {
-    const el = document.getElementById("resume-canvas");
-    if (el?.requestFullscreen) el.requestFullscreen();
+toggleFullscreen() {
+    if (isPlatformBrowser(this.platformId)) {
+      const el = document.getElementById("resume-canvas");
+      if (el?.requestFullscreen) {
+        el.requestFullscreen();
+      }
+    }
   }
-
+  
   // Drag & selection
   onDragEnd(event: CdkDragEnd, el: ResumeElement) {
   const { x, y } = event.source.getFreeDragPosition();
@@ -238,8 +293,10 @@ export class CanvasComponent implements AfterViewInit {
   }
 
   @HostListener("window:resize")
-  onResize() {
-    this.autoScale();
+   onResize() {
+    if (isPlatformBrowser(this.platformId)) {
+      this.autoScale();
+    }
   }
 
   autoScale() {
@@ -370,13 +427,15 @@ startResize(event: MouseEvent, el: ResumeElement) {
     this.updateResume();
   };
 
-  const onMouseUp = () => {
-    document.removeEventListener('mousemove', onMouseMove);
-    document.removeEventListener('mouseup', onMouseUp);
-  };
+  if (isPlatformBrowser(this.platformId)) {
+      const onMouseUp = () => {
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      };
 
   document.addEventListener('mousemove', onMouseMove);
   document.addEventListener('mouseup', onMouseUp);
+}
 }
 
 
@@ -414,6 +473,9 @@ startResize(event: MouseEvent, el: ResumeElement) {
   return target;
 }
 
+  ngOnInit() {
+  console.log('Resume state:', this.resumeService.resumeState());
+}
 
 
   onExperienceHeaderBlur(event: any) {
@@ -493,10 +555,10 @@ onRefereeHeaderBlur(event: any) {
     }
   }
 private isCtrlResizing = false;
-  // @HostListener('window:keydown', ['$event'])
+  
 @HostListener('window:keydown', ['$event'])
 onKeyDown(event: KeyboardEvent) {
-
+if (isPlatformBrowser(this.platformId)) {
   if (event.ctrlKey) {
     this.isCtrlResizing = true;
   }
@@ -554,6 +616,7 @@ onKeyDown(event: KeyboardEvent) {
     }
   }
 }
+}
 
 
 
@@ -574,9 +637,11 @@ onMouseDown(event: MouseEvent) {
 
 @HostListener('window:keyup', ['$event'])
 onKeyUp(event: KeyboardEvent) {
+  if (isPlatformBrowser(this.platformId)) {
   if (!event.ctrlKey) {
     this.isCtrlResizing = false;
   }
+}
 }
 
   private getActiveTarget(): any {

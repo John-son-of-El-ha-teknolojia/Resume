@@ -1,6 +1,7 @@
-import { Injectable, signal, inject } from '@angular/core';
+import { Injectable, signal, inject, PLATFORM_ID, Inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { isPlatformBrowser } from '@angular/common';
 
 export interface Referee {
   id: string;
@@ -146,6 +147,22 @@ export interface BlockStyle {
   };
 }
 
+export interface Board {
+  id: string;
+  name: string;
+  role: string;
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  style?: {
+    fontSize?: number;
+    color?: string;
+    textAlign?: string;
+  };
+}
+
+
 export interface ResumeData {
   name: string;
   email: string;
@@ -159,6 +176,7 @@ export interface ResumeData {
   referees: Referee[];
   skills: Skill[];
   hobbies: Hobby[];
+  boards?: Board[];   // ✅ new array for CEO template
   website?: string;
   qrCode?: string;
   aesthetics: Aesthetics;
@@ -180,6 +198,7 @@ export interface ResumeData {
   isAdmin?: boolean;
   otpCode?: string;
   otpExpiry?: number;
+  templateId?: 'minimal' | 'modern' | 'classic' | 'ceo';
 }
 
 export interface CoverLetterData {
@@ -238,14 +257,50 @@ export class ResumeService {
   private maxHistory = 50;
   private initialState: string | null = null;
 
-  constructor() {
-    // Initialize history with current state
-    const state = JSON.stringify(this.resumeState());
-    this.history.push(state);
-    this.initialState = state;
-    const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    this.isLoggedIn.set(loggedIn);
+  constructor(
+  private https: HttpClient,
+  @Inject(PLATFORM_ID) private platformId: Object
+) {
+  // Initialize history with current state
+  const state = JSON.stringify(this.resumeState());
+  this.history.push(state);
+  this.initialState = state;
+
+  // Always default to logged out on SSR
+  this.isLoggedIn.set(false);
+}
+
+
+ async initializeSession() {
+   
+
+    let token: string | null = null;
+  if (isPlatformBrowser(this.platformId)) {
+    token = localStorage.getItem('jwt');
   }
+
+    if (!token) {
+      this.logout();
+      return;
+    }
+
+    try {
+      let email: string | null = null;
+    if (isPlatformBrowser(this.platformId)) {
+      email = localStorage.getItem('userEmail');
+    }
+
+      if (email) {
+        await this.loadUser(email);
+        this.isLoggedIn.set(true);
+      } else {
+        this.logout();
+      }
+    } catch {
+      this.logout();
+    }
+  }
+
 
   resetToInitial() {
     if (this.initialState) {
@@ -444,6 +499,102 @@ referees: [{
 });
 
 
+convertMockTemplateToResumeData(mockTemplate: any): ResumeData {
+  const resumeData: ResumeData = {
+    name: mockTemplate.name || '',
+    email: mockTemplate.email || '',
+    phone: mockTemplate.phone || '',
+    phoneCountryCode: mockTemplate.phoneCountryCode || '+1',
+    location: mockTemplate.location || '',
+    summary: mockTemplate.summary || '',
+    sections: [],
+    experience: (mockTemplate.experience || []).map((exp: any, i: number) => ({
+      id: `exp${i+1}`,
+      company: exp.company || '',
+      title: exp.title || '',
+      startDate: exp.startDate || '',
+      endDate: exp.endDate || '',
+      current: exp.current || false,
+      content: exp.content || '',
+      x: 50,
+      y: 350 + (i * 120),
+      width: 700,
+      height: 100,
+      style: { fontSize: 12, color: '#111827', textAlign: 'left' }
+    })),
+    education: (mockTemplate.education || []).map((edu: any, i: number) => ({
+      id: `edu${i+1}`,
+      school: edu.school || '',
+      degree: edu.degree || '',
+      startDate: edu.startDate || '',
+      endDate: edu.endDate || '',
+      description: edu.description || '',
+      x: 50,
+      y: 600 + (i * 80),
+      width: 700,
+      height: 80,
+      style: { fontSize: 12, color: '#111827', textAlign: 'left' }
+    })),
+    referees: (mockTemplate.referees || []).map((ref: any, i: number) => ({
+      id: `ref${i+1}`,
+      name: ref.name || '',
+      email: ref.email || '',
+      phone: ref.phone || '',
+      address: ref.address || '',
+      x: 50,
+      y: 950 + (i * 60),
+      width: 700,
+      height: 60,
+      style: { fontSize: 12, color: '#111827', textAlign: 'left' }
+    })),
+    skills: (mockTemplate.skills || []).map((skill: any, i: number) => ({
+      id: `skill${i+1}`,
+      name: skill.name || '',
+      level: skill.level || 50,
+      x: 50 + (i % 4 * 100),
+      y: 800 + (Math.floor(i / 4) * 40),
+      width: 200,
+      height: 40,
+      style: { fontSize: 12, color: '#111827', textAlign: 'left' }
+    })),
+    hobbies: mockTemplate.hobbies || [],
+    boards: (mockTemplate.boards || []).map((board: any, i: number) => ({
+      id: `board${i+1}`,
+      name: board.name || '',
+      role: board.role || '',
+      x: 50,
+      y: 1100 + (i * 80),
+      width: 700,
+      height: 60,
+      style: { fontSize: 12, color: '#111827', textAlign: 'left' }
+    })),
+    aesthetics: {
+      fontFamily: mockTemplate.fontFamily || 'Inter',
+      primaryColor: mockTemplate.primaryColor || '#000',
+      backgroundColor: mockTemplate.backgroundColor || '#fff',
+      fontSize: 14,
+      elements: []
+    },
+    metadataStyle: { x:0, y:0, width:800 },
+    experienceStyle: { x:0, y:350, width:800, style:{} },
+    educationStyle: { x:0, y:600, width:800, style:{} },
+    skillsStyle: { x:0, y:800, width:800, style:{} },
+    refereeStyle: { x:0, y:950, width:800, style:{} },
+    qrStyle: { x:650, y:50, width:100, height:100 },
+    nameStyle: { x:300, y:50, width:200, style:{ fontSize:32, fontWeight:'900', color:'#000', textAlign:'center' } },
+    emailStyle: { x:300, y:100, width:200, style:{ fontSize:12, color:'#6b7280', textAlign:'center' } },
+    phoneStyle: { x:300, y:120, width:200, style:{ fontSize:12, color:'#6b7280', textAlign:'center' } },
+    summaryStyle: { x:0, y:200, width:800, style:{ fontSize:14, color:'#111827', textAlign:'center' } },
+    tier: 'free',
+    freeDownloadsUsed: 0,
+    isAdmin: false,
+    otpCode: ''
+  };
+
+  return resumeData;
+}
+
+
   commit() {
     const currentState = JSON.stringify(this.resumeState());
     if (this.history.length > 0 && this.history[this.history.length - 1] === currentState) {
@@ -486,9 +637,6 @@ referees: [{
     { id: '1y', name: 'Annual Studio', price: 7.59, duration: '1 year' }
   ];
 
-
-  // loggedIn = localStorage.getItem('isLoggedIn') === 'true';
-// this.isLoggedIn.set(loggedIn);
 
 
 
@@ -535,10 +683,12 @@ referees: [{
   return !!user.otpCode;             // ✅ true if non-empty, false if empty
 }
 
-
-getCurrentUserEmail(): string {
-  return this.userEmail() || localStorage.getItem('userEmail') || this.resumeState().email || '';
-}
+  getCurrentUserEmail(): string {
+    if (isPlatformBrowser(this.platformId)) {
+      return this.userEmail() || localStorage.getItem('userEmail') || this.resumeState().email || '';
+    }
+    return this.userEmail() || this.resumeState().email || '';
+  }
 
 
   // Example: update state after login
@@ -548,26 +698,30 @@ getCurrentUserEmail(): string {
   
 
 
-    async login(email: string, password: string): Promise<boolean> {
-      const response = await firstValueFrom(
-        this.http.post<{ token: string; email: string; isAdmin: boolean }>(
-          `${this.API_BASE}/api/auth/login`,
-          { email, password }
-        )
-      );
 
-      if (response.token) {
-        localStorage.setItem('jwt', response.token);
-        localStorage.setItem('userEmail', response.email); // ✅ persist email
-        this.isLoggedIn.set(true);
-        localStorage.setItem('isLoggedIn', 'true')
-        this.userEmail.set(response.email);
-        this.resumeState.update(prev => ({ ...prev, email: response.email }));
-        await this.loadUser(response.email);
-        return true;
-      }
-      return false;
+async login(email: string, password: string): Promise<boolean> {
+  const response = await firstValueFrom(
+    this.http.post<{ token: string; email: string; isAdmin: boolean }>(
+      `${this.API_BASE}/api/auth/login`,
+      { email, password }
+    )
+  );
+
+  if (response.token) {
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.setItem('jwt', response.token);
+      localStorage.setItem('userEmail', response.email);
+      localStorage.setItem('isLoggedIn', 'true');
     }
+    this.isLoggedIn.set(true);
+    this.userEmail.set(response.email);
+    this.resumeState.update(prev => ({ ...prev, email: response.email }));
+    await this.loadUser(response.email);
+    await this.checkEligibility();
+    return true;
+  }
+  return false;
+}
 
 
   async signup(data: Record<string, string | null>): Promise<boolean> {
@@ -590,16 +744,19 @@ getCurrentUserEmail(): string {
     }
   }
 
-  async loadUser(email: string) {
+async loadUser(email: string) {
   try {
-    const token = localStorage.getItem('jwt');
+    let token: string | null = null;
+    if (isPlatformBrowser(this.platformId)) {
+      token = localStorage.getItem('jwt');
+    }
     const user = await firstValueFrom(
       this.http.get<ResumeData>(
         `${this.API_BASE}/api/user?email=${email}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        token ? { headers: { Authorization: `Bearer ${token}` } } : {}
       )
     );
-    this.resumeState.set(user); // ✅ overwrite with backend record
+    this.resumeState.set(user);
     return user;
   } catch (error) {
     console.error('Failed to load user:', error);
@@ -608,10 +765,15 @@ getCurrentUserEmail(): string {
 }
 
 
-  logout() {
+ logout() {
     this.isLoggedIn.set(false);
     this.isAdmin.set(false);
     this.userEmail.set(null);
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.removeItem('jwt');
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('isLoggedIn');
+    }
   }
 
   async getAdminStats() {
@@ -776,32 +938,40 @@ getCurrentUserEmail(): string {
     }
   }
 
-  async checkEligibility(): Promise<{ canDownload: boolean; isPremium: boolean; hasFreeDownloadLeft: boolean }> {
+async checkEligibility(): Promise<{ canDownload: boolean; isPremium: boolean; hasFreeDownloadLeft: boolean }> {
   const email = this.resumeState().email;
-  if (!email) {
-    return { canDownload: true, isPremium: false, hasFreeDownloadLeft: false };
+  const tier = this.resumeState().tier;
+
+  if (email && !tier) {
+    return { canDownload: false, isPremium: false, hasFreeDownloadLeft: false };
   }
 
   try {
-    const token = localStorage.getItem('jwt');
+    let token: string | null = null;
+    if (isPlatformBrowser(this.platformId)) {
+      token = localStorage.getItem('jwt');
+    }
     const res = await firstValueFrom(
       this.http.post<{ canDownload: boolean; isPremium: boolean; hasFreeDownloadLeft: boolean }>(
         `${this.API_BASE}/api/resume/check-eligibility`,
         { email },
-        { headers: { Authorization: `Bearer ${token}` } }
+        token ? { headers: { Authorization: `Bearer ${token}` } } : {}
       )
     );
 
-    this.isPremium.set(res.isPremium);
+    const premiumTiers = ['1y', '1m', '2w'];
+    const isPremium = (tier && premiumTiers.includes(tier)) || res.isPremium;
+
+    this.isPremium.set(isPremium);
     this.hasFreeDownloadLeft.set(res.hasFreeDownloadLeft);
-    this.isPaid.set(res.isPremium);
-    return res;
+    this.isPaid.set(isPremium);
+
+    return { canDownload: res.canDownload, isPremium, hasFreeDownloadLeft: res.hasFreeDownloadLeft };
   } catch (error) {
     console.error('Eligibility check failed:', error);
     return { canDownload: false, isPremium: false, hasFreeDownloadLeft: false };
   }
 }
-
 
   async enhanceText(text: string): Promise<string> {
     if (!text.trim()) return text;
@@ -819,21 +989,21 @@ getCurrentUserEmail(): string {
     }
   }
 
-    async initiatePayment(email: string, tierId: string, amount: number): Promise<any> {
-      const response = await fetch(`http://localhost:8080/api/payment/initiate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, tierId, amount })
-      });
-      const result = await response.json();
-
-      if (result.authorization_url) {
-        // ✅ append tierId to callback URL
-        window.location.href = result.authorization_url;
-      }
-      return result;
+  async initiatePayment(email: string, tierId: string, amount: number) {
+    if (!isPlatformBrowser(this.platformId)) {
+      return; // skip in SSR
     }
-
+    const response = await fetch(`http://localhost:8080/api/payment/initiate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, tierId, amount })
+    });
+    const result = await response.json();
+    if (isPlatformBrowser(this.platformId) && result.authorization_url) {
+  window.location.href = result.authorization_url;
+}
+    return result;
+  }
 
 
   async verifyPayment(reference: string): Promise<any> {
@@ -1069,7 +1239,11 @@ getDefaultResume(): ResumeData {
 }
 
  async runCoachAnalysis(resumeData: unknown) {
-  const token = localStorage.getItem('jwt');
+    let token: string | null = null;
+  if (isPlatformBrowser(this.platformId)) {
+    token = localStorage.getItem('jwt');
+  }
+
   return firstValueFrom(
     this.http.post<{ atsScore: number; suggestions: string[] }>(
       `${this.API_BASE}/api/ai/coach`,
@@ -1139,90 +1313,39 @@ async polishSummary(summary: string): Promise<{ result?: string; requiresSubscri
 
   async loadTemplate(templateId: string): Promise<ResumeData> {
   try {
-    const token = localStorage.getItem('jwt');
-    const response = await firstValueFrom(
-      this.http.get<ResumeData>(
+    let token: string | null = null;
+    if (isPlatformBrowser(this.platformId)) {
+      token = localStorage.getItem('jwt');
+    }
+
+    const mockTemplate = await firstValueFrom(
+      this.http.get<any>(
         `${this.API_BASE}/api/templates/${templateId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
     );
 
+    const resumeData = this.convertMockTemplateToResumeData(mockTemplate);
+
     // Replace current resume state with the selected template
-    this.resumeState.set(response);
+    this.resumeState.set(resumeData);
     this.commit();
-    return response;
+    return resumeData;
   } catch (error) {
     console.error('Failed to load template:', error);
     throw error;
   }
 }
 
-
-  async downloadPdf() {
-  const canvas = document.getElementById('resume-canvas');
-  if (!canvas) {
-    alert('Canvas not found');
-    return;
-  }
-
-  const html = `
-  <!DOCTYPE html>
-  <html>
-  <head>
-    <meta charset="utf-8">
-    <title>Resume</title>
-    <style>
-      body { font-family: ${this.resumeState().aesthetics.fontFamily}, sans-serif; }
-    </style>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto&family=Open+Sans&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  </head>
-  <body>${canvas.outerHTML}</body>
-  </html>`;
-
-  const token = localStorage.getItem('jwt');
-  const resp = await firstValueFrom(
+async exportHtml(html: string, token: string | null) {
+  return firstValueFrom(
     this.http.post<{ pdfUrl: string }>(
       `${this.API_BASE}/api/resume/export-html`,
       { html },
-      { headers: { Authorization: `Bearer ${token}` } }
+      token ? { headers: { Authorization: `Bearer ${token}` } } : {}
     )
   );
-
-  const link = document.createElement('a');
-  link.href = `${this.API_BASE}${resp.pdfUrl}`;
-  link.download = 'resume.pdf';
-  link.target = '_blank';   // ✅ open in new tab
-  link.rel = 'noopener';    // ✅ security best practice
-  link.click();
-
 }
-
-
-
-// Actual PDF generator/downloader
-// private async triggerPdfDownload() {
-//   try {
-//     const resumeData = this.resumeState();
-//     const token = localStorage.getItem('jwt');
-//     const response = await firstValueFrom(
-//   this.http.post<{ pdfUrl: string }>(
-//       `${this.API_BASE}/api/resume/generate-pdf`,
-//       resumeData,
-//       { headers: { Authorization: `Bearer ${token}` } }
-//     )
-//   );
-
-//   // ✅ Use absolute HTTP URL, not file://
-//   const link = document.createElement('a');
-//   link.href = `${this.API_BASE}${response.pdfUrl}`;
-//   link.download = 'resume.pdf';
-//   link.click();
-
-//   } catch (error) {
-//     console.error('PDF download failed:', error);
-//   }
-// }
 
 
 }

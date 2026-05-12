@@ -18,6 +18,7 @@
       "prefix": "app",
       "architect": {
         "build": {
+          
           "builder": "@angular/build:application",
           "options": {
             "aot": true,
@@ -92,7 +93,19 @@
               "src/**/*.html"
             ]
           }
-        }
+        },
+        "prerender": {
+            "builder": "@angular/build:prerender",
+            "options": {
+              "browserTarget": "app:build:production",
+              "serverTarget": "app:server:production",
+              "routes": [
+                "/", 
+                "/login" 
+              ]
+            }
+          }
+
       }
     }
   }

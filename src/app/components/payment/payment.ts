@@ -1,5 +1,5 @@
-import { Component, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Inject, inject, PLATFORM_ID, signal } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
@@ -106,7 +106,8 @@ import { ResumeService } from '../../services/resume';
 export class PaymentDialogComponent {
   private dialogRef = inject(MatDialogRef<PaymentDialogComponent>);
   private resumeService = inject(ResumeService);
-
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
+  
   tiers = [
     { id: '2w', name: '2 Weeks Access', priceKES: 260, priceUSD: '$1.99', description: 'Immediate Premium Access' },
     { id: '1m', name: 'Monthly Pro', priceKES: 525, priceUSD: '$3.99', description: 'Strategic Planning Plan' },
@@ -130,7 +131,7 @@ export class PaymentDialogComponent {
       const tier = this.selectedTier();
       const response = await this.resumeService.initiatePayment(this.email, tier.id, tier.priceKES);
 
-      if (response.authorization_url) {
+      if (isPlatformBrowser(this.platformId) && response.authorization_url) {
         window.location.href = response.authorization_url;
       } else {
         this.error.set('Payment initialization failed.');

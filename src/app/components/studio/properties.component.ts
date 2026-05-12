@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, PLATFORM_ID, Inject } from '@angular/core';
 import { ResumeService } from '../../services/resume';
 import {
 //   Component,
@@ -7,10 +7,11 @@ import {
 import { MatDialog } from "@angular/material/dialog";
 import { Router } from "@angular/router";
 import { PaymentDialogComponent } from "../payment/payment";
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { CanvasComponent } from './canvas.component';
 @Component({
   selector: 'app-properties',
   templateUrl: './propperties.component.html',
@@ -21,6 +22,7 @@ export class PropertiesComponent {
 //   @Input() resume: any;
   @Output() resumeChange = new EventEmitter<any>();
   public resumeService = inject(ResumeService);
+  public canvas = inject(CanvasComponent);
   private dialog = inject(MatDialog);
   private router = inject(Router);
 
@@ -137,16 +139,24 @@ alignVertical(direction: 'top' | 'middle' | 'bottom') {
     async exportPdf() {
       const res = await this.resumeService.checkEligibility();
       if (res.canDownload) {
-        this.resumeService.downloadPdf();
+        this.canvas.downloadPdf();
       } else {
         this.dialog.open(PaymentDialogComponent, { width: "500px" });
       }
     }
-
+constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
   share() {
-    const url = window.location.href;
-    navigator.clipboard.writeText(url);
-    alert("Studio link replicated. Copied to clipboard.");
+    if (isPlatformBrowser(this.platformId)) {
+      const url = window.location.href;
+      navigator.clipboard.writeText(url).then(() => {
+        // Replace alert with a user-friendly UI notification
+        console.log("Studio link copied to clipboard.");
+        // Or use Angular Material Snackbar:
+        // this.snackBar.open("Studio link copied!", "Close", { duration: 3000 });
+      }).catch(err => {
+        console.error("Clipboard copy failed:", err);
+      });
+    }
   }
 
 }

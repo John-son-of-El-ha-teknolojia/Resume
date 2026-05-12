@@ -29,6 +29,7 @@ import { Router } from '@angular/router';
 })
 export class StudioComponent {
   public resumeService = inject(ResumeService);
+  public canvas = inject(CanvasComponent);
   
   resume = this.resumeService.getDefaultResume();
   sidebarPosition = signal<'left' | 'right'>('left');
