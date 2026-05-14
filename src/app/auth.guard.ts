@@ -1,15 +1,18 @@
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { ResumeService } from './services/resume';
+import { isPlatformBrowser } from '@angular/common';
+// import { PLATFORM_ID, Inject } from '@angular/core';
 
 export const authGuard = () => {
   const resumeService = inject(ResumeService);
   const router = inject(Router);
 
-  // Check both signal and localStorage
-  const loggedIn = resumeService.isLoggedIn();
+  // ✅ Check both signal and localStorage
+  const loggedInSignal = resumeService.isLoggedIn();
+  const loggedInStorage = typeof window !== 'undefined' && localStorage.getItem('jwt');
 
-  if (loggedIn) {
+  if (loggedInSignal || loggedInStorage) {
     return true;
   }
 

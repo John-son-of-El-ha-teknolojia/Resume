@@ -1,10 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, Inject, PLATFORM_ID, OnInit } from '@angular/core';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { NavbarComponent } from './components/navbar/navbar';
 import { AsyncPipe, isPlatformBrowser } from '@angular/common';
 import { map, filter, startWith } from 'rxjs';
-import { Inject, PLATFORM_ID } from '@angular/core';
-// import { isPlatformBrowser } from '@angular/common';
+import { ResumeService } from './services/resume';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -20,10 +19,11 @@ import { Inject, PLATFORM_ID } from '@angular/core';
   `,
   styleUrl: './app.css',
 })
-export class App {
+export class App implements OnInit {
   private router = inject(Router);
+  private resumeService = inject(ResumeService);   // ✅ inject ResumeService
   private idleTimeout: any;
-  private isActive = true; // track activity state
+  private isActive = true;
 
   showNavbar$ = this.router.events.pipe(
     filter(event => event instanceof NavigationEnd),
@@ -32,9 +32,13 @@ export class App {
     map(url => !url.includes('/writer') && !url.includes('/viewer'))
   );
 
- constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
 
   ngOnInit() {
+    // ✅ Restore session from localStorage
+    this.resumeService.initializeSession();
+
+    // ✅ Idle logout logic
     if (isPlatformBrowser(this.platformId)) {
       this.resetIdleTimer();
       ['click', 'mousemove', 'keydown'].forEach(evt =>
@@ -52,10 +56,9 @@ export class App {
       this.isActive = false;
       localStorage.removeItem('jwt');
       this.router.navigate(['/login']);
-    }, 10 * 60 * 1000); // 10 minutes
+    }, 10 * 60 * 1000);
   }
 
-  // Expose activity state for interceptor
   public getActivityState() {
     return this.isActive;
   }

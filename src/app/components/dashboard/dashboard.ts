@@ -5,6 +5,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { ResumeService } from '../../services/resume';
 import { SafeUrlPipe } from '../../pipes/safeUrl.pipe'
+import { PaymentDialogComponent } from '../payment/payment';
+import { MatDialog } from '@angular/material/dialog';
 // import path from 'path';
 
 @Component({
@@ -43,7 +45,9 @@ import { SafeUrlPipe } from '../../pipes/safeUrl.pipe'
           </div>
 
           <!-- PDF Editor Card -->
-          <div class="bg-white p-10 rounded-[2.5rem] shadow-sm border border-zinc-100 flex flex-col gap-6 group hover:shadow-xl hover:-translate-y-1 transition-all duration-500 cursor-pointer border-indigo-100/50" routerLink="/pdf-editor">
+          <div 
+          class="bg-white p-10 rounded-[2.5rem] shadow-sm border border-zinc-100 flex flex-col gap-6 group hover:shadow-xl hover:-translate-y-1 transition-all duration-500 cursor-pointer border-indigo-100/50" 
+          (click)="openPdfEditor()">
             <div class="w-16 h-16 bg-indigo-600 rounded-3xl flex items-center justify-center text-white scale-110 group-hover:rotate-6 transition-transform">
               <mat-icon class="scale-[1.5]">picture_as_pdf</mat-icon>
             </div>
@@ -120,6 +124,7 @@ import { SafeUrlPipe } from '../../pipes/safeUrl.pipe'
 export class DashboardComponent {
   resumeService = inject(ResumeService);
   private router = inject(Router);
+  private dialog = inject(MatDialog);   // ✅ inject dialog
 
   frameworks = [
     { id: 'minimal', name: 'Swiss Minimalist', tag: 'Professional', path: 'assets/CEO.html' },
@@ -133,5 +138,20 @@ export class DashboardComponent {
   this.router.navigate(['/writer']);
 }
 
+openPdfEditor() {
+  const userTier = this.resumeService.getCurrentTier();
+
+  if (userTier && userTier !== 'free') {
+    // Premium user → redirect in the same tab
+    window.location.href = 'http://localhost:2400/';
+    // or: window.open('http://localhost:2400/', '_self');
+  } else {
+    // Free user → show payment dialog
+    this.dialog.open(PaymentDialogComponent, {
+      width: '600px',
+      disableClose: true
+    });
+  }
+}
 
 }

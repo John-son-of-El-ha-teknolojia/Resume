@@ -214,7 +214,7 @@ export interface CoverLetterData {
 })
 export class ResumeService {
   private http = inject(HttpClient);
-  private readonly API_BASE = 'https://resume-backend-777-5555-1.onrender.com';
+  private readonly API_BASE = 'http://localhost:8080'; // Change to actual backend URL in production
 
   // Supported models to be handled by the backend
   public readonly SUPPORTED_MODELS = [
@@ -232,7 +232,16 @@ export class ResumeService {
   getSelectedModel() {
     return this.selectedModelId;
   }
-  
+
+getCurrentTier(): string {
+  return localStorage.getItem('tier') || this.resumeState().tier || 'free';
+}
+
+isUserLoggedIn(): boolean {
+  return localStorage.getItem('isLoggedIn') === 'true' || this.isLoggedIn();
+}
+
+
   // Selection state
   public selectedIds = signal<Set<string>>(new Set());
 
@@ -701,7 +710,7 @@ convertMockTemplateToResumeData(mockTemplate: any): ResumeData {
 
 async login(email: string, password: string): Promise<boolean> {
   const response = await firstValueFrom(
-    this.http.post<{ token: string; email: string; isAdmin: boolean }>(
+    this.http.post<{ token: string; email: string; isAdmin: boolean; tier?: string }>(
       `${this.API_BASE}/api/auth/login`,
       { email, password }
     )
@@ -710,17 +719,31 @@ async login(email: string, password: string): Promise<boolean> {
   if (response.token) {
     if (isPlatformBrowser(this.platformId)) {
       localStorage.setItem('jwt', response.token);
+      localStorage.setItem('isAdmin', response.isAdmin ? 'true' : 'false');
       localStorage.setItem('userEmail', response.email);
       localStorage.setItem('isLoggedIn', 'true');
+      if (response.tier) {
+        localStorage.setItem('tier', response.tier);
+      }
     }
+
+    // ✅ update signals
     this.isLoggedIn.set(true);
     this.userEmail.set(response.email);
+    this.isAdmin.set(response.isAdmin);   // <-- critical line
+    this.isPremium.set(!!response.tier);  // optional, if you want premium flag
+
     this.resumeState.update(prev => ({ ...prev, email: response.email }));
     await this.loadUser(response.email);
     await this.checkEligibility();
     return true;
   }
   return false;
+}
+
+
+isAdminUser(): boolean {
+  return this.isAdmin();
 }
 
 

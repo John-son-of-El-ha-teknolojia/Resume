@@ -39,15 +39,10 @@ export const routes: Routes = [
   },
   { path: 'account', component: AccountComponent, canActivate: [authGuard] },
   {
-    path: 'pdf-editor',
-    loadComponent: () => import('./components/pdf-editor/pdf-editor').then(m => m.PdfEditorComponent),
-    canActivate: [authGuard]
-  },
-  {
     path: 'admin',
     loadComponent: () => import('./components/admin/admin').then(m => m.AdminDashboardComponent),
     canActivate: [adminGuard]
   },
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
-  { path: '**', redirectTo: 'login' }
+  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+  { path: '**', redirectTo: 'dashboard' }
 ];

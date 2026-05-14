@@ -109,9 +109,10 @@ export class PaymentDialogComponent {
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
   
   tiers = [
-    { id: '2w', name: '2 Weeks Access', priceKES: 260, priceUSD: '$1.99', description: 'Immediate Premium Access' },
-    { id: '1m', name: 'Monthly Pro', priceKES: 525, priceUSD: '$3.99', description: 'Strategic Planning Plan' },
-    { id: '1y', name: 'Annual Studio', priceKES: 1040, priceUSD: '$7.99', description: 'Executive Suite Access' }
+   { id: '5d', name: '5 Days Access', priceKES: 337, priceUSD: '$2.59', description: 'Starter Premium Access' },
+    { id: '2w', name: '2 Weeks Access', priceKES: 1117, priceUSD: '$8.59', description: 'Immediate Premium Access' },
+    { id: '1m', name: 'Monthly Pro', priceKES: 1949, priceUSD: '$14.99', description: 'Strategic Planning Plan' },
+    { id: '1y', name: 'Annual Studio', priceKES: 3769, priceUSD: '$28.99', description: 'Executive Suite Access' }
   ];
 
   selectedTier = signal(this.tiers[1]);
