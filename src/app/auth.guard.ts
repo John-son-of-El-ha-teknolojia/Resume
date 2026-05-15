@@ -8,16 +8,38 @@ export const authGuard = () => {
   const resumeService = inject(ResumeService);
   const router = inject(Router);
 
-  // ✅ Check both signal and localStorage
+  // ✅ Check query params first
+  if (typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    const email = params.get('email');
+    const tier = params.get('tier');
+
+    if (token) {
+      localStorage.setItem('jwt', token);
+      if (email) localStorage.setItem('userEmail', email);
+      if (tier) localStorage.setItem('tier', tier);
+
+      // Clean up query string
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }
+
+  // ✅ Now check both signal and localStorage
   const loggedInSignal = resumeService.isLoggedIn();
   const loggedInStorage = typeof window !== 'undefined' && localStorage.getItem('jwt');
 
   if (loggedInSignal || loggedInStorage) {
+    // If user tries to hit /login while logged in, reroute to dashboard
+    if (router.url === '/login') {
+      return router.parseUrl('/dashboard');
+    }
     return true;
   }
 
   return router.parseUrl('/login');
 };
+
 
 export const adminGuard = () => {
   const resumeService = inject(ResumeService);

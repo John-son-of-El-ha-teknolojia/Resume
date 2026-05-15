@@ -64,18 +64,22 @@ import { MatDialog } from '@angular/material/dialog';
           </div>
 
           <!-- Cover Letter Card -->
-          <div class="bg-white p-10 rounded-[2.5rem] shadow-sm border border-zinc-100 flex flex-col gap-6 group hover:shadow-xl hover:-translate-y-1 transition-all duration-500 cursor-pointer" routerLink="/cover-letter">
-            <div class="w-16 h-16 bg-blue-600 rounded-3xl flex items-center justify-center text-white -rotate-3 group-hover:-rotate-6 transition-transform">
-              <mat-icon class="scale-[1.5]">auto_awesome</mat-icon>
-            </div>
-            <div>
-              <h2 class="text-2xl font-black uppercase tracking-widest mb-2">Cover Letter AI</h2>
-              <p class="text-zinc-500 line-clamp-2">Upload a job ad and let our AI agents draft a professional cover letter specifically for that role.</p>
-            </div>
-            <div class="mt-auto pt-4 flex items-center gap-2 text-blue-600 font-bold uppercase tracking-wider text-xs">
-              Craft Letter <mat-icon class="text-sm">arrow_forward</mat-icon>
-            </div>
-          </div>
+
+              <div 
+                class="bg-white p-10 rounded-[2.5rem] shadow-sm border border-zinc-100 flex flex-col gap-6 group hover:shadow-xl hover:-translate-y-1 transition-all duration-500 cursor-pointer" 
+                (click)="openCoverLetter()">
+                <div class="w-16 h-16 bg-blue-600 rounded-3xl flex items-center justify-center text-white -rotate-3 group-hover:-rotate-6 transition-transform">
+                  <mat-icon class="scale-[1.5]">auto_awesome</mat-icon>
+                </div>
+                <div>
+                  <h2 class="text-2xl font-black uppercase tracking-widest mb-2">Cover Letter AI</h2>
+                  <p class="text-zinc-500 line-clamp-2">Upload a job ad and let our AI agents draft a professional cover letter specifically for that role.</p>
+                </div>
+                <div class="mt-auto pt-4 flex items-center gap-2 text-blue-600 font-bold uppercase tracking-wider text-xs">
+                  Craft Letter <mat-icon class="text-sm">arrow_forward</mat-icon>
+                </div>
+              </div>
+
         </div>
 
         <!-- Free Templates -->
@@ -143,7 +147,7 @@ openPdfEditor() {
 
   if (userTier && userTier !== 'free') {
     // Premium user → redirect in the same tab
-    window.location.href = 'http://localhost:2400/';
+    window.location.href = 'http://localhost:2000/';
     // or: window.open('http://localhost:2400/', '_self');
   } else {
     // Free user → show payment dialog
@@ -153,5 +157,20 @@ openPdfEditor() {
     });
   }
 }
+openCoverLetter() {
+  const userTier = this.resumeService.getCurrentTier();
+
+  if (userTier && userTier !== 'free') {
+    // Premium user → redirect to cover letter module
+    window.location.href = 'http://localhost:3000/';
+  } else {
+    // Free user → show payment dialog
+    this.dialog.open(PaymentDialogComponent, {
+      width: '600px',
+      disableClose: true
+    });
+  }
+}
+
 
 }

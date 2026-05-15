@@ -280,35 +280,46 @@ isUserLoggedIn(): boolean {
 }
 
 
- async initializeSession() {
-   
 
-    let token: string | null = null;
+async initializeSession() {
   if (isPlatformBrowser(this.platformId)) {
-    token = localStorage.getItem('jwt');
-  }
+    // ✅ First, restore from query params if present
+    const params = new URLSearchParams(window.location.search);
+    const tokenParam = params.get('token');
+    const emailParam = params.get('email');
+    const tierParam = params.get('tier');
 
-    if (!token) {
-      this.logout();
-      return;
-    }
+    if (tokenParam) {
+      localStorage.setItem('jwt', tokenParam);
+      if (emailParam) localStorage.setItem('userEmail', emailParam);
+      if (tierParam) localStorage.setItem('tier', tierParam);
 
-    try {
-      let email: string | null = null;
-    if (isPlatformBrowser(this.platformId)) {
-      email = localStorage.getItem('userEmail');
-    }
-
-      if (email) {
-        await this.loadUser(email);
-        this.isLoggedIn.set(true);
-      } else {
-        this.logout();
-      }
-    } catch {
-      this.logout();
+      // Clear query params from URL so they don’t linger
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }
+
+  // ✅ Now continue with your existing logic
+  const token = isPlatformBrowser(this.platformId) ? localStorage.getItem('jwt') : null;
+
+  if (!token) {
+    this.logout();
+    return;
+  }
+
+  try {
+    const email = isPlatformBrowser(this.platformId) ? localStorage.getItem('userEmail') : null;
+
+    if (email) {
+      await this.loadUser(email);
+      this.isLoggedIn.set(true);
+    } else {
+      this.logout();
+    }
+  } catch {
+    this.logout();
+  }
+}
 
 
   resetToInitial() {
