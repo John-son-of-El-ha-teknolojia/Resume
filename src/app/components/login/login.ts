@@ -17,9 +17,9 @@ import { ResumeService } from '../../services/resume';
       <mat-card class="w-full max-w-md p-8 !rounded-3xl !border-none shadow-2xl">
         <div class="text-center mb-10">
           <div class="bg-blue-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-blue-200">
-            <mat-icon class="text-white scale-150">auto_awesome</mat-icon>
+           
           </div>
-          <h1 class="text-3xl font-black text-slate-800 uppercase tracking-tight">Welcome Back</h1>
+          <h1 class="text-3xl font-black text-slate-800 uppercase tracking-tight">Welcome</h1>
           <p class="text-slate-400 font-medium mt-2">Sign in to continue your professional journey.</p>
         </div>
 
@@ -34,20 +34,20 @@ import { ResumeService } from '../../services/resume';
           <label for="password" class="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-1">
             Password
           </label>
-          <div class="relative">
-            <input id="password" name="password"
-                  [(ngModel)]="password"
-                  [type]="showPassword() ? 'text' : 'password'"
-                  placeholder="••••••••"
-                  class="w-full bg-slate-50 border border-slate-100 rounded-xl p-4 pr-12 text-slate-800 font-bold focus:outline-none focus:border-blue-400 transition-all">
-            
-            <button type="button"
-                    mat-icon-button
-                    (click)="showPassword.set(!showPassword())"
-                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-              <mat-icon>{{ showPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
-            </button>
-          </div>
+              <div class="relative">
+                <input id="password" name="password"
+                      [(ngModel)]="password"
+                      [type]="showPassword() ? 'text' : 'password'"
+                      placeholder="••••••••"
+                      class="w-full bg-slate-50 border border-slate-100 rounded-xl p-4 pr-12 text-slate-800 font-bold focus:outline-none focus:border-blue-400 transition-all">
+
+                <button type="button"
+                        (click)="showPassword.set(!showPassword())"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-slate-400 hover:text-blue-600">
+                  <mat-icon class="text-base">{{ showPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+                </button>
+              </div>
+
         </div>
 
 
@@ -88,19 +88,27 @@ export class LoginComponent {
 
 
   constructor(private resumeService: ResumeService, private router: Router) {}
+async onLogin() {
+  this.loading = true;
+  this.loginError = null;
 
-  async onLogin() {
-    this.loading = true;
-    this.loginError = null;
-
+  try {
     const success = await this.resumeService.login(this.email, this.password);
 
     if (success) {
+      // 🚀 Navigate immediately
       this.router.navigate(['/dashboard']);
+      // ❌ Do NOT call checkEligibility() here again
     } else {
       this.loginError = 'Incorrect email or password';
     }
-
+  } catch (err) {
+    console.error('Login failed:', err);
+    this.loginError = 'Login failed';
+  } finally {
     this.loading = false;
   }
+}
+
+
 }

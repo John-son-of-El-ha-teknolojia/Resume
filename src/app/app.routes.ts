@@ -1,12 +1,13 @@
 import { Routes } from '@angular/router';
-import { authGuard, adminGuard } from './auth.guard';
+import { authGuard, adminGuard, loginGuard, rootGuard } from './auth.guard';
 import { AccountComponent } from './components/account/account';
 import { PaymentCallbackComponent } from './components/payment/payment-callback.component';
 export const routes: Routes = [
   { 
-    path: 'login', 
-    loadComponent: () => import('./components/login/login').then(m => m.LoginComponent) 
-  },
+  path: 'login', 
+  loadComponent: () => import('./components/login/login').then(m => m.LoginComponent),
+  canActivate: [loginGuard]
+},
   { 
     path: 'signup', 
     loadComponent: () => import('./components/signup/signup').then(m => m.SignupComponent) 
@@ -43,6 +44,9 @@ export const routes: Routes = [
     loadComponent: () => import('./components/admin/admin').then(m => m.AdminDashboardComponent),
     canActivate: [adminGuard]
   },
-  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-  { path: '**', redirectTo: 'dashboard' }
+   // ✅ Root route must redirect somewhere
+  { path: '', redirectTo: 'login', pathMatch: 'full' },
+  { path: '**', redirectTo: 'login' }
+
+
 ];

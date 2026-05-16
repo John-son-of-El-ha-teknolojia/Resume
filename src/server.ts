@@ -170,7 +170,7 @@ app.use((req, res, next) => {
  * The server listens on the port defined by the `PORT` environment variable, or defaults to 4000.
  */
 if (isMainModule(import.meta.url) || process.env['pm_id']) {
-  const port = process.env['PORT'] || 1000;   // ✅ changed from 4000 → 1000
+  const port = process.env['PORT'] || 4000;   // ✅ changed from 4000 → 1000
   app.listen(port, (error) => {
     if (error) throw error;
     console.log(`Resume Builder listening on http://localhost:${port}`);

@@ -68,3 +68,27 @@ export const premiumGuard = () => {
 
   return router.parseUrl('/account'); // redirect to upgrade page
 };
+
+export function loginGuard(): boolean {
+  const resumeService = inject(ResumeService);
+  const router = inject(Router);
+
+  if (resumeService.isLoggedIn()) {
+    router.navigate(['/dashboard']);
+    return false;
+  }
+  return true;
+}
+
+
+export function rootGuard(): boolean {
+  const resumeService = inject(ResumeService);
+  const router = inject(Router);
+
+  if (resumeService.isLoggedIn()) {
+    router.navigate(['/dashboard']);
+  } else {
+    router.navigate(['/login']);
+  }
+  return false; // prevent direct navigation
+}

@@ -13,7 +13,7 @@ import { ResumeService } from '../../services/resume';
       <div class="resume-container h-20 flex items-center justify-between">
         <div class="flex items-center gap-2 group cursor-pointer" routerLink="/writer">
           <div class="bg-blue-600 p-2 rounded-lg shadow-lg shadow-blue-200 group-hover:scale-110 transition-transform">
-            <mat-icon class="text-white">auto_awesome</mat-icon>
+             
           </div>
           <span class="text-xl font-black text-slate-800 uppercase tracking-tighter">Elite<span class="text-blue-600">CV</span></span>
         </div>

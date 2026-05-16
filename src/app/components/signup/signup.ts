@@ -62,37 +62,40 @@ import { ViewChildren, QueryList, ElementRef } from '@angular/core';
                   </div>
                 </div>
 
-                <div class="group">
-  <label for="password" class="block text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-2 pl-1">
-    Password
-  </label>
-  <div class="relative">
-    <input id="password" formControlName="password"
-           [type]="showPassword() ? 'text' : 'password'"
-           placeholder="Enter password"
-           class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 pr-12 text-zinc-800 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-600/10 focus:border-indigo-600 transition-all placeholder:text-zinc-300">
-    <button type="button" mat-icon-button (click)="showPassword.set(!showPassword())"
-            class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-indigo-600">
-      <mat-icon>{{ showPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
-    </button>
-  </div>
-</div>
+          <div class="group">
+            <label for="password" class="block text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-2 pl-1">
+              Password
+            </label>
+            <div class="relative">
+              <input id="password" formControlName="password"
+                    [type]="showPassword() ? 'text' : 'password'"
+                    placeholder="Enter password"
+                    class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 pr-12 text-zinc-800 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-600/10 focus:border-indigo-600 transition-all placeholder:text-zinc-300">
+              <button type="button"
+                      (click)="showPassword.set(!showPassword())"
+                      class="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-zinc-400 hover:text-indigo-600">
+                <mat-icon class="text-base">{{ showPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+            </div>
+          </div>
 
-<div class="group">
-  <label for="confirmPassword" class="block text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-2 pl-1">
-    Confirm Password
-  </label>
-  <div class="relative">
-    <input id="confirmPassword" formControlName="confirmPassword"
-           [type]="showPassword() ? 'text' : 'password'"
-           placeholder="Confirm password"
-           class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 pr-12 text-zinc-800 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-600/10 focus:border-indigo-600 transition-all placeholder:text-zinc-300">
-    <button type="button" mat-icon-button (click)="showPassword.set(!showPassword())"
-            class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-indigo-600">
-      <mat-icon>{{ showPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
-    </button>
-  </div>
-</div>
+          <div class="group">
+            <label for="confirmPassword" class="block text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-2 pl-1">
+              Confirm Password
+            </label>
+            <div class="relative">
+              <input id="confirmPassword" formControlName="confirmPassword"
+                    [type]="showPassword() ? 'text' : 'password'"
+                    placeholder="Confirm password"
+                    class="w-full bg-zinc-50 border border-zinc-100 rounded-xl p-4 pr-12 text-zinc-800 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-600/10 focus:border-indigo-600 transition-all placeholder:text-zinc-300">
+              <button type="button"
+                      (click)="showPassword.set(!showPassword())"
+                      class="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-zinc-400 hover:text-indigo-600">
+                <mat-icon class="text-base">{{ showPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+            </div>
+          </div>
+
 
 
 

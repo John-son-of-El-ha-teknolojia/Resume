@@ -2,6 +2,7 @@ import { Injectable, signal, inject, PLATFORM_ID, Inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
+import {  timeout } from 'rxjs';
 
 export interface Referee {
   id: string;
@@ -681,21 +682,22 @@ convertMockTemplateToResumeData(mockTemplate: any): ResumeData {
   }
 
 
-  async verifyOtp(email: string, code: string): Promise<{ success: boolean }> {
-    const response = await firstValueFrom(
-      this.http.post<{ success: boolean }>(
-        `${this.API_BASE}/api/auth/verify-otp`,
-        { email, code }
-      )
-    );
+ async verifyOtp(email: string, code: string): Promise<{ success: boolean }> {
+  const response = await firstValueFrom(
+    this.http.post<{ success: boolean }>(
+      `${this.API_BASE}/api/auth/verify-otp`,
+      { email, code }
+    )
+  );
 
-    if (response.success) {
-  await this.loadUser(email); // ✅ refresh full record
+  if (response.success) {
+    // 🚀 run in background
+    this.loadUser(email).catch(err => console.error('Load user failed:', err));
+  }
+
+  return response;
 }
 
-
-    return response;
-  }
 
 
  get isEmailVerified(): boolean {
@@ -719,38 +721,48 @@ convertMockTemplateToResumeData(mockTemplate: any): ResumeData {
 
 
 
+
 async login(email: string, password: string): Promise<boolean> {
-  const response = await firstValueFrom(
-    this.http.post<{ token: string; email: string; isAdmin: boolean; tier?: string }>(
-      `${this.API_BASE}/api/auth/login`,
-      { email, password }
-    )
-  );
+  try {
+    const response = await firstValueFrom(
+      this.http.post<{ token: string; email: string; isAdmin: boolean; tier?: string }>(
+        `${this.API_BASE}/api/auth/login`,
+        { email, password },
+        { observe: 'body' }
+      ).pipe(timeout(15000))
+    );
 
-  if (response.token) {
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.setItem('jwt', response.token);
-      localStorage.setItem('isAdmin', response.isAdmin ? 'true' : 'false');
-      localStorage.setItem('userEmail', response.email);
-      localStorage.setItem('isLoggedIn', 'true');
-      if (response.tier) {
-        localStorage.setItem('tier', response.tier);
+    if (response.token) {
+      // store token + flags
+      if (isPlatformBrowser(this.platformId)) {
+        localStorage.setItem('jwt', response.token);
+        localStorage.setItem('isAdmin', response.isAdmin ? 'true' : 'false');
+        localStorage.setItem('userEmail', response.email);
+        localStorage.setItem('isLoggedIn', 'true');
+        if (response.tier) localStorage.setItem('tier', response.tier);
       }
+
+      // update signals immediately
+      this.isLoggedIn.set(true);
+      this.userEmail.set(response.email);
+      this.isAdmin.set(response.isAdmin);
+      this.isPremium.set(!!response.tier);
+
+      this.resumeState.update(prev => ({ ...prev, email: response.email }));
+
+      // 🚀 background tasks
+      this.loadUser(response.email).catch(err => console.error('Load user failed:', err));
+      this.checkEligibility().catch(err => console.error('Eligibility check failed:', err));
+
+      return true; // dashboard navigation can happen instantly
     }
-
-    // ✅ update signals
-    this.isLoggedIn.set(true);
-    this.userEmail.set(response.email);
-    this.isAdmin.set(response.isAdmin);   // <-- critical line
-    this.isPremium.set(!!response.tier);  // optional, if you want premium flag
-
-    this.resumeState.update(prev => ({ ...prev, email: response.email }));
-    await this.loadUser(response.email);
-    await this.checkEligibility();
-    return true;
+    return false;
+  } catch (err) {
+    console.error('Login failed or timed out:', err);
+    return false;
   }
-  return false;
 }
+
 
 
 isAdminUser(): boolean {
