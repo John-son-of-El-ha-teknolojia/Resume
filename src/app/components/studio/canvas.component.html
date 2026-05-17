@@ -64,13 +64,13 @@
                     {{ el.content }}
                   </div>
               } @else if (el.type === 'text') {
-                <div class="w-full h-full p-2 outline-none whitespace-pre-wrap select-text" 
-                     [style.font-size.px]="el.style?.['fontSize'] || 12"
-                     [style.color]="el.style?.['color'] || '#09090b'"
-                     [style.font-weight]="el.style?.['fontWeight'] || '400'"
-                     [style.font-family]="resume?.aesthetics?.fontFamily"
-                     [contentEditable]="!el.isLocked"
-                     (blur)="el.content = $any($event.target).innerText; resumeChange.emit(resume)">{{ el.content }}</div>
+                <app-text
+                  [content]="el.content|| ''"
+                  [style]="el.style || {}"
+                  (contentChange)="el.content = $event; resumeChange.emit(resume)"
+                  (styleChange)="el.style = $event; resumeChange.emit(resume)">
+                </app-text>
+
               }
             </div>
           }
@@ -90,13 +90,12 @@
                (mousedown)="toggleSelection('nameStyle', $event)"
                [class.ring-2]="resumeService.selectedIds().has('nameStyle')" [class.ring-sky-400]="resumeService.selectedIds().has('nameStyle')"
                (cdkDragEnded)="onNameDragEnd($event)">
-            <h1 class="font-black uppercase outline-none focus:ring-1 focus:ring-zinc-200 block w-full" 
-                [style.color]="resume.nameStyle?.style?.color"
-                [style.font-size.px]="resume.nameStyle?.style?.fontSize"
-                [style.text-align]="resume.nameStyle?.style?.textAlign"
-                [style.font-family]="resume?.aesthetics?.fontFamily"
-                contentEditable 
-                (blur)="resume.name = $any($event.target).innerText; updateResume()">{{ resume.name || 'Full Name' }}</h1>
+            <app-text
+              [content]="resume.name || 'Full Name'"
+              [style]="resume.nameStyle?.style"
+              (contentChange)="resume.name = $event; updateResume()"
+              (styleChange)="resume.nameStyle.style = $event; updateResume()">
+            </app-text>
             <div class="absolute -top-6 left-0 text-[8px] font-black uppercase text-zinc-300 opacity-0 group-hover/layer:opacity-100 transition-opacity whitespace-nowrap layer-label">Name Layer</div>
           </div>
         }
@@ -110,12 +109,13 @@
                (mousedown)="toggleSelection('emailStyle', $event)"
                [class.ring-2]="resumeService.selectedIds().has('emailStyle')" [class.ring-sky-400]="resumeService.selectedIds().has('emailStyle')"
                (cdkDragEnded)="onEmailDragEnd($event)">
-            <span contentEditable class="outline-none focus:ring-1 focus:ring-zinc-200 font-black uppercase block w-full" 
-                  [style.color]="resume.emailStyle?.style?.color"
-                  [style.font-size.px]="resume.emailStyle?.style?.fontSize"
-                  [style.text-align]="resume.emailStyle?.style?.textAlign"
-                  [style.font-family]="resume?.aesthetics?.fontFamily"
-                  (blur)="resume.email = $any($event.target).innerText; updateResume()">{{ resume.email || 'Email' }}</span>
+            <app-text
+              [content]="resume.email || 'Email'"
+              [style]="resume.emailStyle?.style || {}"
+              (contentChange)="resume.email = $event; updateResume()"
+              (styleChange)="resume.emailStyle ? resume.emailStyle.style = $event : null; updateResume()">
+            </app-text>
+
             <div class="absolute -top-6 left-0 text-[8px] font-black uppercase text-zinc-300 opacity-0 group-hover/layer:opacity-100 transition-opacity whitespace-nowrap layer-label">Email Layer</div>
           </div>
         }
@@ -130,15 +130,13 @@
               [class.ring-2]="resumeService.selectedIds().has('phoneStyle')"
               [class.ring-sky-400]="resumeService.selectedIds().has('phoneStyle')"
               (cdkDragEnded)="onPhoneDragEnd($event)">
-            <span contentEditable
-                  class="outline-none focus:ring-1 focus:ring-zinc-200 font-black uppercase block w-full"
-                  [style.color]="resume.phoneStyle?.style?.color"
-                  [style.font-size.px]="resume.phoneStyle?.style?.fontSize"
-                  [style.text-align]="resume.phoneStyle?.style?.textAlign"
-                  [style.font-family]="resume?.aesthetics?.fontFamily"
-                  (blur)="resume.phone = $any($event.target).innerText; updateResume()">
-              {{ resume.phoneCountryCode }} {{ resume.phone || 'Phone' }}
-            </span>
+          <app-text
+            [content]="resume.phoneCountryCode + ' ' + (resume.phone || 'Phone')"
+            [style]="resume.phoneStyle?.style || {}"
+            (contentChange)="resume.phone = $event; updateResume()"
+            (styleChange)="resume.phoneStyle ? resume.phoneStyle.style = $event : null; updateResume()">
+          </app-text>
+
             <div class="absolute -top-6 left-0 text-[8px] font-black uppercase text-zinc-300 opacity-0 group-hover/layer:opacity-100 transition-opacity whitespace-nowrap layer-label">Phone Layer</div>
           </div>
         }
@@ -173,8 +171,13 @@
                 [class.ring-2]="resumeService.selectedIds().has('summaryStyle')" [class.ring-sky-400]="resumeService.selectedIds().has('summaryStyle')"
                 (cdkDragEnded)="onSummaryDragEnd($event)">
              <section class="max-w-xl mx-auto text-center">
-                <p class="text-xs leading-relaxed text-zinc-600 font-medium italic outline-none focus:ring-1 focus:ring-zinc-200 p-1" [style.font-family]="resume?.aesthetics?.fontFamily"
-                   contentEditable (blur)="resume.summary = $any($event.target).innerText; updateResume()">"{{ resume.summary }}"</p>
+                <app-text
+                  [content]="resume.summary || 'Professional Summary'"
+                  [style]="resume.summaryStyle?.style || {}"
+                  (contentChange)="resume.summary = $event; updateResume()"
+                  (styleChange)="resume.summaryStyle ? resume.summaryStyle.style = $event : null; updateResume()">
+                </app-text>
+
              </section>
              <div class="absolute -top-6 left-0 text-[8px] font-black uppercase text-zinc-300 opacity-0 group-hover/layer:opacity-100 transition-opacity whitespace-nowrap layer-label">Summary Block</div>
            </div>
@@ -191,15 +194,12 @@
                (mousedown)="toggleSelection('experienceStyle', $event)"
                [class.ring-2]="resumeService.selectedIds().has('experienceStyle')" [class.ring-sky-400]="resumeService.selectedIds().has('experienceStyle')"
                (cdkDragEnded)="onExperienceDragEnd($event)">
-            <h3 class="font-black uppercase flex items-center gap-4 outline-none focus:ring-1 focus:ring-zinc-200 px-1"
-              contentEditable
-              [style.color]="resume.experienceStyle?.style?.color || '#444'"
-              [style.font-size.px]="resume.experienceStyle?.style?.fontSize || 12"
-              [style.font-family]="resume?.aesthetics?.fontFamily"
-              (blur)="onExperienceHeaderBlur($event)">
-            Experience <span class="flex-1 h-px bg-zinc-100"></span>
-          </h3>
-
+            <app-text
+              [content]="'Experience'"
+              [style]="resume.experienceStyle?.style || {}"
+              (contentChange)="onExperienceHeaderBlur($event)"
+              (styleChange)="resume.experienceStyle.style = $event; updateResume()">
+            </app-text>
 
             <div class="absolute -top-6 left-0 text-[8px] font-black uppercase text-zinc-300 opacity-0 group-hover/layer:opacity-100 transition-opacity whitespace-nowrap layer-label">Experience Header</div>
           </div>
@@ -214,15 +214,43 @@
                  [class.ring-2]="resumeService.selectedIds().has(exp.id)" [class.ring-sky-400]="resumeService.selectedIds().has(exp.id)"
                  (cdkDragEnded)="onExperienceItemDragEnd($event, exp)">
               <div class="flex justify-between items-start">
-                 <h4 class="font-black uppercase text-zinc-900 text-sm outline-none focus:ring-1 focus:ring-zinc-200 px-1" [style.font-family]="resume?.aesthetics?.fontFamily" contentEditable (blur)="exp.company = $any($event.target).innerText; updateResume()">{{ exp.company || 'Company Name' }}</h4>
+                 <app-text
+                  [content]="exp.company || 'Company Name'"
+                  [style]="exp.companyStyle || {}"
+                  (contentChange)="exp.company = $event; updateResume()"
+                  (styleChange)="exp.style.company = $event; updateResume()">
+                </app-text>
+
                  <div class="flex items-center gap-1">
-                  <span class="text-[9px] font-black uppercase" [style.font-family]="resume?.aesthetics?.fontFamily" contentEditable (blur)="exp.startDate = $any($event.target).innerText; updateResume()">{{ exp.startDate || 'Start' }}</span>
+                  <app-text
+                    [content]="exp.startDate || 'Start'"
+                    [style]="exp.startDateStyle || {}"
+                    (contentChange)="exp.startDate = $event; updateResume()"
+                    (styleChange)="exp.style.startDate = $event; updateResume()">
+                  </app-text>
                   <span class="text-[9px] font-black uppercase mx-1">-</span>
-                  <span class="text-[9px] font-black uppercase" [style.font-family]="resume?.aesthetics?.fontFamily" contentEditable (blur)="exp.endDate = $any($event.target).innerText; updateResume()">{{ exp.current ? 'Present' : (exp.endDate || 'End') }}</span>
+                  <app-text
+                    [content]="exp.current ? 'Present' : (exp.endDate || 'End')"
+                    [style]="exp.endDateStyle || {}"
+                    (contentChange)="exp.endDate = $event; updateResume()"
+                    (styleChange)="exp.style.endDate = $event; updateResume()">
+                  </app-text>
                  </div>
               </div>
-              <p class="text-xs text-zinc-400 font-bold mb-2 outline-none focus:ring-1 focus:ring-zinc-200 px-1" [style.font-family]="resume?.aesthetics?.fontFamily" contentEditable (blur)="exp.title = $any($event.target).innerText; updateResume()">{{ exp.title || 'Job Title' }}</p>
-              <p class="text-xs text-zinc-600 leading-relaxed outline-none focus:ring-1 focus:ring-zinc-200 p-1" contentEditable (blur)="exp.content = $any($event.target).innerText; updateResume()">{{ exp.content || 'Share your achievements...' }}</p>
+              <app-text
+                [content]="exp.title || 'Job Title'"
+                [style]="exp.titleStyle || {}"
+                (contentChange)="exp.title = $event; updateResume()"
+                (styleChange)="exp.style.title = $event; updateResume()">
+              </app-text>
+
+              <app-text
+                [content]="exp.content || 'Share your achievements...'"
+                [style]="exp.contentStyle || {}"
+                (contentChange)="exp.content = $event; updateResume()"
+                (styleChange)="exp.style.content = $event; updateResume()">
+              </app-text>
+
               <div class="absolute -top-6 left-0 text-[8px] font-black uppercase text-zinc-300 opacity-0 group-hover/layer:opacity-100 transition-opacity">Job Entry #{{i + 1}}</div>
             </div>
           }
@@ -239,14 +267,13 @@
                (mousedown)="toggleSelection('educationStyle', $event)"
                [class.ring-2]="resumeService.selectedIds().has('educationStyle')" [class.ring-sky-400]="resumeService.selectedIds().has('educationStyle')"
                (cdkDragEnded)="onEducationDragEnd($event)">
-              <h3 class="font-black uppercase flex items-center gap-4 outline-none focus:ring-1 focus:ring-zinc-200 px-1"
-                  contentEditable
-                  [style.color]="resume.educationStyle?.style?.color || '#444'"
-                  [style.font-size.px]="resume.educationStyle?.style?.fontSize || 12"
-                  [style.font-family]="resume?.aesthetics?.fontFamily"
-                  (blur)="onEducationHeaderBlur($event)">
-                Education <span class="flex-1 h-px bg-zinc-100"></span>
-              </h3>
+              <app-text
+                [content]="'Education'"
+                [style]="resume.educationStyle?.style"
+                (contentChange)="onEducationHeaderBlur($event)"
+                (styleChange)="resume.educationStyle.style = $event; updateResume()">
+              </app-text>
+
 
             <div class="absolute -top-6 left-0 text-[8px] font-black uppercase text-zinc-300 opacity-0 group-hover/layer:opacity-100 transition-opacity whitespace-nowrap layer-label">Education Header</div>
           </div>
@@ -261,14 +288,38 @@
                  [class.ring-2]="resumeService.selectedIds().has(edu.id)" [class.ring-sky-400]="resumeService.selectedIds().has(edu.id)"
                  (cdkDragEnded)="onEducationItemDragEnd($event, edu)">
               <div class="flex justify-between items-start">
-                 <h4 class="font-black uppercase text-zinc-900 text-sm outline-none focus:ring-1 focus:ring-zinc-200 px-1" [style.font-family]="resume?.aesthetics?.fontFamily" contentEditable (blur)="edu.school = $any($event.target).innerText; updateResume()">{{ edu.school || 'Institution' }}</h4>
+
+                 <app-text
+                  [content]="edu.school || 'Institution'"
+                  [style]="edu.schoolStyle || {}"
+                  (contentChange)="edu.school = $event; updateResume()"
+                  (styleChange)="edu.style.school = $event; updateResume()">
+                </app-text>
+
                  <div class="flex items-center gap-1">
-                  <span class="text-[9px] font-black uppercase" [style.font-family]="resume?.aesthetics?.fontFamily" contentEditable (blur)="edu.startDate = $any($event.target).innerText; updateResume()">{{ edu.startDate || 'Start' }}</span>
+                  <app-text
+                    [content]="edu.startDate || 'Start'"
+                    [style]="edu.startDateStyle || {}"
+                    (contentChange)="edu.startDate = $event; updateResume()"
+                    (styleChange)="edu.style.startDate = $event; updateResume()">
+                  </app-text>
                   <span class="text-[9px] font-black uppercase mx-1">-</span>
-                  <span class="text-[9px] font-black uppercase" [style.font-family]="resume?.aesthetics?.fontFamily" contentEditable (blur)="edu.endDate = $any($event.target).innerText; updateResume()">{{ edu.endDate || 'End' }}</span>
+                  <app-text
+                    [content]="edu.endDate || 'End'"
+                    [style]="edu.endDateStyle || {}"
+                    (contentChange)="edu.endDate = $event; updateResume()"
+                    (styleChange)="edu.style.endDate = $event; updateResume()">
+                  </app-text>
                  </div>
               </div>
-              <p class="text-xs text-zinc-400 font-bold outline-none focus:ring-1 focus:ring-zinc-200 px-1" [style.font-family]="resume?.aesthetics?.fontFamily" contentEditable (blur)="edu.degree = $any($event.target).innerText; updateResume()">{{ edu.degree || 'Degree Title' }}</p>
+
+              <app-text
+                [content]="edu.degree || 'Degree Title'"
+                [style]="edu.degreeStyle || {}"
+                (contentChange)="edu.degree = $event; updateResume()"
+                (styleChange)="edu.style.degree = $event; updateResume()">
+              </app-text>
+
               <div class="absolute -top-6 left-0 text-[8px] font-black uppercase text-zinc-300 opacity-0 group-hover/layer:opacity-100 transition-opacity">Education #{{i + 1}}</div>
             </div>
           }
@@ -285,14 +336,13 @@
                 (mousedown)="toggleSelection('skillsStyle', $event)"
                 [class.ring-2]="resumeService.selectedIds().has('skillsStyle')" [class.ring-sky-400]="resumeService.selectedIds().has('skillsStyle')"
                 (cdkDragEnded)="onSkillsDragEnd($event)">
-             <h3 class="font-black uppercase flex items-center gap-4 outline-none focus:ring-1 focus:ring-zinc-200 px-1"
-                contentEditable
-                [style.color]="resume.skillsStyle?.style?.color || '#444'"
-                [style.font-size.px]="resume.skillsStyle?.style?.fontSize || 12"
-                [style.font-family]="resume?.aesthetics?.fontFamily"
-                (blur)="onSkillsHeaderBlur($event)">
-              Skills <span class="flex-1 h-px bg-zinc-100"></span>
-            </h3>
+             <app-text
+              [content]="'Skills'"
+              [style]="resume.skillsStyle?.style"
+              (contentChange)="onSkillsHeaderBlur($event)"
+              (styleChange)="resume.skillsStyle.style = $event; updateResume()">
+            </app-text>
+
 
              <div class="absolute -top-6 left-0 text-[8px] font-black uppercase text-zinc-300 opacity-0 group-hover/layer:opacity-100 transition-opacity whitespace-nowrap layer-label">Skills Header</div>
            </div>
@@ -306,7 +356,13 @@
                   (mousedown)="toggleSelection(skill.id, $event)"
                   [class.ring-2]="resumeService.selectedIds().has(skill.id)" [class.ring-sky-400]="resumeService.selectedIds().has(skill.id)"
                   (cdkDragEnded)="onSkillItemDragEnd($event, skill)">
-               <span class="px-3 py-1 bg-zinc-50 border border-zinc-100 text-[10px] font-black uppercase text-zinc-900 rounded outline-none focus:ring-1 focus:ring-zinc-200" [style.font-family]="resume?.aesthetics?.fontFamily" contentEditable (blur)="skill.name = $any($event.target).innerText; updateResume()">{{ skill.name }}</span>
+               <app-text
+                [content]="skill.name || 'Skill'"
+                [style]="skill.style || {}"
+                (contentChange)="skill.name = $event; updateResume()"
+                (styleChange)="skill.style = $event; updateResume()">
+              </app-text>
+
              </div>
            }
         }
@@ -322,14 +378,13 @@
                (mousedown)="toggleSelection('refereeStyle', $event)"
                [class.ring-2]="resumeService.selectedIds().has('refereeStyle')" [class.ring-sky-400]="resumeService.selectedIds().has('refereeStyle')"
                (cdkDragEnded)="onRefereeDragEnd($event)">
-            <h3 class="font-black uppercase flex items-center gap-4 outline-none focus:ring-1 focus:ring-zinc-200 px-1"
-                contentEditable
-                [style.color]="resume.refereeStyle?.style?.color || '#444'"
-                [style.font-size.px]="resume.refereeStyle?.style?.fontSize || 12"
-                [style.font-family]="resume?.aesthetics?.fontFamily"
-                (blur)="onRefereeHeaderBlur($event)">
-              Referees <span class="flex-1 h-px bg-zinc-100"></span>
-            </h3>
+            <app-text
+              [content]="'Referees'"
+              [style]="resume.refereeStyle?.style"
+              (contentChange)="onRefereeHeaderBlur($event)"
+              (styleChange)="resume.refereeStyle.style = $event; updateResume()">
+            </app-text>
+
 
             <div class="absolute -top-6 left-0 text-[8px] font-black uppercase text-zinc-300 opacity-0 group-hover/layer:opacity-100 transition-opacity whitespace-nowrap layer-label">Referees Header</div>
           </div>
@@ -344,8 +399,20 @@
                  [class.ring-2]="resumeService.selectedIds().has(ref.id)" [class.ring-sky-400]="resumeService.selectedIds().has(ref.id)"
                  (cdkDragEnded)="onRefereeItemDragEnd($event, ref)">
               <div class="space-y-1">
-                <p class="text-xs font-black uppercase text-zinc-900 outline-none focus:ring-1 focus:ring-zinc-200 px-1" [style.font-family]="resume?.aesthetics?.fontFamily" contentEditable (blur)="ref.name = $any($event.target).innerText; updateResume()">{{ ref.name || 'Referee Name' }}</p>
-                <p class="text-[9px] text-zinc-400 font-bold outline-none focus:ring-1 focus:ring-zinc-200 px-1" [style.font-family]="resume?.aesthetics?.fontFamily" contentEditable (blur)="ref.email = $any($event.target).innerText; updateResume()">{{ ref.email || 'Email Address' }}</p>
+               <app-text
+                [content]="ref.name || 'Referee Name'"
+                [style]="ref.nameStyle || {}"
+                (contentChange)="ref.name = $event; updateResume()"
+                (styleChange)="ref.style.name = $event; updateResume()">
+              </app-text>
+
+                <app-text
+                  [content]="ref.email || 'Email Address'"
+                  [style]="ref.emailStyle || {}"
+                  (contentChange)="ref.email = $event; updateResume()"
+                  (styleChange)="ref.style.email = $event; updateResume()">
+                </app-text>
+
               </div>
               <div class="absolute -top-6 left-0 text-[8px] font-black uppercase text-zinc-300 opacity-0 group-hover/layer:opacity-100 transition-opacity">Referee #{{i + 1}}</div>
             </div>
@@ -375,16 +442,14 @@
                    <img [src]="el.url" class="w-full h-full object-cover rounded shadow-sm" [style.transform]="getImageMirror(el)" [style.opacity]="el.style?.['opacity'] || 1">
                  }
                  @case ('text') {
-                   <div class="w-full h-full flex items-center justify-center p-2 outline-none focus:ring-1 focus:ring-sky-200" 
-                        contentEditable
-                        [style.font-size.px]="el.style?.['fontSize'] || 14"
-                        [style.color]="el.style?.['color'] || '#000'"
-                        [style.font-weight]="el.style?.['fontWeight'] || 'normal'"
-                        [style.text-align]="el.style?.['textAlign'] || 'left'"
-                        (blur)="el.content = $any($event.target).innerText; updateResume()">
-                     {{ el.content }}
-                   </div>
-                 }
+                    <app-text
+                      [content]="el.content || ''"
+                      [style]="el.style"
+                      (contentChange)="el.content = $event; resumeChange.emit(resume)"
+                      (styleChange)="el.style = $event; resumeChange.emit(resume)">
+                    </app-text>
+                  }
+
                  @case ('box') {
                    <!--Resize Handle (only visible when selected)-->
                     <div class="w-full h-full rounded shadow-sm"

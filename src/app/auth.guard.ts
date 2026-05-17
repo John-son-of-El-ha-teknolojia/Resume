@@ -8,22 +8,10 @@ export const authGuard = () => {
   const resumeService = inject(ResumeService);
   const router = inject(Router);
 
-  // ✅ Check query params first
-  if (typeof window !== 'undefined') {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get('token');
-    const email = params.get('email');
-    const tier = params.get('tier');
+//   // ✅ Check query params first
+//   const loggedInSignal = resumeService.isLoggedIn();
+// const loggedInStorage = typeof window !== 'undefined' && localStorage.getItem('jwt');
 
-    if (token) {
-      localStorage.setItem('jwt', token);
-      if (email) localStorage.setItem('userEmail', email);
-      if (tier) localStorage.setItem('tier', tier);
-
-      // Clean up query string
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-  }
 
   // ✅ Now check both signal and localStorage
   const loggedInSignal = resumeService.isLoggedIn();
@@ -31,9 +19,10 @@ export const authGuard = () => {
 
   if (loggedInSignal || loggedInStorage) {
     // If user tries to hit /login while logged in, reroute to dashboard
-    if (router.url === '/login') {
+    if (router.routerState.snapshot.url === '/login') {
       return router.parseUrl('/dashboard');
     }
+
     return true;
   }
 
@@ -69,26 +58,24 @@ export const premiumGuard = () => {
   return router.parseUrl('/account'); // redirect to upgrade page
 };
 
-export function loginGuard(): boolean {
+export function loginGuard() {
   const resumeService = inject(ResumeService);
   const router = inject(Router);
 
   if (resumeService.isLoggedIn()) {
-    router.navigate(['/dashboard']);
-    return false;
+    return router.parseUrl('/dashboard');
   }
   return true;
 }
 
 
-export function rootGuard(): boolean {
+
+export function rootGuard() {
   const resumeService = inject(ResumeService);
   const router = inject(Router);
 
   if (resumeService.isLoggedIn()) {
-    router.navigate(['/dashboard']);
-  } else {
-    router.navigate(['/login']);
+    return router.parseUrl('/dashboard');
   }
-  return false; // prevent direct navigation
+  return router.parseUrl('/login');
 }

@@ -44,6 +44,16 @@ export const routes: Routes = [
     loadComponent: () => import('./components/admin/admin').then(m => m.AdminDashboardComponent),
     canActivate: [adminGuard]
   },
+  {
+    path: 'pdf-editor',
+    loadChildren: () =>
+      import('pdfEditor/PdfEditorModule').then(m => m.PdfEditorModule),
+  },
+  {
+    path: 'cover-letter',
+    loadChildren: () =>
+      import('coverLetter/CoverLetterModule').then(m => m.CoverLetterModule),
+  },
    // ✅ Root route must redirect somewhere
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: '**', redirectTo: 'login' }

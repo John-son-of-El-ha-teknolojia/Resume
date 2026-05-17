@@ -3,7 +3,10 @@ import angular from '@analogjs/vite-plugin-angular';
 
 export default defineConfig({
   server: {
-    port: 3000,
+  //   mimeTypes: {
+  //   'js': 'application/javascript'
+  // },
+    port: 4000,
     host: 'localhost',
     proxy: {
       '/api': {

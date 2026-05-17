@@ -7,12 +7,14 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { firstValueFrom } from 'rxjs';
 import { PLATFORM_ID } from '@angular/core';
+import { TextComponent } from '../studio/text/text.component'; // adjust path
 
 @Component({
   selector: 'app-canvas',
   standalone: true,
   imports: [
-    CommonModule, 
+    CommonModule,
+    TextComponent, 
     DragDropModule,
     MatIconModule,
     MatButtonModule,

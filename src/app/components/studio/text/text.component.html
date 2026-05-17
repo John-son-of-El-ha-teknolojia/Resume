@@ -1,0 +1,21 @@
+<div class="text-block" 
+     contentEditable="true"
+     [style.font-size.px]="style.fontSize"
+     [style.font-weight]="style.fontWeight"
+     [style.font-style]="style.fontStyle"
+     [style.text-decoration]="style.textDecoration"
+     [style.color]="style.color"
+     [style.background-color]="style.backgroundColor"
+     (blur)="updateContent($event)">
+  {{ content }}
+</div>
+
+<!-- Formatting Toolbar -->
+<div class="toolbar">
+  <button (click)="applyStyle('fontWeight', style.fontWeight === 'bold' ? 'normal' : 'bold')">B</button>
+  <button (click)="applyStyle('fontStyle', style.fontStyle === 'italic' ? 'normal' : 'italic')">I</button>
+  <button (click)="applyStyle('textDecoration', style.textDecoration === 'underline' ? 'none' : 'underline')">U</button>
+  
+  <input type="color" [value]="style.color" (input)="applyStyle('color', $event.target.value)">
+  <input type="color" [value]="style.backgroundColor" (input)="applyStyle('backgroundColor', $event.target.value)">
+</div>

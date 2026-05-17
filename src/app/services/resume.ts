@@ -14,11 +14,9 @@ export interface Referee {
   y?: number;
   width?: number;
   height?: number;
-  style?: {
-    fontSize?: number;
-    color?: string;
-    textAlign?: string;
-  };
+  style?: any;
+  nameStyle?: any;
+  emailStyle?: any;
 }
 
 export interface Experience {
@@ -33,11 +31,12 @@ export interface Experience {
   y?: number;
   width?: number;
   height?: number;
-  style?: {
-    fontSize?: number;
-    color?: string;
-    textAlign?: string;
-  };
+  style?: any;              // shared style
+  companyStyle?: any;       // per-field style
+  titleStyle?: any;
+  contentStyle?: any;
+  startDateStyle?: any;
+  endDateStyle?: any;
 }
 
 export interface ResumeSection {
@@ -99,11 +98,11 @@ export interface Education {
   y?: number;
   width?: number;
   height?: number;
-  style?: {
-    fontSize?: number;
-    color?: string;
-    textAlign?: string;
-  };
+  style?: any;
+  schoolStyle?: any;
+  degreeStyle?: any;
+  startDateStyle?: any;
+  endDateStyle?: any;
 }
 
 export interface Hobby {
@@ -268,7 +267,6 @@ isUserLoggedIn(): boolean {
   private initialState: string | null = null;
 
   constructor(
-  private https: HttpClient,
   @Inject(PLATFORM_ID) private platformId: Object
 ) {
   // Initialize history with current state
@@ -283,43 +281,57 @@ isUserLoggedIn(): boolean {
 
 
 async initializeSession() {
+  console.time('initializeSession');
   if (isPlatformBrowser(this.platformId)) {
-    // ✅ First, restore from query params if present
+    console.log('[Session] Checking query params...');
     const params = new URLSearchParams(window.location.search);
-    const tokenParam = params.get('token');
-    const emailParam = params.get('email');
-    const tierParam = params.get('tier');
+    console.log('[Session] Params:', Object.fromEntries(params.entries()));
+  }
 
-    if (tokenParam) {
-      localStorage.setItem('jwt', tokenParam);
-      if (emailParam) localStorage.setItem('userEmail', emailParam);
-      if (tierParam) localStorage.setItem('tier', tierParam);
+  const token = isPlatformBrowser(this.platformId) ? localStorage.getItem('jwt') : null;
+  console.log('[Session] Token found:', token);
 
-      // Clear query params from URL so they don’t linger
+  if (!token) {
+    console.warn('[Session] No token, logging out');
+    this.logout();
+    console.timeEnd('initializeSession');
+    return;
+  }
+
+  if (typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    const email = params.get('email');
+    const tier = params.get('tier');
+
+    if (token) {
+      localStorage.setItem('jwt', token);
+      if (email) localStorage.setItem('userEmail', email);
+      if (tier) localStorage.setItem('tier', tier);
+
+      // Clean up query string
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }
 
-  // ✅ Now continue with your existing logic
-  const token = isPlatformBrowser(this.platformId) ? localStorage.getItem('jwt') : null;
-
-  if (!token) {
-    this.logout();
-    return;
-  }
-
   try {
     const email = isPlatformBrowser(this.platformId) ? localStorage.getItem('userEmail') : null;
+    console.log('[Session] Email found:', email);
 
     if (email) {
+      console.time('loadUser');
       await this.loadUser(email);
+      console.timeEnd('loadUser');
       this.isLoggedIn.set(true);
     } else {
+      console.warn('[Session] No email, logging out');
       this.logout();
     }
-  } catch {
+  } catch (err) {
+    console.error('[Session] Error loading user:', err);
     this.logout();
   }
+  console.timeEnd('initializeSession');
 }
 
 
@@ -627,6 +639,8 @@ convertMockTemplateToResumeData(mockTemplate: any): ResumeData {
     }
     this.redoStack = [];
     console.log('State committed to history');
+    console.log('[Commit] Snapshot size:', currentState.length, 'chars');
+
   }
 
   undo() {
@@ -690,10 +704,9 @@ convertMockTemplateToResumeData(mockTemplate: any): ResumeData {
     )
   );
 
-  if (response.success) {
-    // 🚀 run in background
-    this.loadUser(email).catch(err => console.error('Load user failed:', err));
-  }
+if (response.success) {
+  this.loadUser(email).catch(err => console.error('Load user failed:', err));
+}
 
   return response;
 }
@@ -723,6 +736,7 @@ convertMockTemplateToResumeData(mockTemplate: any): ResumeData {
 
 
 async login(email: string, password: string): Promise<boolean> {
+  console.time('loginRequest')
   try {
     const response = await firstValueFrom(
       this.http.post<{ token: string; email: string; isAdmin: boolean; tier?: string }>(
@@ -731,9 +745,10 @@ async login(email: string, password: string): Promise<boolean> {
         { observe: 'body' }
       ).pipe(timeout(15000))
     );
+    
 
     if (response.token) {
-      // store token + flags
+      console.log('[Login] Success for', response.email);
       if (isPlatformBrowser(this.platformId)) {
         localStorage.setItem('jwt', response.token);
         localStorage.setItem('isAdmin', response.isAdmin ? 'true' : 'false');
@@ -742,7 +757,6 @@ async login(email: string, password: string): Promise<boolean> {
         if (response.tier) localStorage.setItem('tier', response.tier);
       }
 
-      // update signals immediately
       this.isLoggedIn.set(true);
       this.userEmail.set(response.email);
       this.isAdmin.set(response.isAdmin);
@@ -750,17 +764,28 @@ async login(email: string, password: string): Promise<boolean> {
 
       this.resumeState.update(prev => ({ ...prev, email: response.email }));
 
-      // 🚀 background tasks
-      this.loadUser(response.email).catch(err => console.error('Load user failed:', err));
-      this.checkEligibility().catch(err => console.error('Eligibility check failed:', err));
+      // 🚀 background tasks (Promises, not Observables)
+      // background tasks with timing
+      console.time('loadUser');
+      this.loadUser(response.email)
+        .then(user => { console.timeEnd('loadUser'); console.log('[Login] User loaded', user); })
+        .catch(err => console.error('Load user failed:', err));
 
-      return true; // dashboard navigation can happen instantly
+      console.time('checkEligibility');
+      this.checkEligibility()
+        .then(flags => { console.timeEnd('checkEligibility'); console.log('[Login] Eligibility checked', flags); })
+        .catch(err => console.error('Eligibility check failed:', err));
+
+
+      return true;
     }
+    console.timeEnd('loginRequest');
     return false;
   } catch (err) {
     console.error('Login failed or timed out:', err);
     return false;
   }
+  
 }
 
 
@@ -773,7 +798,7 @@ isAdminUser(): boolean {
   async signup(data: Record<string, string | null>): Promise<boolean> {
     try {
       // In a real app, this would call your Go backend
-      // await firstValueFrom(this.http.post('/api/auth/signup', data));
+      await firstValueFrom(this.http.post(`${this.API_BASE}/api/auth/signup`, data));
       
       this.isLoggedIn.set(true);
       this.userEmail.set(data['email'] ?? null);
@@ -792,6 +817,7 @@ isAdminUser(): boolean {
 
 async loadUser(email: string) {
   try {
+    console.time('loadUser');
     let token: string | null = null;
     if (isPlatformBrowser(this.platformId)) {
       token = localStorage.getItem('jwt');
@@ -800,8 +826,9 @@ async loadUser(email: string) {
       this.http.get<ResumeData>(
         `${this.API_BASE}/api/user?email=${email}`,
         token ? { headers: { Authorization: `Bearer ${token}` } } : {}
-      )
+      ).pipe(timeout(15000))
     );
+    console.timeEnd('loadUser');
     this.resumeState.set(user);
     return user;
   } catch (error) {
@@ -809,6 +836,7 @@ async loadUser(email: string) {
     throw error;
   }
 }
+
 
 
  logout() {
@@ -857,7 +885,7 @@ async loadUser(email: string) {
 
   this.commit();
   
-  this.resumeState.update(prev => ({ ...prev }));
+  // this.resumeState.update(prev => ({ ...prev }));
 }
 
 
@@ -973,9 +1001,11 @@ async loadUser(email: string) {
 
   async extractResume(fileName: string) {
     try {
+      console.time('extractResume');
       const response = await firstValueFrom(
         this.http.post<ResumeData>(`${this.API_BASE}/api/resume/extract`, { fileName })
       );
+      console.timeEnd('extractResume');
       this.resumeState.set(response);
       return response;
     } catch (error) {
@@ -997,13 +1027,15 @@ async checkEligibility(): Promise<{ canDownload: boolean; isPremium: boolean; ha
     if (isPlatformBrowser(this.platformId)) {
       token = localStorage.getItem('jwt');
     }
+    console.time('checkEligibility');
     const res = await firstValueFrom(
       this.http.post<{ canDownload: boolean; isPremium: boolean; hasFreeDownloadLeft: boolean }>(
         `${this.API_BASE}/api/resume/check-eligibility`,
         { email },
         token ? { headers: { Authorization: `Bearer ${token}` } } : {}
-      )
+      ).pipe(timeout(15000))
     );
+    console.timeEnd('checkEligibility');
 
     const premiumTiers = ['1y', '1m', '2w'];
     const isPremium = (tier && premiumTiers.includes(tier)) || res.isPremium;
@@ -1019,9 +1051,11 @@ async checkEligibility(): Promise<{ canDownload: boolean; isPremium: boolean; ha
   }
 }
 
+
   async enhanceText(text: string): Promise<string> {
     if (!text.trim()) return text;
     try {
+      
       const response = await firstValueFrom(
         this.http.post<{ improvedText: string }>(`${this.API_BASE}/api/ai/enhance`, { 
           sectionText: text,
@@ -1039,12 +1073,15 @@ async checkEligibility(): Promise<{ canDownload: boolean; isPremium: boolean; ha
     if (!isPlatformBrowser(this.platformId)) {
       return; // skip in SSR
     }
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
     const response = await fetch(`http://localhost:8080/api/payment/initiate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, tierId, amount })
+      body: JSON.stringify({ email, tierId, amount }), signal: controller.signal
     });
     const result = await response.json();
+    clearTimeout(timeoutId);
     if (isPlatformBrowser(this.platformId) && result.authorization_url) {
   window.location.href = result.authorization_url;
 }
@@ -1171,7 +1208,7 @@ alignElements(type: 'left' | 'right' | 'center' | 'top' | 'bottom' | 'middle') {
     return next;
   });
   this.commit();
-  this.resumeState.update(prev => ({ ...prev }));
+  // this.resumeState.update(prev => ({ ...prev }));
 
 }
 
@@ -1240,7 +1277,7 @@ distributeElements(direction: 'horizontal' | 'vertical') {
     return next;
   });
   this.commit();
-  this.resumeState.update(prev => ({ ...prev }));
+  // this.resumeState.update(prev => ({ ...prev }));
 
 }
 
@@ -1295,7 +1332,7 @@ getDefaultResume(): ResumeData {
       `${this.API_BASE}/api/ai/coach`,
       { resumeData, model: this.selectedModelId },
       { headers: { Authorization: `Bearer ${token}` } }
-    )
+    ).pipe(timeout(15000))
   );
 }
 
@@ -1306,7 +1343,7 @@ private async polishSummaryRequest(summary: string) {
     this.http.post<{ result: string }>(`${this.API_BASE}/api/ai/polish-summary`, { 
       summary,
       model: this.selectedModelId
-    })
+    }).pipe(timeout(15000))
   );
 }
 
@@ -1331,7 +1368,7 @@ async polishSummary(summary: string): Promise<{ result?: string; requiresSubscri
         company, 
         currentContent,
         model: this.selectedModelId
-      })
+      }).pipe(timeout(15000))
     );
   }
 
@@ -1363,14 +1400,14 @@ async polishSummary(summary: string): Promise<{ result?: string; requiresSubscri
     if (isPlatformBrowser(this.platformId)) {
       token = localStorage.getItem('jwt');
     }
-
+    console.time('loadTemplate');
     const mockTemplate = await firstValueFrom(
       this.http.get<any>(
         `${this.API_BASE}/api/templates/${templateId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
     );
-
+    console.timeEnd('loadTemplate');
     const resumeData = this.convertMockTemplateToResumeData(mockTemplate);
 
     // Replace current resume state with the selected template
@@ -1389,7 +1426,7 @@ async exportHtml(html: string, token: string | null) {
       `${this.API_BASE}/api/resume/export-html`,
       { html },
       token ? { headers: { Authorization: `Bearer ${token}` } } : {}
-    )
+    ).pipe(timeout(15000))
   );
 }
 

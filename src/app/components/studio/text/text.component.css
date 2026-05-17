@@ -1,0 +1,25 @@
+.text-block {
+  padding: 8px;
+  min-width: 100px;
+  min-height: 30px;
+  border: 1px dashed #ccc;
+  outline: none;
+}
+
+.toolbar {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.toolbar button {
+  font-weight: bold;
+  padding: 4px 6px;
+  border: none;
+  background: #f3f4f6;
+  cursor: pointer;
+}
+
+.toolbar button:hover {
+  background: #e5e7eb;
+}

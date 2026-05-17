@@ -100,11 +100,11 @@ import { MatDialog } from '@angular/material/dialog';
                    <div class="w-full h-full bg-white shadow-2xl rounded-sm p-4 space-y-2 opacity-80 scale-90 group-hover:scale-100 transition-transform duration-500">
                    
                    <ng-container *ngIf="resumeService.isLoggedIn()">
-                   <iframe 
-                      [src]="tmpl.path | safeUrl" 
-                      class="w-full h-40 rounded border border-zinc-200"
-                      style="pointer-events:none; transform:scale(0.5); transform-origin: top left;">
-                    </iframe>
+                   <img 
+                      src="https://res.cloudinary.com/dxvwfibhj/image/upload/v1778915357/EliteSuitesLogo_rqpdsy.png"
+                      alt="{{ tmpl.name }} preview"
+                      class="w-full h-40 rounded border border-zinc-200 shadow-2xl opacity-80 scale-90 group-hover:scale-100 transition-transform duration-500"
+                    />
                     <div class="pt-2">
                       <p class="text-sm font-bold text-zinc-800">{{ tmpl.name }}</p>
                       <p class="text-xs text-zinc-500">{{ tmpl.tag }}</p>
@@ -144,33 +144,22 @@ export class DashboardComponent {
 
 openPdfEditor() {
   const userTier = this.resumeService.getCurrentTier();
-
   if (userTier && userTier !== 'free') {
-    // Premium user → redirect in the same tab
-    window.location.href = 'http://localhost:2000/';
-    // or: window.open('http://localhost:2400/', '_self');
+    this.router.navigate(['/pdf-editor']);
   } else {
-    // Free user → show payment dialog
-    this.dialog.open(PaymentDialogComponent, {
-      width: '600px',
-      disableClose: true
-    });
+    this.dialog.open(PaymentDialogComponent, { width: '600px', disableClose: true });
   }
 }
+
 openCoverLetter() {
   const userTier = this.resumeService.getCurrentTier();
-
   if (userTier && userTier !== 'free') {
-    // Premium user → redirect to cover letter module
-    window.location.href = 'http://localhost:3000/';
+    this.router.navigate(['/cover-letter']);
   } else {
-    // Free user → show payment dialog
-    this.dialog.open(PaymentDialogComponent, {
-      width: '600px',
-      disableClose: true
-    });
+    this.dialog.open(PaymentDialogComponent, { width: '600px', disableClose: true });
   }
 }
+
 
 
 }
