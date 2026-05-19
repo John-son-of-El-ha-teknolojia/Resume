@@ -2,33 +2,23 @@ import { defineConfig } from 'vite';
 import angular from '@analogjs/vite-plugin-angular';
 
 export default defineConfig({
+  plugins: [angular()],
+  optimizeDeps: {
+    exclude: [
+      'pdfEditor/PdfEditorModule',
+      'coverLetter/CoverLetterModule'
+    ],
+  },
+  ssr: {
+    noExternal: [
+      'pdfEditor/PdfEditorModule',
+      'coverLetter/CoverLetterModule'
+    ],
+  },
   server: {
-  //   mimeTypes: {
-  //   'js': 'application/javascript'
-  // },
     port: 4000,
-    host: 'localhost',
     proxy: {
-      '/api': {
-        target: 'https://resume-backend-777-5555-1.onrender.com',
-        changeOrigin: true,
-        secure: false,
-      },
-    },
-    hmr: {
-      protocol: 'ws',
-      host: 'localhost',
-      port: 3000,
-    },
-  },
-  plugins: [angular(
-    // aot: true
-  )],
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: undefined,
-      },
-    },
-  },
+      '/api': 'http://localhost:8080'
+    }
+  }
 });

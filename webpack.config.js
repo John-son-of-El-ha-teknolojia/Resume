@@ -1,11 +1,11 @@
-const { shareAll, withModuleFederationPlugin } = require('@angular-architects/module-federation/webpack');
-
-module.exports = withModuleFederationPlugin({
+new ModuleFederationPlugin({
   remotes: {
-  pdfEditor: 'pdfEditor@http://localhost:2000/remoteEntry.js',
-  coverLetter: 'coverLetter@http://localhost:3000/remoteEntry.js',
-},
-  shared: {
-    ...shareAll({ singleton: true, strictVersion: true, requiredVersion: 'auto' }),
+    pdfEditor: 'pdfEditor@https://resumebuilder-pdfeditor.onrender.com/remoteEntry.js',
+    coverLetter: 'coverLetter@https://coverletter-1-sbiz.onrender.com/remoteEntry.js'
   },
-});
+  shared: {
+    '@angular/core': { singleton: true, strictVersion: true },
+    '@angular/common': { singleton: true, strictVersion: true },
+    '@angular/router': { singleton: true, strictVersion: true }
+  }
+})
