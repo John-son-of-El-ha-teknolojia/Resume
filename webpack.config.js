@@ -1,4 +1,7 @@
-new ModuleFederationPlugin({
+const { withModuleFederationPlugin } = require('@angular-architects/module-federation/webpack');
+
+module.exports = withModuleFederationPlugin({
+  name: 'resume',
   remotes: {
     pdfEditor: 'pdfEditor@https://resumebuilder-pdfeditor.onrender.com/remoteEntry.js',
     coverLetter: 'coverLetter@https://coverletter-1-sbiz.onrender.com/remoteEntry.js'
@@ -8,4 +11,4 @@ new ModuleFederationPlugin({
     '@angular/common': { singleton: true, strictVersion: true },
     '@angular/router': { singleton: true, strictVersion: true }
   }
-})
+});
