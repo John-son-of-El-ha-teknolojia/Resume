@@ -18,7 +18,7 @@ export default defineConfig({
   server: {
     port: 4000,
     proxy: {
-      '/api': 'https://resume-backend-weld.vercel.app'
+      '/api': 'https://resume-backend-plmv.onrender.com'
     }
   }
 });

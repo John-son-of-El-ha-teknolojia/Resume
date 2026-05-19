@@ -92,7 +92,7 @@ export class CanvasComponent implements AfterViewInit {
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
-  private readonly API_BASE = 'https://resume-backend-weld.vercel.app/';
+  private readonly API_BASE = 'https://resume-backend-plmv.onrender.com';
 async downloadPdf() {
   if (!isPlatformBrowser(this.platformId)) {
     return; // SSR: skip

@@ -1075,7 +1075,7 @@ async checkEligibility(): Promise<{ canDownload: boolean; isPremium: boolean; ha
     }
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
-    const response = await fetch(`https://resume-backend-weld.vercel.app/api/payment/initiate`, {
+    const response = await fetch(`https://resume-backend-plmv.onrender.com/api/payment/initiate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, tierId, amount }), signal: controller.signal
@@ -1090,12 +1090,12 @@ async checkEligibility(): Promise<{ canDownload: boolean; isPremium: boolean; ha
 
 
   async verifyPayment(reference: string): Promise<any> {
-    const response = await fetch(`https://resume-backend-weld.vercel.app/api/payment/verify?reference=${reference}`);
+    const response = await fetch(`https://resume-backend-plmv.onrender.com/api/payment/verify?reference=${reference}`);
     return response.json();
   }
 
   async updateUserSubscription(email: string, tierId: string): Promise<any> {
-  const response = await fetch(`https://resume-backend-weld.vercel.app/api/payment/upgrade`, {
+  const response = await fetch(`https://resume-backend-plmv.onrender.com/api/payment/upgrade`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, tierId })
