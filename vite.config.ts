@@ -18,7 +18,7 @@ export default defineConfig({
   server: {
     port: 4000,
     proxy: {
-      '/api': 'http://localhost:8080'
+      '/api': 'https://resume-backend-weld.vercel.app'
     }
   }
 });
