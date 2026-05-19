@@ -1,10 +1,8 @@
 {
-  "functions": {
-    "api/index.js": {
-      "runtime": "nodejs20.x"
-    }
-  },
+  "builds": [
+    { "src": "angular.json", "use": "@vercel/static-build", "config": { "distDir": "dist/app/browser" } }
+  ],
   "rewrites": [
-    { "source": "/(.*)", "destination": "/api/index.js" }
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
