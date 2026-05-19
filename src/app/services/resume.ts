@@ -214,7 +214,7 @@ export interface CoverLetterData {
 })
 export class ResumeService {
   private http = inject(HttpClient);
-  private readonly API_BASE = 'https://resume-backend-weld.vercel.app'; // Change to actual backend URL in production
+  private readonly API_BASE = 'https://resume-backend-plmv.onrender.com'; // Change to actual backend URL in production
 
   // Supported models to be handled by the backend
   public readonly SUPPORTED_MODELS = [
