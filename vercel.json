@@ -1,6 +1,6 @@
 {
   "builds": [
-    { "src": "angular.json", "use": "@vercel/static-build", "config": { "distDir": "dist/app/browser" } }
+    { "src": "package.json", "use": "@vercel/static-build", "config": { "distDir": "dist/app/browser" } }
   ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
