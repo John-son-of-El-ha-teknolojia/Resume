@@ -214,7 +214,7 @@ export interface CoverLetterData {
 })
 export class ResumeService {
   private http = inject(HttpClient);
-  private readonly API_BASE = 'http://localhost:8080'; // Change to actual backend URL in production
+  private readonly API_BASE = 'https://resume-backend-weld.vercel.app/'; // Change to actual backend URL in production
 
   // Supported models to be handled by the backend
   public readonly SUPPORTED_MODELS = [
@@ -1075,7 +1075,7 @@ async checkEligibility(): Promise<{ canDownload: boolean; isPremium: boolean; ha
     }
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
-    const response = await fetch(`http://localhost:8080/api/payment/initiate`, {
+    const response = await fetch(`https://resume-backend-weld.vercel.app/api/payment/initiate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, tierId, amount }), signal: controller.signal
@@ -1090,12 +1090,12 @@ async checkEligibility(): Promise<{ canDownload: boolean; isPremium: boolean; ha
 
 
   async verifyPayment(reference: string): Promise<any> {
-    const response = await fetch(`http://localhost:8080/api/payment/verify?reference=${reference}`);
+    const response = await fetch(`https://resume-backend-weld.vercel.app/api/payment/verify?reference=${reference}`);
     return response.json();
   }
 
   async updateUserSubscription(email: string, tierId: string): Promise<any> {
-  const response = await fetch(`http://localhost:8080/api/payment/upgrade`, {
+  const response = await fetch(`https://resume-backend-weld.vercel.app/api/payment/upgrade`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, tierId })
