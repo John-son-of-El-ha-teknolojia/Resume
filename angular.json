@@ -33,9 +33,6 @@
 						"styles": [
 							"styles.css"
 						],
-						"ssr": {
-							"entry": "src/server.ts"
-						},
 						"main": "src/main.ts",
 						"outputPath": "dist/app",
 						"extraWebpackConfig": "webpack.config.js",
