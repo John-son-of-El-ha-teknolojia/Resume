@@ -25,15 +25,14 @@
 						"tsConfig": "tsconfig.app.json",
 						"assets": [
 							{
-								"glob": "**/*",
-								"input": "public",
-								"output": "."
+							"glob": "**/*",
+							"input": "public",
+							"output": "."
 							}
 						],
 						"styles": [
 							"styles.css"
 						],
-						"outputMode": "server",
 						"ssr": {
 							"entry": "src/server.ts"
 						},
@@ -41,7 +40,7 @@
 						"outputPath": "dist/app",
 						"extraWebpackConfig": "webpack.config.js",
 						"commonChunk": false
-					},
+						},
 					"configurations": {
 						"production": {
 							"fileReplacements": [
