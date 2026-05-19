@@ -743,7 +743,7 @@ async login(email: string, password: string): Promise<boolean> {
         `${this.API_BASE}/api/auth/login`,
         { email, password },
         { observe: 'body' }
-      ).pipe(timeout(15000))
+      ).pipe(timeout(45000))
     );
     
 
