@@ -4,7 +4,8 @@ module.exports = withModuleFederationPlugin({
   name: 'resume',
   remotes: {
     pdfEditor: 'pdfEditor@https://resumebuilder-pdfeditor.onrender.com/remoteEntry.js',
-    coverLetter: 'coverLetter@https://coverletter-1-sbiz.onrender.com/remoteEntry.js'
+    coverLetter: 'coverLetter@https://coverletter-1-sbiz.onrender.com/remoteEntry.js',
+    jobSearch: "jobSearch@https://your-jobsearch-app.vercel.app/remoteEntry.js"
   },
   shared: {
     '@angular/core': { singleton: true, strictVersion: true },

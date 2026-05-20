@@ -42,6 +42,23 @@ export const routes: Routes = [
     },
   },
 
+{
+  path: 'job-search',
+  loadComponent: async () => {
+    // @ts-ignore
+    await __webpack_init_sharing__('default');
+    const container = (window as any).jobSearch;
+    // @ts-ignore
+    await container.init(__webpack_share_scopes__.default);
+    const factory = await container.get('./JobSearch');
+    return factory().JobSearch;   // ✅ standalone component
+  },
+  canActivate: [authGuard]
+},
+
+
+
+
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: '**', redirectTo: 'login' }
 ];

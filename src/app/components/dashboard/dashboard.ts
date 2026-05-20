@@ -80,6 +80,23 @@ import { MatDialog } from '@angular/material/dialog';
                 </div>
               </div>
 
+              <!-- Job Search Engine Card -->
+                <div 
+                  class="bg-white p-10 rounded-[2.5rem] shadow-sm border border-zinc-100 flex flex-col gap-6 group hover:shadow-xl hover:-translate-y-1 transition-all duration-500 cursor-pointer" 
+                  (click)="openJobSearch()">
+                  <div class="w-16 h-16 bg-green-600 rounded-3xl flex items-center justify-center text-white group-hover:rotate-6 transition-transform">
+                    <mat-icon class="scale-[1.5]">work</mat-icon>
+                  </div>
+                  <div>
+                    <h2 class="text-2xl font-black uppercase tracking-widest mb-2">Job Search Engine</h2>
+                    <p class="text-zinc-500 line-clamp-2">Discover tailored job opportunities and integrate them with your resume workflow.</p>
+                  </div>
+                  <div class="mt-auto pt-4 flex items-center gap-2 text-green-600 font-bold uppercase tracking-wider text-xs">
+                    Explore Jobs <mat-icon class="text-sm">arrow_forward</mat-icon>
+                  </div>
+                </div>
+
+
         </div>
 
         <!-- Free Templates -->
@@ -159,6 +176,16 @@ openCoverLetter() {
     this.dialog.open(PaymentDialogComponent, { width: '600px', disableClose: true });
   }
 }
+
+openJobSearch() {
+  const userTier = this.resumeService.getCurrentTier();
+  if (userTier && userTier !== 'free') {
+    this.router.navigate(['/job-search']);   // ✅ route to your microservice
+  } else {
+    this.dialog.open(PaymentDialogComponent, { width: '600px', disableClose: true });
+  }
+}
+
 
 
 
