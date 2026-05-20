@@ -2,6 +2,9 @@ const { withModuleFederationPlugin } = require('@angular-architects/module-feder
 
 module.exports = withModuleFederationPlugin({
   name: 'resume',
+  expose: {
+    './login': './src/app/components/login/login.ts',
+  },
   remotes: {
     pdfEditor: 'pdfEditor@https://resumebuilder-pdfeditor.onrender.com/remoteEntry.js',
     coverLetter: 'coverLetter@https://coverletter-1-sbiz.onrender.com/remoteEntry.js',
