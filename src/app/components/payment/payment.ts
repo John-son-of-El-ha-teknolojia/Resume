@@ -1,12 +1,13 @@
 import { Component, Inject, inject, PLATFORM_ID, signal } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { MatDialogRef, MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { ResumeService } from '../../services/resume';
+// import { resumePlans } from '../../shared/data/plans.data';
 
 @Component({
   selector: 'app-payment-dialog',
@@ -106,16 +107,17 @@ import { ResumeService } from '../../services/resume';
 export class PaymentDialogComponent {
   private dialogRef = inject(MatDialogRef<PaymentDialogComponent>);
   private resumeService = inject(ResumeService);
-  constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
-  
-  tiers = [
-   { id: '5d', name: '5 Days Access', priceKES: 337, priceUSD: '$2.59', description: 'Starter Premium Access' },
-    { id: '2w', name: '2 Weeks Access', priceKES: 1117, priceUSD: '$8.59', description: 'Immediate Premium Access' },
-    { id: '1m', name: 'Monthly Pro', priceKES: 1949, priceUSD: '$14.99', description: 'Strategic Planning Plan' },
-    { id: '1y', name: 'Annual Studio', priceKES: 3769, priceUSD: '$28.99', description: 'Executive Suite Access' }
-  ];
 
-  selectedTier = signal(this.tiers[1]);
+  constructor(
+    @Inject(PLATFORM_ID) private platformId: Object,
+    @Inject(MAT_DIALOG_DATA) public data: { plan: any }
+  ) {
+    if (data?.plan) {
+      this.selectedTier.set(data.plan);
+    }
+  }
+
+  selectedTier = signal<any>(null);
   email = '';
   processing = signal(false);
   error = signal<string | null>(null);
@@ -144,4 +146,3 @@ export class PaymentDialogComponent {
     }
   }
 }
-
