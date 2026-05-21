@@ -2,13 +2,13 @@ const { withModuleFederationPlugin } = require('@angular-architects/module-feder
 
 module.exports = withModuleFederationPlugin({
   name: 'resume',
-  expose: {
+  exposes: {   // ✅ must be "exposes"
     './login': './src/app/components/login/login.ts',
   },
   remotes: {
     pdfEditor: 'pdfEditor@https://resumebuilder-pdfeditor.onrender.com/remoteEntry.js',
     coverLetter: 'coverLetter@https://coverletter-1-sbiz.onrender.com/remoteEntry.js',
-    jobSearch: "jobSearch@https://your-jobsearch-app.vercel.app/remoteEntry.js"
+    jobSearch: 'jobSearch@https://your-jobsearch-app.vercel.app/remoteEntry.js'
   },
   shared: {
     '@angular/core': { singleton: true, strictVersion: true },
