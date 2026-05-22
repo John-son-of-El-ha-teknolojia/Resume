@@ -278,57 +278,32 @@ isUserLoggedIn(): boolean {
   this.isLoggedIn.set(false);
 }
 
-
-
 async initializeSession() {
   console.time('initializeSession');
-  if (isPlatformBrowser(this.platformId)) {
-    console.log('[Session] Checking query params...');
-    const params = new URLSearchParams(window.location.search);
-    console.log('[Session] Params:', Object.fromEntries(params.entries()));
-  }
-
-  const token = isPlatformBrowser(this.platformId) ? localStorage.getItem('jwt') : null;
-  console.log('[Session] Token found:', token);
-
-  if (!token) {
-    console.warn('[Session] No token, logging out');
-    this.logout();
-    console.timeEnd('initializeSession');
-    return;
-  }
-
-  if (typeof window !== 'undefined') {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get('token');
-    const email = params.get('email');
-    const tier = params.get('tier');
-
-    if (token) {
-      localStorage.setItem('jwt', token);
-      if (email) localStorage.setItem('userEmail', email);
-      if (tier) localStorage.setItem('tier', tier);
-
-      // Clean up query string
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-  }
-
   try {
-    const email = isPlatformBrowser(this.platformId) ? localStorage.getItem('userEmail') : null;
-    console.log('[Session] Email found:', email);
+    const response = await firstValueFrom(
+      this.http.get<{ loggedIn: boolean; email: string; isAdmin: boolean; tier?: string }>(
+        `${this.API_BASE}/api/auth/session`,
+        { withCredentials: true } // ✅ send cookie
+      )
+    );
 
-    if (email) {
-      console.time('loadUser');
-      await this.loadUser(email);
-      console.timeEnd('loadUser');
+    if (response.loggedIn) {
+      console.log('[Session] Email found:', response.email);
       this.isLoggedIn.set(true);
+      this.userEmail.set(response.email);
+      this.isAdmin.set(response.isAdmin);
+      this.isPremium.set(!!response.tier);
+
+      console.time('loadUser');
+      await this.loadUser(response.email);
+      console.timeEnd('loadUser');
     } else {
-      console.warn('[Session] No email, logging out');
+      console.warn('[Session] No session, logging out');
       this.logout();
     }
   } catch (err) {
-    console.error('[Session] Error loading user:', err);
+    console.error('[Session] Error loading session:', err);
     this.logout();
   }
   console.timeEnd('initializeSession');
@@ -733,50 +708,37 @@ if (response.success) {
   
 
 
-
 async login(email: string, password: string): Promise<boolean> {
   console.time('loginRequest');
   try {
     const response = await firstValueFrom(
-      this.http.post<{ token: string; email: string; isAdmin: boolean; tier?: string }>(
+      this.http.post<{ email: string; isAdmin: boolean; tier?: string }>(
         `${this.API_BASE}/api/auth/login`,
         { email, password },
-        { observe: 'body' }
-      ).pipe(timeout(15000)) // shorter timeout
+        { observe: 'body', withCredentials: true } // ✅ cookie set by backend
+      ).pipe(timeout(15000))
     );
 
-    if (response.token) {
-      console.log('[Login] Success for', response.email);
+    console.log('[Login] Success for', response.email);
 
-      if (isPlatformBrowser(this.platformId)) {
-        localStorage.setItem('jwt', response.token);
-        localStorage.setItem('isAdmin', response.isAdmin ? 'true' : 'false');
-        localStorage.setItem('userEmail', response.email);
-        localStorage.setItem('isLoggedIn', 'true');
-        if (response.tier) localStorage.setItem('tier', response.tier);
-      }
+    // ✅ hydrate signals only
+    this.isLoggedIn.set(true);
+    this.userEmail.set(response.email);
+    this.isAdmin.set(response.isAdmin);
+    this.isPremium.set(!!response.tier);
+    this.resumeState.update(prev => ({ ...prev, email: response.email }));
 
-      this.isLoggedIn.set(true);
-      this.userEmail.set(response.email);
-      this.isAdmin.set(response.isAdmin);
-      this.isPremium.set(!!response.tier);
-      this.resumeState.update(prev => ({ ...prev, email: response.email }));
+    // background tasks
+    this.loadUser(response.email)
+      .then(user => console.log('[Login] User loaded', user))
+      .catch(err => console.error('Load user failed:', err));
 
-      // ✅ background tasks without duplicate timers
-      this.loadUser(response.email)
-        .then(user => console.log('[Login] User loaded', user))
-        .catch(err => console.error('Load user failed:', err));
-
-      this.checkEligibility()
-        .then(flags => console.log('[Login] Eligibility checked', flags))
-        .catch(err => console.error('Eligibility check failed:', err));
-
-      console.timeEnd('loginRequest');
-      return true;
-    }
+    this.checkEligibility()
+      .then(flags => console.log('[Login] Eligibility checked', flags))
+      .catch(err => console.error('Eligibility check failed:', err));
 
     console.timeEnd('loginRequest');
-    return false;
+    return true;
   } catch (err) {
     console.timeEnd('loginRequest');
     console.error('Login failed or timed out:', err);
@@ -835,16 +797,21 @@ async loadUser(email: string) {
 
 
 
- logout() {
-    this.isLoggedIn.set(false);
-    this.isAdmin.set(false);
-    this.userEmail.set(null);
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.removeItem('jwt');
-      localStorage.removeItem('userEmail');
-      localStorage.removeItem('isLoggedIn');
-    }
+async logout() {
+  this.isLoggedIn.set(false);
+  this.isAdmin.set(false);
+  this.userEmail.set(null);
+  this.isPremium.set(false);
+
+  try {
+    await firstValueFrom(
+      this.http.post(`${this.API_BASE}/api/auth/logout`, {}, { withCredentials: true })
+    );
+    console.log('[Logout] Cookie cleared by backend');
+  } catch (err) {
+    console.error('[Logout] Failed to clear cookie:', err);
   }
+}
 
   async getAdminStats() {
     return firstValueFrom(
