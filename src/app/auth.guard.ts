@@ -8,24 +8,29 @@ export const authGuard = () => {
   const resumeService = inject(ResumeService);
   const router = inject(Router);
 
-//   // ✅ Check query params first
-//   const loggedInSignal = resumeService.isLoggedIn();
-// const loggedInStorage = typeof window !== 'undefined' && localStorage.getItem('jwt');
-
-
-  // ✅ Now check both signal and localStorage
   const loggedInSignal = resumeService.isLoggedIn();
   const loggedInStorage = typeof window !== 'undefined' && localStorage.getItem('jwt');
 
-  if (loggedInSignal && loggedInStorage) {
-    // If user tries to hit /login while logged in, reroute to dashboard
+  // 1. Signal takes priority
+  if (loggedInSignal) {
+    // If already logged in, block access to /login
     if (router.routerState.snapshot.url === '/login') {
       return router.parseUrl('/dashboard');
     }
-
     return true;
   }
 
+  // 2. Fallback: JWT in localStorage
+  if (loggedInStorage) {
+    // Hydrate signals if needed
+    resumeService.initializeSession?.();
+    if (router.routerState.snapshot.url === '/login') {
+      return router.parseUrl('/dashboard');
+    }
+    return true;
+  }
+
+  // 3. Not logged in at all
   return router.parseUrl('/login');
 };
 
