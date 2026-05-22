@@ -284,7 +284,7 @@ async initializeSession() {
     const response = await firstValueFrom(
       this.http.get<{ loggedIn: boolean; email: string; isAdmin: boolean; tier?: string }>(
         `${this.API_BASE}/api/auth/session`,
-        { withCredentials: true } // ✅ send cookie
+        { withCredentials: true }
       )
     );
 
@@ -298,6 +298,10 @@ async initializeSession() {
       console.time('loadUser');
       await this.loadUser(response.email);
       console.timeEnd('loadUser');
+
+      console.time('checkEligibility');
+      await this.checkEligibility();
+      console.timeEnd('checkEligibility');
     } else {
       console.warn('[Session] No session, logging out');
       this.logout();
@@ -308,6 +312,7 @@ async initializeSession() {
   }
   console.timeEnd('initializeSession');
 }
+
 
 
   resetToInitial() {
@@ -707,7 +712,6 @@ if (response.success) {
   }
   
 
-
 async login(email: string, password: string): Promise<boolean> {
   console.time('loginRequest');
   try {
@@ -715,28 +719,19 @@ async login(email: string, password: string): Promise<boolean> {
       this.http.post<{ email: string; isAdmin: boolean; tier?: string }>(
         `${this.API_BASE}/api/auth/login`,
         { email, password },
-        { observe: 'body', withCredentials: true } // ✅ cookie set by backend
+        { observe: 'body', withCredentials: true }
       ).pipe(timeout(15000))
     );
 
     console.log('[Login] Success for', response.email);
 
-    // ✅ hydrate signals only
     this.isLoggedIn.set(true);
     this.userEmail.set(response.email);
     this.isAdmin.set(response.isAdmin);
     this.isPremium.set(!!response.tier);
     this.resumeState.update(prev => ({ ...prev, email: response.email }));
 
-    // background tasks
-    this.loadUser(response.email)
-      .then(user => console.log('[Login] User loaded', user))
-      .catch(err => console.error('Load user failed:', err));
-
-    this.checkEligibility()
-      .then(flags => console.log('[Login] Eligibility checked', flags))
-      .catch(err => console.error('Eligibility check failed:', err));
-
+    // ✅ Just hydrate signals, let initializeSession handle background tasks
     console.timeEnd('loginRequest');
     return true;
   } catch (err) {
