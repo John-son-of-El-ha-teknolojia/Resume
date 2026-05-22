@@ -17,7 +17,7 @@ export const authGuard = () => {
   const loggedInSignal = resumeService.isLoggedIn();
   const loggedInStorage = typeof window !== 'undefined' && localStorage.getItem('jwt');
 
-  if (loggedInSignal || loggedInStorage) {
+  if (loggedInSignal && loggedInStorage) {
     // If user tries to hit /login while logged in, reroute to dashboard
     if (router.routerState.snapshot.url === '/login') {
       return router.parseUrl('/dashboard');

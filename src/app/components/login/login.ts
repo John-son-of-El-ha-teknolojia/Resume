@@ -95,11 +95,14 @@ async onLogin() {
   try {
     const success = await this.resumeService.login(this.email, this.password);
 
-    if (success) {
-      // 🚀 Navigate immediately
+  if (success) {
+    // wait a tick so guards see updated state
+    setTimeout(() => {
       this.router.navigate(['/dashboard']);
-      // ❌ Do NOT call checkEligibility() here again
-    } else {
+      this.resumeService.loadUser(this.email).catch(console.error);
+      this.resumeService.checkEligibility().catch(console.error);
+    }, 0);
+  } else {
       this.loginError = 'Incorrect email or password';
     }
   } catch (err) {
