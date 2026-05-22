@@ -734,21 +734,20 @@ if (response.success) {
 
 
 
-
 async login(email: string, password: string): Promise<boolean> {
-  console.time('loginRequest')
+  console.time('loginRequest');
   try {
     const response = await firstValueFrom(
       this.http.post<{ token: string; email: string; isAdmin: boolean; tier?: string }>(
         `${this.API_BASE}/api/auth/login`,
         { email, password },
         { observe: 'body' }
-      ).pipe(timeout(120000))
+      ).pipe(timeout(15000)) // shorter timeout
     );
-    
 
     if (response.token) {
       console.log('[Login] Success for', response.email);
+
       if (isPlatformBrowser(this.platformId)) {
         localStorage.setItem('jwt', response.token);
         localStorage.setItem('isAdmin', response.isAdmin ? 'true' : 'false');
@@ -761,31 +760,28 @@ async login(email: string, password: string): Promise<boolean> {
       this.userEmail.set(response.email);
       this.isAdmin.set(response.isAdmin);
       this.isPremium.set(!!response.tier);
-
       this.resumeState.update(prev => ({ ...prev, email: response.email }));
 
-      // 🚀 background tasks (Promises, not Observables)
-      // background tasks with timing
-      console.time('loadUser');
+      // ✅ background tasks without duplicate timers
       this.loadUser(response.email)
-        .then(user => { console.timeEnd('loadUser'); console.log('[Login] User loaded', user); })
+        .then(user => console.log('[Login] User loaded', user))
         .catch(err => console.error('Load user failed:', err));
 
-      console.time('checkEligibility');
       this.checkEligibility()
-        .then(flags => { console.timeEnd('checkEligibility'); console.log('[Login] Eligibility checked', flags); })
+        .then(flags => console.log('[Login] Eligibility checked', flags))
         .catch(err => console.error('Eligibility check failed:', err));
 
-
+      console.timeEnd('loginRequest');
       return true;
     }
+
     console.timeEnd('loginRequest');
     return false;
   } catch (err) {
+    console.timeEnd('loginRequest');
     console.error('Login failed or timed out:', err);
     return false;
   }
-  
 }
 
 
