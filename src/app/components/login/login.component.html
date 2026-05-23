@@ -1,0 +1,66 @@
+<div class="min-h-screen flex items-center justify-center bg-slate-50 p-6">
+  <mat-card class="w-full max-w-md p-8 !rounded-3xl !border-none shadow-2xl">
+    <!-- Logo / Icon -->
+    <div class="text-center mb-10">
+      <div class="bg-blue-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-blue-200">
+        <mat-icon class="text-white scale-150">auto_awesome</mat-icon>
+      </div>
+      <h1 class="text-3xl font-black text-slate-800 uppercase tracking-tight">Welcome</h1>
+      <p class="text-slate-400 font-medium mt-2">Sign in to continue your professional journey.</p>
+    </div>
+
+    <!-- Login Form -->
+    <form (ngSubmit)="onLogin()" class="space-y-6">
+      <!-- Email -->
+      <div class="space-y-1">
+        <label for="email" class="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-1">Email</label>
+        <input id="email" name="email" [(ngModel)]="email" type="email" placeholder="curtisombai@gmail.com"
+               class="w-full bg-slate-50 border border-slate-100 rounded-xl p-4 text-slate-800 font-bold focus:outline-none focus:border-blue-400 transition-all">
+      </div>
+
+      <!-- Password -->
+      <div class="space-y-1">
+        <label for="password" class="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-1">Password</label>
+        <div class="relative">
+          <input id="password" name="password"
+                 [(ngModel)]="password"
+                 [type]="showPassword() ? 'text' : 'password'"
+                 placeholder="••••••••"
+                 class="w-full bg-slate-50 border border-slate-100 rounded-xl p-4 pr-12 text-slate-800 font-bold focus:outline-none focus:border-blue-400 transition-all">
+
+          <button type="button"
+                  (click)="showPassword.set(!showPassword())"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-slate-400 hover:text-blue-600">
+            <mat-icon class="text-base">{{ showPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Error Message -->
+      <p *ngIf="loginError" class="text-red-500 text-xs font-bold text-center bg-red-50 p-3 rounded-lg border border-red-100">
+        {{ loginError }}
+      </p>
+
+      <!-- Submit Button -->
+      <button mat-flat-button
+              class="!bg-blue-600 !text-white w-full h-14 rounded-xl text-sm font-black uppercase tracking-widest shadow-xl shadow-blue-100"
+              [disabled]="loading">
+        <ng-container *ngIf="loading; else signInText">
+          <mat-icon class="animate-spin mr-2">sync</mat-icon> Verifying...
+        </ng-container>
+        <ng-template #signInText>
+          Sign In
+        </ng-template>
+      </button>
+    </form>
+
+    <!-- Footer Links -->
+    <p class="text-center text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-8">
+      Don't have an account? <a routerLink="/signup" class="text-blue-600 hover:underline">Sign Up</a>
+    </p>
+
+    <p class="text-center text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-4">
+      Professional Resume Builder v2.0
+    </p>
+  </mat-card>
+</div>
