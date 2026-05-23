@@ -940,36 +940,29 @@ async logout() {
       throw error;
     }
   }
-
 async checkEligibility(): Promise<{ canDownload: boolean; isPremium: boolean; hasFreeDownloadLeft: boolean }> {
-  const email = this.resumeState().email;
-  const tier = this.resumeState().tier;
-
-  if (email && !tier) {
+  const token = localStorage.getItem('jwt');
+  if (!token) {
+    console.error('No token found');
     return { canDownload: false, isPremium: false, hasFreeDownloadLeft: false };
   }
 
   try {
-    let token: string | null = null;
-    if (isPlatformBrowser(this.platformId)) {
-      token = localStorage.getItem('jwt');
-    }
     console.time('checkEligibility');
     const res = await firstValueFrom(
       this.http.post<{ canDownload: boolean; isPremium: boolean; hasFreeDownloadLeft: boolean }>(
         `${this.API_BASE}/api/resume/check-eligibility`,
-        { email },
-        token ? { headers: { Authorization: `Bearer ${token}` } } : {}
+        { email: this.userEmail() },
+        { headers: { Authorization: `Bearer ${token}` } }
       ).pipe(timeout(15000))
     );
     console.timeEnd('checkEligibility');
 
     const premiumTiers = ['1y', '1m', '2w'];
-    const isPremium = (tier && premiumTiers.includes(tier)) || res.isPremium;
+    const isPremium = (this.isPremium() && premiumTiers.includes('premium')) || res.isPremium;
 
     this.isPremium.set(isPremium);
     this.hasFreeDownloadLeft.set(res.hasFreeDownloadLeft);
-    this.isPaid.set(isPremium);
 
     return { canDownload: res.canDownload, isPremium, hasFreeDownloadLeft: res.hasFreeDownloadLeft };
   } catch (error) {
