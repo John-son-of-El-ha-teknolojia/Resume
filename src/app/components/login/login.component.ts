@@ -24,6 +24,8 @@ import { HttpClient } from '@angular/common/http';
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent {
+  private readonly API_BASE = 'https://resume-backend-plmv.onrender.com'; // ✅ backend base URL
+
   email = '';
   password = '';
   loginError: string | null = null;
@@ -39,13 +41,12 @@ export class LoginComponent {
 
     try {
       const resp = await this.http.post<any>(
-        '/api/auth/login',
+        `${this.API_BASE}/api/auth/login`,   // ✅ use API_BASE
         { email: this.email, password: this.password },
-        { withCredentials: true } // ✅ ensures JWT cookie is stored
+        { withCredentials: true }            // ensures JWT cookie is stored
       ).toPromise();
 
       if (resp && resp.token) {
-        // Navigate after login success
         this.router.navigate(['/dashboard']);
       } else {
         this.loginError = 'Incorrect email or password';
