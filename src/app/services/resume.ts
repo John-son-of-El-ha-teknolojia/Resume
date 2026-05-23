@@ -710,37 +710,6 @@ if (response.success) {
   setUserProfile(profile: any) {
     this.resumeState.set(profile);
   }
-  
-
-async login(email: string, password: string): Promise<boolean> {
-  console.time('loginRequest');
-  try {
-    const response = await firstValueFrom(
-      this.http.post<{ email: string; isAdmin: boolean; tier?: string }>(
-        `${this.API_BASE}/api/auth/login`,
-        { email, password },
-        { observe: 'body', withCredentials: true }
-      ).pipe(timeout(15000))
-    );
-
-    console.log('[Login] Success for', response.email);
-
-    this.isLoggedIn.set(true);
-    this.userEmail.set(response.email);
-    this.isAdmin.set(response.isAdmin);
-    this.isPremium.set(!!response.tier);
-    this.resumeState.update(prev => ({ ...prev, email: response.email }));
-
-    // ✅ Just hydrate signals, let initializeSession handle background tasks
-    console.timeEnd('loginRequest');
-    return true;
-  } catch (err) {
-    console.timeEnd('loginRequest');
-    console.error('Login failed or timed out:', err);
-    return false;
-  }
-}
-
 
 
 isAdminUser(): boolean {

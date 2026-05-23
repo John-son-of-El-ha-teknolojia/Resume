@@ -7,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { firstValueFrom, timeout } from 'rxjs';
 
 @Component({
   selector: 'app-login',
@@ -32,27 +33,44 @@ export class LoginComponent {
   loading = false;
   showPassword = signal(false);
 
+  // signals for session state
+  isLoggedIn = signal(false);
+  userEmail = signal<string | null>(null);
+  isAdmin = signal(false);
+  isPremium = signal(false);
+
   private http = inject(HttpClient);
   private router = inject(Router);
 
   async onLogin() {
     this.loading = true;
     this.loginError = null;
+    console.time('loginRequest');
 
     try {
-      const resp = await this.http.post<any>(
-        `${this.API_BASE}/api/auth/login`,   // ✅ use API_BASE
-        { email: this.email, password: this.password },
-        { withCredentials: true }            // ensures JWT cookie is stored
-      ).toPromise();
+      const response = await firstValueFrom(
+        this.http.post<{ email: string; isAdmin: boolean; tier?: string }>(
+          `${this.API_BASE}/api/auth/login`,
+          { email: this.email, password: this.password },
+          { observe: 'body', withCredentials: true }
+        ).pipe(timeout(15000))
+      );
 
-      if (resp && resp.token) {
-        this.router.navigate(['/dashboard']);
-      } else {
-        this.loginError = 'Incorrect email or password';
-      }
+      console.log('[Login] Success for', response.email);
+
+      // hydrate signals
+      this.isLoggedIn.set(true);
+      this.userEmail.set(response.email);
+      this.isAdmin.set(response.isAdmin);
+      this.isPremium.set(!!response.tier);
+
+      console.timeEnd('loginRequest');
+
+      // navigate after login
+      this.router.navigate(['/dashboard']);
     } catch (err: any) {
-      console.error('Login failed:', err);
+      console.timeEnd('loginRequest');
+      console.error('Login failed or timed out:', err);
       this.loginError = err.error?.message || 'Login failed';
     } finally {
       this.loading = false;
