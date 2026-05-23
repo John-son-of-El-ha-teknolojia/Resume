@@ -279,38 +279,33 @@ isUserLoggedIn(): boolean {
 }
 
 async initializeSession() {
-  console.time('initializeSession');
+  const token = localStorage.getItem('jwt');
+  if (!token) {
+    console.warn('[Session] No token found');
+    this.logout();
+    return;
+  }
+
   try {
     const response = await firstValueFrom(
       this.http.get<{ loggedIn: boolean; email: string; isAdmin: boolean; tier?: string }>(
         `${this.API_BASE}/api/auth/session`,
-        { withCredentials: true }
+        { headers: { Authorization: `Bearer ${token}` } }
       )
     );
 
     if (response.loggedIn) {
-      console.log('[Session] Email found:', response.email);
       this.isLoggedIn.set(true);
       this.userEmail.set(response.email);
       this.isAdmin.set(response.isAdmin);
       this.isPremium.set(!!response.tier);
-
-      console.time('loadUser');
-      await this.loadUser(response.email);
-      console.timeEnd('loadUser');
-
-      console.time('checkEligibility');
-      await this.checkEligibility();
-      console.timeEnd('checkEligibility');
     } else {
-      console.warn('[Session] No session, logging out');
       this.logout();
     }
   } catch (err) {
     console.error('[Session] Error loading session:', err);
     this.logout();
   }
-  console.timeEnd('initializeSession');
 }
 
 
@@ -760,22 +755,17 @@ async loadUser(email: string) {
 }
 
 
-
 async logout() {
+  localStorage.removeItem('jwt');
+  await firstValueFrom(
+    this.http.post(`${this.API_BASE}/api/auth/logout`, {}, { withCredentials: true })
+  );
   this.isLoggedIn.set(false);
-  this.isAdmin.set(false);
   this.userEmail.set(null);
+  this.isAdmin.set(false);
   this.isPremium.set(false);
-
-  try {
-    await firstValueFrom(
-      this.http.post(`${this.API_BASE}/api/auth/logout`, {}, { withCredentials: true })
-    );
-    console.log('[Logout] Cookie cleared by backend');
-  } catch (err) {
-    console.error('[Logout] Failed to clear cookie:', err);
-  }
 }
+
 
   async getAdminStats() {
     return firstValueFrom(
