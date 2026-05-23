@@ -152,12 +152,11 @@ export class AccountComponent {
   hasFreeDownloadLeft = this.resumeService.hasFreeDownloadLeft;
 
   ngOnInit(): void {
-    // ✅ refresh subscription state from backend
-    this.resumeService.checkEligibility().then(res => {
-      console.log('Eligibility refreshed:', res);
+    this.resumeService.initializeSession().then(() => {
+      console.log('Session hydrated:', this.resumeService.resumeState());
     });
   }
-   
+
   viewDetails(): void {
   const currentUser = this.resumeService.resumeState(); // ✅ get fresh state
   this.dialog.open(UserDetailsDialogComponent, {
