@@ -49,20 +49,24 @@ export class LoginComponent {
 
     try {
       const response = await firstValueFrom(
-        this.http.post<{ email: string; isAdmin: boolean; tier?: string }>(
+        this.http.post<{ token: string; user_id: string; email: string; isAdmin: boolean; tier?: string }>(
           `${this.API_BASE}/api/auth/login`,
           { email: this.email, password: this.password },
-          { observe: 'body', withCredentials: true }
+          { observe: 'body' }
         ).pipe(timeout(15000))
       );
 
       console.log('[Login] Success for', response.email);
+
+      // ✅ Save JWT
+      localStorage.setItem('jwt', response.token);
 
       // hydrate signals
       this.isLoggedIn.set(true);
       this.userEmail.set(response.email);
       this.isAdmin.set(response.isAdmin);
       this.isPremium.set(!!response.tier);
+
 
       console.timeEnd('loginRequest');
 
