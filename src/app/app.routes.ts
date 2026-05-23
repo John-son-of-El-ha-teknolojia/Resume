@@ -1,9 +1,9 @@
 import { Routes } from '@angular/router';
-import { authGuard, adminGuard, loginGuard, rootGuard } from './auth.guard';
+import { authGuard, loginGuard } from './auth.guard';
 import { AccountComponent } from './components/account/account';
 import { PaymentCallbackComponent } from './components/payment/payment-callback.component';
 export const routes: Routes = [
-  { path: 'login', loadComponent: () => import('./components/login/login.component').then(m => m.LoginComponent), canActivate: [loginGuard, adminGuard] },
+  { path: 'login', loadComponent: () => import('./components/login/login.component').then(m => m.LoginComponent), canActivate: [loginGuard] },
   { path: 'signup', loadComponent: () => import('./components/signup/signup').then(m => m.SignupComponent) },
   { path: 'dashboard', loadComponent: () => import('./components/dashboard/dashboard').then(m => m.DashboardComponent) },
   { path: 'writer', loadComponent: () => import('./components/studio/studio.components').then(m => m.StudioComponent) },
@@ -57,8 +57,8 @@ export const routes: Routes = [
 },
 
 
-{ path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-{ path: '**', redirectTo: 'dashboard' }
+{ path: '', redirectTo: 'login', pathMatch: 'full' },
+{ path: '**', redirectTo: 'login' }
 
 
   // { path: '', redirectTo: 'login', pathMatch: 'full' },
