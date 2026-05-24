@@ -18,24 +18,24 @@ import { ResumeService } from '../../services/resume';
           <span class="text-xl font-black text-slate-800 uppercase tracking-tighter">Elite<span class="text-blue-600">CV</span></span>
         </div>
 
-       @if (resumeService.isLoggedIn) {
-              <div class="hidden md:flex items-center gap-1">
-                <a routerLink="/dashboard" ...>Dashboard</a>
-                <a routerLink="/writer" ...>Studio</a>
-                <a routerLink="/account" ...>Account</a>
-                @if (resumeService.isAdmin) {
-                  <a routerLink="/admin" ...>Admin</a>
-                }
-              </div>
-
-              <div class="flex items-center gap-4">
-                <button mat-stroked-button (click)="logout()">Logout</button>
-              </div>
-            } @else {
-              <div class="flex items-center gap-4">
-                <button mat-flat-button routerLink="/login">Sign In</button>
-              </div>
+       @if (isLoggedIn$ | async) {
+          <div class="hidden md:flex items-center gap-1">
+            <a routerLink="/dashboard">Dashboard</a>
+            <a routerLink="/writer">Studio</a>
+            <a routerLink="/account">Account</a>
+            @if (isAdmin$ | async) {
+              <a routerLink="/admin">Admin</a>
             }
+          </div>
+
+          <div class="flex items-center gap-4">
+            <button mat-stroked-button (click)="logout()">Logout</button>
+          </div>
+        } @else {
+          <div class="flex items-center gap-4">
+            <button mat-flat-button routerLink="/login">Sign In</button>
+          </div>
+        }
               </div>
 
                  <!-- Mobile Menu -->
@@ -72,7 +72,10 @@ export class NavbarComponent {
   resumeService = inject(ResumeService);
   private router = inject(Router);
 
-   mobileMenuOpen = false;
+  isLoggedIn$ = this.resumeService.isLoggedIn$;
+  isAdmin$ = this.resumeService.isAdmin$;
+
+  mobileMenuOpen = false;
 
   toggleMobileMenu() {
     this.mobileMenuOpen = !this.mobileMenuOpen;
