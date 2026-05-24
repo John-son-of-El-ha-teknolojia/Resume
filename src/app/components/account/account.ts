@@ -78,11 +78,13 @@ import { UserDetailsDialogComponent } from '../userDetail/user-details-dialog.co
 </p>
 
               
-              @if (!isPremium()) {
-                <button mat-flat-button class="!bg-blue-600 !text-white h-12 px-8 rounded-xl font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-100" (click)="upgrade()">
-                  Explore Plans
-                </button>
-              }
+           <button *ngIf="!(isPremium$ | async)"
+        mat-flat-button
+        class="!bg-blue-600 !text-white h-12 px-8 rounded-xl font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-100"
+        (click)="upgrade()">
+  Explore Plans
+</button>
+
             </div>
 
            <div class="space-y-6">
