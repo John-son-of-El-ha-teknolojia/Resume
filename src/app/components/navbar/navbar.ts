@@ -41,11 +41,6 @@ import { ResumeService } from '../../services/resume';
 
     <!-- Mobile Menu -->
     <div class="flex md:hidden items-center gap-3">
-      <!-- Account Icon -->
-      <button routerLink="/account"
-              class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-md">
-        <mat-icon>person</mat-icon>
-      </button>
 
       <!-- Hamburger -->
       <button (click)="toggleMobileMenu()" class="w-10 h-10 flex items-center justify-center text-slate-600">

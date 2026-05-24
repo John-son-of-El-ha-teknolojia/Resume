@@ -38,21 +38,8 @@ import { MatDialog } from '@angular/material/dialog';
                 class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-md">
           <mat-icon>person</mat-icon>
         </button>
-
-        <!-- Hamburger -->
-        <button (click)="toggleMobileMenu()" class="w-10 h-10 flex items-center justify-center text-slate-600">
-          <mat-icon>menu</mat-icon>
-        </button>
       </div>
     </header>
-
-    <!-- Mobile Dropdown -->
-    <div *ngIf="mobileMenuOpen" class="md:hidden bg-white border-t border-slate-100 mt-2 rounded-lg shadow-lg">
-      <a routerLink="/writer" class="mobile-link">Resume Studio</a>
-      <a (click)="openPdfEditor()" class="mobile-link">PDF AI Editor</a>
-      <a (click)="openCoverLetter()" class="mobile-link">Cover Letter AI</a>
-      <a (click)="openJobSearch()" class="mobile-link">Job Search Engine</a>
-    </div>
 
     <!-- Main Actions -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
