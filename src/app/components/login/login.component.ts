@@ -8,6 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom, timeout } from 'rxjs';
+import { ResumeService } from '../../services/resume';
 
 @Component({
   selector: 'app-login',
@@ -25,22 +26,16 @@ import { firstValueFrom, timeout } from 'rxjs';
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent {
-  private readonly API_BASE = 'https://resume-backend-plmv.onrender.com'; // ✅ backend base URL
-
+  private readonly API_BASE = 'https://resume-backend-plmv.onrender.com';
   email = '';
   password = '';
   loginError: string | null = null;
   loading = false;
   showPassword = signal(false);
 
-  // signals for session state
-  isLoggedIn = signal(false);
-  userEmail = signal<string | null>(null);
-  isAdmin = signal(false);
-  isPremium = signal(false);
-
   private http = inject(HttpClient);
   private router = inject(Router);
+  resumeService = inject(ResumeService); // ✅ inject service
 
   async onLogin() {
     this.loading = true;
@@ -58,19 +53,15 @@ export class LoginComponent {
 
       console.log('[Login] Success for', response.email);
 
-      // ✅ Save JWT
       localStorage.setItem('jwt', response.token);
 
-      // hydrate signals
-      this.isLoggedIn.set(true);
-      this.userEmail.set(response.email);
-      this.isAdmin.set(response.isAdmin);
-      this.isPremium.set(!!response.tier);
-
+      // ✅ Update ResumeService BehaviorSubjects
+      this.resumeService.isLoggedInSubject.next(true);
+      this.resumeService.userEmailSubject.next(response.email);
+      this.resumeService.isAdminSubject.next(response.isAdmin);
+      this.resumeService.isPremiumSubject.next(!!response.tier);
 
       console.timeEnd('loginRequest');
-
-      // navigate after login
       this.router.navigate(['/dashboard']);
     } catch (err: any) {
       console.timeEnd('loginRequest');

@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
 import {  timeout } from 'rxjs';
-
+import { BehaviorSubject } from 'rxjs';
 export interface Referee {
   id: string;
   name: string;
@@ -237,10 +237,10 @@ getCurrentTier(): string {
   return localStorage.getItem('tier') || this.resumeState().tier || 'free';
 }
 
+// ✅ Getter for current login state
 isUserLoggedIn(): boolean {
-  return localStorage.getItem('isLoggedIn') === 'true' || this.isLoggedIn();
+  return localStorage.getItem('isLoggedIn') === 'true' || this.isLoggedInSubject.value;
 }
-
 
   // Selection state
   public selectedIds = signal<Set<string>>(new Set());
@@ -275,7 +275,7 @@ isUserLoggedIn(): boolean {
   this.initialState = state;
 
   // Always default to logged out on SSR
-  this.isLoggedIn.set(false);
+  // this.isLoggedInSubject.next(false);
 }
 
 async initializeSession() {
@@ -295,10 +295,10 @@ async initializeSession() {
     );
 
     if (response.loggedIn) {
-      this.isLoggedIn.set(true);
-      this.userEmail.set(response.email);
-      this.isAdmin.set(response.isAdmin);
-      this.isPremium.set(!!response.tier);
+      this.isLoggedInSubject.next(true);
+      this.userEmailSubject.next(response.email);
+      this.isAdminSubject.next(response.isAdmin);
+      this.isPremiumSubject.next(!!response.tier);
     } else {
       this.logout();
     }
@@ -307,6 +307,7 @@ async initializeSession() {
     this.logout();
   }
 }
+
 
 
 
@@ -650,13 +651,27 @@ convertMockTemplateToResumeData(mockTemplate: any): ResumeData {
 
 
 
-  isPaid = signal<boolean>(false);
-  hasFreeDownloadLeft = signal<boolean>(true);
-  isPremium = signal<boolean>(false);
-  isLoggedIn = signal<boolean>(false);
-  isAdmin = signal<boolean>(false);
-  userEmail = signal<string | null>(null);
-  
+
+
+ isLoggedInSubject = new BehaviorSubject<boolean>(false);
+isLoggedIn$ = this.isLoggedInSubject.asObservable();
+
+ userEmailSubject = new BehaviorSubject<string | null>(null);
+userEmail$ = this.userEmailSubject.asObservable();
+
+ isAdminSubject = new BehaviorSubject<boolean>(false);
+isAdmin$ = this.isAdminSubject.asObservable();
+
+ isPremiumSubject = new BehaviorSubject<boolean>(false);
+isPremium$ = this.isPremiumSubject.asObservable();
+
+hasFreeDownloadLeftSubject = new BehaviorSubject<boolean>(true);
+hasFreeDownloadLeft$ = this.hasFreeDownloadLeftSubject.asObservable();
+
+ get isLoggedIn(): boolean { return this.isLoggedInSubject.value; }
+  get userEmail(): string | null { return this.userEmailSubject.value; }
+  get isAdmin(): boolean { return this.isAdminSubject.value; }
+  get isPremium(): boolean { return this.isPremiumSubject.value; }
   currentTemplate = signal<'minimal' | 'modern' | 'classic'>('minimal');
 
     async sendOtp(data: { name: string; email: string; location: string; role: string }): Promise<boolean> {
@@ -693,12 +708,13 @@ if (response.success) {
   return !!user.otpCode;             // ✅ true if non-empty, false if empty
 }
 
-  getCurrentUserEmail(): string {
-    if (isPlatformBrowser(this.platformId)) {
-      return this.userEmail() || localStorage.getItem('userEmail') || this.resumeState().email || '';
-    }
-    return this.userEmail() || this.resumeState().email || '';
+// ✅ Getter for current user email
+getCurrentUserEmail(): string {
+  if (isPlatformBrowser(this.platformId)) {
+    return this.userEmailSubject.value || localStorage.getItem('userEmail') || this.resumeState().email || '';
   }
+  return this.userEmailSubject.value || this.resumeState().email || '';
+}
 
 
   // Example: update state after login
@@ -707,30 +723,31 @@ if (response.success) {
   }
 
 
+// ✅ Admin check
 isAdminUser(): boolean {
-  return this.isAdmin();
+  return this.isAdminSubject.value;
+}
+async signup(data: Record<string, string | null>): Promise<boolean> {
+  try {
+    await firstValueFrom(this.http.post(`${this.API_BASE}/api/auth/signup`, data));
+
+    this.isLoggedInSubject.next(true);
+    this.userEmailSubject.next(data['email'] ?? null);
+
+    this.resumeState.update(prev => ({ 
+      ...prev, 
+      name: data['name'] ?? '',
+      email: data['email'] ?? '',
+      location: data['location'] ?? ''
+    }));
+
+    return true;
+  } catch (error) {
+    console.error('Signup error:', error);
+    return false;
+  }
 }
 
-
-  async signup(data: Record<string, string | null>): Promise<boolean> {
-    try {
-      // In a real app, this would call your Go backend
-      await firstValueFrom(this.http.post(`${this.API_BASE}/api/auth/signup`, data));
-      
-      this.isLoggedIn.set(true);
-      this.userEmail.set(data['email'] ?? null);
-      this.resumeState.update(prev => ({ 
-        ...prev, 
-        name: data['name'] ?? '',
-        email: data['email'] ?? '',
-        location: data['location'] ?? ''
-      }));
-      return true;
-    } catch (error) {
-      console.error('Signup error:', error);
-      return false;
-    }
-  }
 
 async loadUser(email: string) {
   try {
@@ -760,10 +777,10 @@ async logout() {
   await firstValueFrom(
     this.http.post(`${this.API_BASE}/api/auth/logout`, {}, { withCredentials: true })
   );
-  this.isLoggedIn.set(false);
-  this.userEmail.set(null);
-  this.isAdmin.set(false);
-  this.isPremium.set(false);
+  this.isLoggedInSubject.next(false);
+  this.userEmailSubject.next(null);
+  this.isAdminSubject.next(false);
+  this.isPremiumSubject.next(false);
 }
 
 
@@ -930,7 +947,8 @@ async logout() {
       throw error;
     }
   }
-async checkEligibility(): Promise<{ canDownload: boolean; isPremium: boolean; hasFreeDownloadLeft: boolean }> {
+
+  async checkEligibility(): Promise<{ canDownload: boolean; isPremium: boolean; hasFreeDownloadLeft: boolean }> {
   const token = localStorage.getItem('jwt');
   if (!token) {
     console.error('No token found');
@@ -942,17 +960,17 @@ async checkEligibility(): Promise<{ canDownload: boolean; isPremium: boolean; ha
     const res = await firstValueFrom(
       this.http.post<{ canDownload: boolean; isPremium: boolean; hasFreeDownloadLeft: boolean }>(
         `${this.API_BASE}/api/resume/check-eligibility`,
-        { email: this.userEmail() },
+        { email: this.userEmailSubject.value },
         { headers: { Authorization: `Bearer ${token}` } }
       ).pipe(timeout(15000))
     );
     console.timeEnd('checkEligibility');
 
     const premiumTiers = ['1y', '1m', '2w'];
-    const isPremium = (this.isPremium() && premiumTiers.includes('premium')) || res.isPremium;
+    const isPremium = premiumTiers.includes(res.isPremium ? 'premium' : '') || res.isPremium;
 
-    this.isPremium.set(isPremium);
-    this.hasFreeDownloadLeft.set(res.hasFreeDownloadLeft);
+    this.isPremiumSubject.next(isPremium);
+    this.hasFreeDownloadLeftSubject.next(res.hasFreeDownloadLeft);
 
     return { canDownload: res.canDownload, isPremium, hasFreeDownloadLeft: res.hasFreeDownloadLeft };
   } catch (error) {
@@ -960,6 +978,7 @@ async checkEligibility(): Promise<{ canDownload: boolean; isPremium: boolean; ha
     return { canDownload: false, isPremium: false, hasFreeDownloadLeft: false };
   }
 }
+
 
 
   async enhanceText(text: string): Promise<string> {
