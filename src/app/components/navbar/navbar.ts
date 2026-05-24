@@ -18,39 +18,51 @@ import { ResumeService } from '../../services/resume';
           <span class="text-xl font-black text-slate-800 uppercase tracking-tighter">Elite<span class="text-blue-600">CV</span></span>
         </div>
 
-        @if (resumeService.isLoggedIn()) {
-          <div class="hidden md:flex items-center gap-1">
-            <a routerLink="/dashboard" routerLinkActive="!text-blue-600" 
-               class="px-5 py-2 text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-all">Dashboard</a>
-            <a routerLink="/writer" routerLinkActive="!text-blue-600" 
-               class="px-5 py-2 text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-all">Studio</a>
-            <a routerLink="/cover-letter" routerLinkActive="!text-blue-600" 
-               class="px-5 py-2 text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-all">Cover Letter</a>
-            <a routerLink="/viewer" routerLinkActive="!text-blue-600" 
-               class="px-5 py-2 text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-all">Viewer</a>
-            <a routerLink="/account" routerLinkActive="!text-blue-600" 
-               class="px-5 py-2 text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-all">Account</a>
-            @if (resumeService.isAdmin()) {
-              <a routerLink="/admin" routerLinkActive="!text-blue-600" 
-                 class="px-5 py-2 text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-all">Admin</a>
-            }
-          </div>
+       @if (resumeService.isLoggedIn) {
+              <div class="hidden md:flex items-center gap-1">
+                <a routerLink="/dashboard" ...>Dashboard</a>
+                <a routerLink="/writer" ...>Studio</a>
+                <a routerLink="/account" ...>Account</a>
+                @if (resumeService.isAdmin) {
+                  <a routerLink="/admin" ...>Admin</a>
+                }
+              </div>
 
-          <div class="flex items-center gap-4">
-            <div class="h-10 w-px bg-slate-100 mx-2"></div>
-            <button mat-stroked-button (click)="logout()" class="!border-slate-100 !text-slate-400 font-bold text-[10px] uppercase tracking-widest h-10 px-4 rounded-lg">
-              Logout
-            </button>
-          </div>
-        } @else {
-           <div class="flex items-center gap-4">
-             <button mat-flat-button routerLink="/login" class="!bg-blue-600 !text-white h-10 px-6 rounded-lg font-bold shadow-lg shadow-blue-100">
-               Sign In
-             </button>
-           </div>
-        }
-      </div>
-    </nav>
+              <div class="flex items-center gap-4">
+                <button mat-stroked-button (click)="logout()">Logout</button>
+              </div>
+            } @else {
+              <div class="flex items-center gap-4">
+                <button mat-flat-button routerLink="/login">Sign In</button>
+              </div>
+            }
+              </div>
+
+                 <!-- Mobile Menu -->
+                    <div class="flex md:hidden items-center gap-3">
+                      <!-- Account Icon -->
+                      <button routerLink="/account"
+                              class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-md">
+                        <mat-icon>person</mat-icon>
+                      </button>
+
+                      <!-- Hamburger -->
+                      <button (click)="toggleMobileMenu()" class="w-10 h-10 flex items-center justify-center text-slate-600">
+                        <mat-icon>menu</mat-icon>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Mobile Dropdown -->
+                  <div *ngIf="mobileMenuOpen" class="md:hidden bg-white border-t border-slate-100">
+                    <a routerLink="/dashboard" class="mobile-link">Dashboard</a>
+                    <a routerLink="/writer" class="mobile-link">Studio</a>
+                    <a routerLink="/cover-letter" class="mobile-link">Cover Letter</a>
+                    <a routerLink="/viewer" class="mobile-link">Viewer</a>
+                    <a *ngIf="resumeService.isAdmin" routerLink="/admin" class="mobile-link">Admin</a>
+                    <button (click)="logout()" class="mobile-link text-red-500">Logout</button>
+                  </div>
+  </nav>
   `,
   styles: [`
     :host { display: block; }
@@ -59,6 +71,12 @@ import { ResumeService } from '../../services/resume';
 export class NavbarComponent {
   resumeService = inject(ResumeService);
   private router = inject(Router);
+
+   mobileMenuOpen = false;
+
+  toggleMobileMenu() {
+    this.mobileMenuOpen = !this.mobileMenuOpen;
+  }
 
   logout() {
     this.resumeService.logout();

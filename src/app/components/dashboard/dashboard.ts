@@ -16,17 +16,44 @@ import { MatDialog } from '@angular/material/dialog';
     <div class="min-h-screen bg-zinc-50 flex flex-col">
       <main class="flex-1 max-w-7xl mx-auto w-full p-8 space-y-12">
         <!-- Header -->
-        <header class="flex items-center justify-between">
-          <div>
-            <h1 class="text-3xl font-black uppercase tracking-widest text-zinc-900">User Dashboard</h1>
-            <p class="text-zinc-500 font-medium letter-spacing-tight">Manage your creative career assets</p>
+          <header class="flex items-center justify-between">
+            <div>
+              <h1 class="text-3xl font-black uppercase tracking-widest text-zinc-900">User Dashboard</h1>
+              <p class="text-zinc-500 font-medium letter-spacing-tight">Manage your creative career assets</p>
+            </div>
+
+            <!-- Desktop Account Button -->
+            <div class="hidden md:flex gap-4">
+              <button mat-flat-button color="primary"
+                      class="!rounded-2xl h-12 !px-8 !font-black !uppercase !tracking-widest"
+                      routerLink="/account">
+                Account & Subscription
+              </button>
+            </div>
+
+            <!-- Mobile Icons -->
+            <div class="flex md:hidden items-center gap-3">
+              <!-- Account Icon -->
+              <button routerLink="/account"
+                      class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-md">
+                <mat-icon>person</mat-icon>
+              </button>
+
+              <!-- Hamburger -->
+              <button (click)="toggleMobileMenu()" class="w-10 h-10 flex items-center justify-center text-slate-600">
+                <mat-icon>menu</mat-icon>
+              </button>
+            </div>
+          </header>
+
+          <!-- Mobile Dropdown -->
+          <div *ngIf="mobileMenuOpen" class="md:hidden bg-white border-t border-slate-100 mt-2 rounded-lg shadow-lg">
+            <a routerLink="/writer" class="mobile-link">Resume Studio</a>
+            <a (click)="openPdfEditor()" class="mobile-link">PDF AI Editor</a>
+            <a (click)="openCoverLetter()" class="mobile-link">Cover Letter AI</a>
+            <a (click)="openJobSearch()" class="mobile-link">Job Search Engine</a>
           </div>
-          <div class="flex gap-4">
-            <button mat-flat-button color="primary" class="!rounded-2xl h-12 !px-8 !font-black !uppercase !tracking-widest" routerLink="/account">
-               Account & Subscription
-            </button>
-          </div>
-        </header>
+
 
         <!-- Main Actions -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -146,6 +173,12 @@ export class DashboardComponent {
   resumeService = inject(ResumeService);
   private router = inject(Router);
   private dialog = inject(MatDialog);   // ✅ inject dialog
+
+  mobileMenuOpen = false;
+
+  toggleMobileMenu() {
+    this.mobileMenuOpen = !this.mobileMenuOpen;
+  }
 
   frameworks = [
     { id: 'minimal', name: 'Swiss Minimalist', tag: 'Professional', path: 'assets/CEO.html' },
