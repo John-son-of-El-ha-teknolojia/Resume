@@ -52,32 +52,31 @@ import { UserDetailsDialogComponent } from '../userDetail/user-details-dialog.co
 
         <!-- Subscription Card -->
         <mat-card class="md:col-span-8 p-0 overflow-hidden !border-slate-200">
-          <div class="p-6 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
-            <h2 class="text-sm font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-              <mat-icon class="text-blue-600 text-sm">workspace_premium</mat-icon> Access Level
-            </h2>
-            @if (isPremium()) {
-              <span class="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest rounded-full border border-emerald-100">Premium Active</span>
-            } @else {
-               <span class="px-3 py-1 bg-slate-100 text-slate-400 text-[10px] font-black uppercase tracking-widest rounded-full">Free Tier</span>
-            }
-          </div>
-          
-          <div class="p-8">
-            <div class="flex items-center justify-between mb-10">
-              <div>
-                <p class="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-2">Member Service</p>
-                <h3 class="text-2xl font-black text-slate-800 uppercase tracking-tight">
-                  @if (isPremium()) {
-                    Executive Pro
-                  } @else {
-                    Global Free
-                  }
-                </h3>
-                @if (hasFreeDownloadLeft()) {
-                  <p class="text-[10px] text-emerald-600 font-bold uppercase mt-2">1 Free Export Remaining</p>
-                }
-              </div>
+         <div class="p-6 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
+  <h2 class="text-sm font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+    <mat-icon class="text-blue-600 text-sm">workspace_premium</mat-icon> Access Level
+  </h2>
+  <span *ngIf="isPremium$ | async; else freeTier"
+        class="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest rounded-full border border-emerald-100">
+    Premium Active
+  </span>
+  <ng-template #freeTier>
+    <span class="px-3 py-1 bg-slate-100 text-slate-400 text-[10px] font-black uppercase tracking-widest rounded-full">
+      Free Tier
+    </span>
+  </ng-template>
+</div>
+
+<h3 class="text-2xl font-black text-slate-800 uppercase tracking-tight">
+  <ng-container *ngIf="isPremium$ | async; else freeLabel">Executive Pro</ng-container>
+  <ng-template #freeLabel>Global Free</ng-template>
+</h3>
+
+<p *ngIf="hasFreeDownloadLeft$ | async"
+   class="text-[10px] text-emerald-600 font-bold uppercase mt-2">
+  1 Free Export Remaining
+</p>
+
               
               @if (!isPremium()) {
                 <button mat-flat-button class="!bg-blue-600 !text-white h-12 px-8 rounded-xl font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-100" (click)="upgrade()">
@@ -145,9 +144,10 @@ export class AccountComponent {
   
   resume = this.resumeService.resumeState;
   // isPaid = this.resumeService.isPaid;
-  isPremium = this.resumeService.isPremium;
-  hasFreeDownloadLeft = this.resumeService.hasFreeDownloadLeft;
-  plans: any[] = [];
+isPremium$ = this.resumeService.isPremium$;
+hasFreeDownloadLeft$ = this.resumeService.hasFreeDownloadLeft$;
+plans: any[] = [];
+
 
 ngOnInit(): void {
   this.resumeService.initializeSession().then(() => {
