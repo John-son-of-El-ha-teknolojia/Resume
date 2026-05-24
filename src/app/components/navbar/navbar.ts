@@ -40,24 +40,25 @@ import { ResumeService } from '../../services/resume';
     </ng-template>
 
     <!-- Mobile Menu -->
-    <div class="flex md:hidden items-center gap-3">
+<!-- Mobile Menu -->
+<div class="flex md:hidden items-center gap-3">
+  <!-- Hamburger -->
+  <button (click)="toggleMobileMenu()" class="w-10 h-10 flex items-center justify-center text-slate-600">
+    <mat-icon>{{ mobileMenuOpen ? 'close' : 'menu' }}</mat-icon>
+  </button>
+</div>
+</div> <!-- closes resume-container -->
 
-      <!-- Hamburger -->
-      <button (click)="toggleMobileMenu()" class="w-10 h-10 flex items-center justify-center text-slate-600">
-        <mat-icon>menu</mat-icon>
-      </button>
-    </div>
-  </div>
+<!-- Mobile Dropdown -->
+<div *ngIf="mobileMenuOpen" class="md:hidden bg-white border-t border-slate-100">
+  <a routerLink="/dashboard" class="mobile-link">Dashboard</a>
+  <a routerLink="/writer" class="mobile-link">Studio</a>
+  <a routerLink="/cover-letter" class="mobile-link">Cover Letter</a>
+  <a routerLink="/viewer" class="mobile-link">Viewer</a>
+  <a *ngIf="resumeService.isAdmin" routerLink="/admin" class="mobile-link">Admin</a>
+  <button (click)="logout()" class="mobile-link text-red-500">Logout</button>
+</div>
 
-  <!-- Mobile Dropdown -->
-  <div *ngIf="mobileMenuOpen" class="md:hidden bg-white border-t border-slate-100">
-    <a routerLink="/dashboard" class="mobile-link">Dashboard</a>
-    <a routerLink="/writer" class="mobile-link">Studio</a>
-    <a routerLink="/cover-letter" class="mobile-link">Cover Letter</a>
-    <a routerLink="/viewer" class="mobile-link">Viewer</a>
-    <a *ngIf="resumeService.isAdmin" routerLink="/admin" class="mobile-link">Admin</a>
-    <button (click)="logout()" class="mobile-link text-red-500">Logout</button>
-  </div>
 </nav>
 
   `,

@@ -668,10 +668,31 @@ isPremium$ = this.isPremiumSubject.asObservable();
 hasFreeDownloadLeftSubject = new BehaviorSubject<boolean>(true);
 hasFreeDownloadLeft$ = this.hasFreeDownloadLeftSubject.asObservable();
 
+plansSubject = new BehaviorSubject<any[]>([]);
+plans$ = this.plansSubject.asObservable();
+
+loadPlans() {
+  this.http.get<any[]>(`${this.API_BASE}/plans`).subscribe(plans => {
+    this.plansSubject.next(plans);
+  });
+}
+
+
+
  get isLoggedIn(): boolean { return this.isLoggedInSubject.value; }
   get userEmail(): string | null { return this.userEmailSubject.value; }
   get isAdmin(): boolean { return this.isAdminSubject.value; }
-  get isPremium(): boolean { return this.isPremiumSubject.value; }
+  get hasFreeDownloadLeft(): boolean {
+  return this.hasFreeDownloadLeftSubject.value;
+}
+
+get isPremium(): boolean {
+  return this.isPremiumSubject.value;
+}
+getPlans() {
+  return this.http.get<any[]>(`${this.API_BASE}/plans`);
+}
+
   currentTemplate = signal<'minimal' | 'modern' | 'classic'>('minimal');
 
     async sendOtp(data: { name: string; email: string; location: string; role: string }): Promise<boolean> {

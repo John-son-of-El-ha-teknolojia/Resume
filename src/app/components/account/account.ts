@@ -86,27 +86,24 @@ import { UserDetailsDialogComponent } from '../userDetail/user-details-dialog.co
               }
             </div>
 
-            <div class="space-y-6">
+           <div class="space-y-6">
               <h3 class="text-[10px] font-black tracking-widest uppercase text-zinc-400">Available Tiers</h3>
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div class="p-4 border border-slate-100 rounded-xl bg-slate-50/30 text-center">
-                  <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Rapid</p>
-                  <div class="text-lg font-black text-slate-800">260 KES</div>
-                  <p class="text-[8px] font-bold text-zinc-400 uppercase">14 Days</p>
-                </div>
-                <div class="p-4 border-2 border-blue-100 rounded-xl bg-blue-50/10 text-center relative">
-                  <div class="absolute -top-2 left-1/2 -translate-x-1/2 bg-blue-600 text-[8px] text-white px-2 py-0.5 rounded-full font-black uppercase">Popular</div>
-                  <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Professional</p>
-                  <div class="text-lg font-black text-slate-800">525 KES</div>
-                  <p class="text-[8px] font-bold text-zinc-400 uppercase">1 Month</p>
-                </div>
-                <div class="p-4 border border-slate-100 rounded-xl bg-slate-50/30 text-center">
-                  <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Executive</p>
-                  <div class="text-lg font-black text-slate-800">1040 KES</div>
-                  <p class="text-[8px] font-bold text-zinc-400 uppercase">Yearly</p>
+                <div *ngFor="let plan of plans"
+                    class="p-4 border border-slate-100 rounded-xl bg-slate-50/30 text-center">
+                  <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">
+                    {{ plan.name }}
+                  </p>
+                  <div class="text-lg font-black text-slate-800">
+                    {{ plan.priceKES }} KES / {{ plan.priceUSD }}
+                  </div>
+                  <p class="text-[8px] font-bold text-zinc-400 uppercase">
+                    {{ plan.description }}
+                  </p>
                 </div>
               </div>
             </div>
+
           </div>
         </mat-card>
 
@@ -147,16 +144,20 @@ export class AccountComponent {
   private dialog = inject(MatDialog);
   
   resume = this.resumeService.resumeState;
-  isPaid = this.resumeService.isPaid;
+  // isPaid = this.resumeService.isPaid;
   isPremium = this.resumeService.isPremium;
   hasFreeDownloadLeft = this.resumeService.hasFreeDownloadLeft;
+  plans: any[] = [];
 
-  ngOnInit(): void {
-    this.resumeService.initializeSession().then(() => {
-      console.log('Session hydrated:', this.resumeService.resumeState());
-    });
-  }
+ngOnInit(): void {
+  this.resumeService.initializeSession().then(() => {
+    console.log('Session hydrated:', this.resumeService.resumeState());
+  });
 
+  this.resumeService.getPlans().subscribe(plans => {
+    this.plans = plans;
+  });
+}
   viewDetails(): void {
   const currentUser = this.resumeService.resumeState(); // ✅ get fresh state
   this.dialog.open(UserDetailsDialogComponent, {
