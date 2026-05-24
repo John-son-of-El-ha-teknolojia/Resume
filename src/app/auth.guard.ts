@@ -8,7 +8,7 @@ export const authGuard = () => {
   const resumeService = inject(ResumeService);
   const router = inject(Router);
 
-  const loggedInSignal = resumeService.isLoggedIn();
+  const loggedInSignal = resumeService.isLoggedIn;
   const loggedInStorage = typeof window !== 'undefined' && localStorage.getItem('jwt');
 
   // 1. Signal takes priority
@@ -39,8 +39,8 @@ export const adminGuard = () => {
   const resumeService = inject(ResumeService);
   const router = inject(Router);
 
-  const loggedIn = resumeService.isLoggedIn();
-  const isAdmin = resumeService.isAdmin();
+  const loggedIn = resumeService.isLoggedIn;
+  const isAdmin = resumeService.isAdmin;
 
   if (loggedIn && isAdmin) {
     return true;
@@ -53,8 +53,8 @@ export const premiumGuard = () => {
   const resumeService = inject(ResumeService);
   const router = inject(Router);
 
-  const loggedIn = resumeService.isLoggedIn();
-  const isPremium = resumeService.isPremium();
+  const loggedIn = resumeService.isLoggedIn;
+  const isPremium = resumeService.isPremium;
 
   if (loggedIn && isPremium) {
     return true;
@@ -67,7 +67,7 @@ export function loginGuard() {
   const resumeService = inject(ResumeService);
   const router = inject(Router);
 
-  if (resumeService.isLoggedIn()) {
+  if (resumeService.isLoggedIn) {
     return router.parseUrl('/dashboard');
   }
   return true;
@@ -79,7 +79,7 @@ export function rootGuard() {
   const resumeService = inject(ResumeService);
   const router = inject(Router);
 
-  if (resumeService.isLoggedIn()) {
+  if (resumeService.isLoggedIn) {
     return router.parseUrl('/dashboard');
   }
   return router.parseUrl('/login');

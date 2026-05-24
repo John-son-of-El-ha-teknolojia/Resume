@@ -12,6 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { CanvasComponent } from './canvas.component';
+import { BehaviorSubject } from 'rxjs';
 @Component({
   selector: 'app-properties',
   templateUrl: './propperties.component.html',
@@ -126,10 +127,12 @@ alignVertical(direction: 'top' | 'middle' | 'bottom') {
 }
 
 
-  // Premium actions
-  isPremium() {
-    return this.resumeService.isPremium();
-  }
+isPremiumSubject = new BehaviorSubject<boolean>(false);
+isPremium$ = this.isPremiumSubject.asObservable();
+
+get isPremium(): boolean {
+  return this.isPremiumSubject.value;
+}
 
   saveToCloud() {
     console.log('Save to cloud');
